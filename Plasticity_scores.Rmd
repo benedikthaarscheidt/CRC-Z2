@@ -1,0 +1,28 @@
+---
+title: "Traitgene Expression Analysis in Arabidopsis thaliana and Capsella bursa-pastoris"
+author: "Bene"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Introduction
+
+This study aims to analyze the traitgene expression data from two plant species, *Arabidopsis thaliana* and *Capsella bursa-pastoris*, under varying conditions of temperature and nitrogen abundance in the soil. We will compute the reaction norms of the traitgene expression data and calculate various plasticity scores as described in the papers by Zoran Nikoloski and Arnold et al.
+
+## Experimental Setup
+
+- **Species**: *Arabidopsis thaliana* and *Capsella bursa-pastoris*
+- **Growth Conditions**: Different temperature regimes and varying nitrogen levels in the soil
+- **Measurement Variation**: Five distinct parameter combinations for each condition
+
+## Data Preparation
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(lme4)
+library(emmeans)
+
+```
