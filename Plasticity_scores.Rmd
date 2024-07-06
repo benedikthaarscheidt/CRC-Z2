@@ -1,5 +1,5 @@
 ---
-title: "Traitgene Expression Analysis in Arabidopsis thaliana and Capsella bursa-pastoris"
+title: "Trait Analysis in Arabidopsis thaliana and Capsella bursa-pastoris"
 author: "Bene"
 date: "`r Sys.Date()`"
 output: html_document
@@ -7,7 +7,7 @@ output: html_document
 
 ## Introduction
 
-This study aims to analyze the traitgene expression data from two plant species, *Arabidopsis thaliana* and *Capsella bursa-pastoris*, under varying conditions of temperature and nitrogen abundance in the soil. We will compute the reaction norms of the traitgene expression data and calculate various plasticity scores as described in the papers by Zoran Nikoloski and Arnold et al.
+This study aims to analyze the trait measurment data from two plant species, *Arabidopsis thaliana* and *Capsella bursa-pastoris*, under varying conditions of temperature and nitrogen abundance in the soil. We will compute the reaction norms of the traitgene expression data and calculate various plasticity scores as described in the papers by Zoran Nikoloski and Arnold et al.
 
 ## Experimental Setup
 
@@ -24,5 +24,63 @@ library(tidyr)
 library(ggplot2)
 library(lme4)
 library(emmeans)
-
 ```
+
+ Getting Familiar with the Tasks/Terms/Data/Etc.
+
+## Trait Measurements
+- **Leaf Length**
+- **Leaf Width**
+- **Number of Leaves**
+- **Stem Height**
+
+## Diversity Panels
+Diversity panels are collections of different accessions (genetically distinct lines) used to study genetic diversity, natural variation, and genotype-phenotype associations.
+
+## Reaction Norms of the Trait Data
+Reaction norms represent the pattern of phenotypic expression of a single genotype across a range of environmental conditions.
+
+## Nominal Approaches for Quantifying Plasticity
+Nominal approaches involve analyzing trait data from a single genotype across various environments. These methods rely on the concept of the reaction norm, which visualizes how trait values of a genotype change across different environments. This approach primarily uses two key concepts:
+
+1. **Slope of the Regression Line**
+   - Represents the rate of change in the trait value relative to the environmental variable.
+   
+2. **Residual Mean Square Error**
+   - Quantifies the deviation of actual trait values from the predicted values by the regression line.
+   - Suitable when the trait changes linearly with environmental changes.
+
+For traits that do not exhibit linear changes (e.g., enzyme activity with respect to pH), other approaches are required.
+
+### Other Nominal Measures of Plasticity
+- **Range**
+  - The difference between the maximum and minimum trait values.
+  
+- **Standard Deviation**
+  
+- **Coefficient of Variation**
+  - The ratio of the standard deviation to the mean, indicating relative variability.
+  
+- **Stability Index**
+  - Quantifies the consistency of trait values across environments.
+
+## Relative Approaches for Quantifying Plasticity
+Relative approaches involve analyzing a single trait across multiple genotypes in the same environments. Here are the key points:
+
+1. **Breaking Down Variance**
+   - The total variance of a trait is split into parts due to the genotype, the environment, and their interactions. ANOVA helps in determining these components.
+
+2. **Genotype-by-Environment Interaction**
+   - This interaction measures how plasticity varies across different genotypes, rather than within a single genotype.
+
+### Finlay and Wilkinson Method
+- **Environmental Index**
+  - Assumes the interaction between genotype and environment depends on an environmental index.
+  
+- **Regression Analysis**
+  - Trait values for each genotype are compared against the average trait values of all genotypes in each environment.
+  
+- **Relative Measures**
+  - The slope and mean square error from these comparisons provide plasticity measures for each genotype.
+
+Advanced methods also incorporate genetic relationships between genotypes and estimate both genotype and environment effects together. These approaches help us understand and compare how different genotypes respond to environmental changes, giving a relative sense of plasticity across genotypes.
