@@ -2,9 +2,25 @@
 title: "Trait Analysis in Arabidopsis thaliana and Capsella bursa-pastoris"
 author: "Bene"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document:
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: 5
 ---
 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(lme4)
+library(emmeans)
+```
 ## Introduction
 
 This study aims to analyze the trait measurment data from two plant species, *Arabidopsis thaliana* and *Capsella bursa-pastoris*, under varying conditions of temperature and nitrogen abundance in the soil. We will compute the reaction norms of the traitgene expression data and calculate various plasticity scores as described in the papers by Zoran Nikoloski and Arnold et al.
@@ -15,30 +31,62 @@ This study aims to analyze the trait measurment data from two plant species, *Ar
 - **Growth Conditions**: Different temperature regimes and varying nitrogen levels in the soil
 - **Measurement Variation**: Five distinct parameter combinations for each condition
 
-## Data Preparation
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(lme4)
-library(emmeans)
-```
 
+## Experimental Setup
+
+**Species:**  
+- *Arabidopsis thaliana*  
+- *Capsella bursa-pastoris*
+
+**Growth Conditions:**  
+- Different temperature regimes  
+- Varying nitrogen levels in the soil
+
+**Measurement Variation:**  
+- Five distinct parameter combinations for each condition
+
+## Experimental Treatments and GC-MS Analysis
+
+**GC-MS Analysis (example pipeline on [DOI: 10.1111/pce.14146](https://doi.org/10.1111/pce.14146))**
+
+Gas Chromatography-Mass Spectrometry (GC-MS) is performed to analyze the biochemical changes in plants subjected to stress conditions. The following steps are involved:
+
+1. **Sample Preparation:**  
+   - Plant tissues (e.g., leaves, roots) are harvested at specified time points.
+   - The tissues are immediately frozen in liquid nitrogen and stored at -80°C until further analysis.
+   - For GC-MS, the samples are ground into a fine powder using a mortar and pestle under liquid nitrogen.
+
+2. **Metabolite Extraction:**  
+   - The powdered plant material is extracted using a solvent mixture, typically methanol or a combination of methanol and water.
+   - The mixture is vortexed and centrifuged to separate the supernatant containing the metabolites.
+
+3. **Derivatization:**  
+   - The extracted metabolites are derivatized to make them more volatile and suitable for GC-MS analysis.
+   - This often involves the use of derivatizing agents such as N-Methyl-N-(trimethylsilyl)trifluoroacetamide (MSTFA) to convert the metabolites into their trimethylsilyl (TMS) derivatives.
+
+4. **GC-MS Conditions:**  
+   - The derivatized samples are injected into a GC-MS system.
+   - The GC is equipped with a suitable capillary column (e.g., DB-5MS) and operated under a temperature gradient.
+   - The column temperature is gradually increased to separate the metabolites.
+
+5. **MS Detection:**  
+   - The separated metabolites are detected using mass spectrometry.
+   - The MS detector operates in electron ionization (EI) mode, scanning over a specified mass range to identify the metabolites based on their mass-to-charge (m/z) ratios.
+
+6. **Data Analysis:**  
+   - The GC-MS data are analyzed using software to identify and quantify the metabolites.
+   - The retention times and mass spectra are compared with reference libraries to confirm the identities of the compounds.
+   - The relative abundances of the metabolites are calculated to assess the biochemical changes induced by stress treatments.
+
+The GC-MS analysis provides insights into the metabolic adjustments in plants in response to abiotic stresses, revealing how epigenetic modifications might influence these biochemic
  Getting Familiar with the Tasks/Terms/Data/Etc.
-
-## Trait Measurements
-- **Leaf Length**
-- **Leaf Width**
-- **Number of Leaves**
-- **Stem Height**
 
 ## Diversity Panels
 Diversity panels are collections of different accessions (genetically distinct lines) used to study genetic diversity, natural variation, and genotype-phenotype associations.
 
 ## Reaction Norms of the Trait Data
-Reaction norms represent the pattern of phenotypic expression of a single genotype across a range of environmental conditions.
+ A ‘reaction norm’ describes the sensitivity of an organism, or of a set of organisms of the same genotype (e.g., the members of a clone), to some specific environmental variable. It quantifies phenotypic change (or lack of change) in a selected aspect of the phenotype as a function of variation in the environmental factor of interest. The reaction norm approach treats environmental sensitivity as a continuously variable response. 
 
 ## Nominal Approaches for Quantifying Plasticity
 Nominal approaches involve analyzing trait data from a single genotype across various environments. These methods rely on the concept of the reaction norm, which visualizes how trait values of a genotype change across different environments. This approach primarily uses two key concepts:
@@ -74,6 +122,12 @@ Relative approaches involve analyzing a single trait across multiple genotypes i
    - This interaction measures how plasticity varies across different genotypes, rather than within a single genotype.
 
 ### Finlay and Wilkinson Method
+
+The Finlay-Wilkinson regression is a method used in agronomy and plant breeding to analyze genotype-by-environment interactions (GxE). This technique helps in understanding how different genotypes (e.g., crop varieties) perform across a range of environmental conditions. Finlay-Wilkinson regression is designed to assess the stability and adaptability of different genotypes in varying environments. It aims to identify which genotypes are consistently high-performing across different environments and which ones are more sensitive to environmental changes.
+
+
+
+
 - **Environmental Index**
   - Assumes the interaction between genotype and environment depends on an environmental index.
   
@@ -83,4 +137,179 @@ Relative approaches involve analyzing a single trait across multiple genotypes i
 - **Relative Measures**
   - The slope and mean square error from these comparisons provide plasticity measures for each genotype.
 
-Advanced methods also incorporate genetic relationships between genotypes and estimate both genotype and environment effects together. These approaches help us understand and compare how different genotypes respond to environmental changes, giving a relative sense of plasticity across genotypes.
+#### Example for 
+```{r}
+# Creating a toy dataset
+data <- data.frame(
+  Environment = rep(1:5, each = 3),
+  Genotype = rep(c("G1", "G2", "G3"), times = 5),
+  Yield = c(2.5, 3.0, 3.5, 
+            2.8, 3.2, 3.6, 
+            3.0, 3.4, 3.8,
+            3.2, 3.5, 4.0,
+            3.5, 3.7, 4.2)
+)
+
+# Display the dataset
+print(data)
+
+# Calculate environmental means
+env_means <- aggregate(Yield ~ Environment, data = data, mean)
+colnames(env_means) <- c("Environment", "EnvMean")
+
+# Merge environmental means with original data
+data <- merge(data, env_means, by = "Environment")
+
+# Fit regression models for each genotype
+fit_G1 <- lm(Yield ~ EnvMean, data = data[data$Genotype == "G1",])
+fit_G2 <- lm(Yield ~ EnvMean, data = data[data$Genotype == "G2",])
+fit_G3 <- lm(Yield ~ EnvMean, data = data[data$Genotype == "G3",])
+
+# Display summary of each model
+summary(fit_G1)
+summary(fit_G2)
+summary(fit_G3)
+
+# Plotting the results
+ggplot(data, aes(x = EnvMean, y = Yield, color = Genotype)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Finlay-Wilkinson Regression Lines",
+       x = "Environmental Mean Yield",
+       y = "Genotype Yield") +
+  theme_minimal()
+```
+
+#### Interpretation
+
+* slope close to 1 indicates average stability, meaning the genotype's performance changes proportionally with the environmental factor
+* A slope greater than 1 indicates that the genotype is more responsive to environmental improvements (high performance in favorable environments but poor performance in unfavorable ones)
+* A slope less than 1 indicates greater stability and lower responsiveness to environmental changes, suggesting the genotype performs relatively consistently across different environments.
+
+
+## Epigenetics and their influence on plasticity
+
+Plants, being sessile, are constantly exposed to various environmental stresses. To survive and adapt to these conditions, they undergo epigenetic modifications. Epigenomics, the study of large-scale epigenetic marks on the genome, includes changes like histone modifications (acetylation, methylation, phosphorylation, ubiquitination) and small RNA machinery. These modifications play a crucial role in gene expression regulation and phenotypic plasticity under stress.
+
+## Types of Epigenetic Changes in Plants
+### Histone Acetylation
+Histone acetylation involves the addition of acetyl groups to lysine residues on histone proteins, regulated by histone acetyltransferases (HATs) and histone deacetylases (HDACs). This modification reduces the electrostatic affinity between histones and DNA, allowing transcription. For example, under drought stress, specific HAT genes in wheat are upregulated, contributing to drought resistance.
+
+### DNA Methylation
+DNA methylation, the addition of a methyl group to cytosine, is a reversible process that regulates gene expression, growth, and stress responses. For instance, drought conditions lead to increased CG hypermethylation in the pea genome, contributing to stress adaptation.
+
+### Phosphorylation
+Histone phosphorylation, particularly of histone H3, plays a role in DNA repair, chromosome condensation, and transcription regulation. Under osmotic stress, phosphorylation of H3T3 in Arabidopsis helps maintain heterochromatin structure and gene repression.
+
+### Ubiquitination
+Ubiquitination involves attaching ubiquitin molecules to target proteins, affecting their stability and function. In wheat, the E3 ubiquitin ligase TaPUB1 enhances salt tolerance by upregulating ion channel-related genes.
+
+### Small RNA Machinery
+Small RNAs, including miRNAs and siRNAs, play significant roles in stress responses. For example, in Arabidopsis, miRNAs regulate genes involved in proline accumulation, enhancing salt stress tolerance.
+
+## Influence of Different Stresses on the Epigenome
+### Drought Stress
+Drought induces histone modifications such as H3K4me3 and H3K9ac, which are crucial for the expression of drought-responsive genes like Rd29A and AtGOLS2. DNA methylation changes are also tissue-specific, with roots showing lower methylation levels compared to leaves under drought conditions.
+
+### Salt Stress
+Salt stress leads to DNA methylation and demethylation changes, affecting gene expression. In wheat, salt stress results in specific changes in cytosine methylation patterns, while in soybean, it alters the expression of several transcription factors through DNA methylation and histone modifications.
+
+### Heat Stress
+Heat stress increases DNA methylation and histone acetylation levels, enhancing the expression of heat-responsive genes. In rice, mild heat stress reduces DNA methylation of the OsFIE1 gene, aiding in stress adaptation.
+
+### Cold Stress
+Cold stress induces histone deacetylation and changes in DNA methylation patterns. For example, in Zea mays, cold acclimation results in increased HDAC expression and subsequent deacetylation of histone subunits H3 and H4.
+
+## Conclusion
+Epigenetic modifications provide a mechanism for plants to adapt to various abiotic stresses, enhancing their survival and productivity. Understanding these processes can aid in developing crop improvement strategies to ensure sustainable agricultural production in the face of climate change and environmental challenges.
+
+
+# Summary of Quantitative estimation of phenotypic plastic the gap between the evolutionary concept and applications
+
+This study reviews methods for quantitatively estimating phenotypic plasticity (PP) and applies them to a case study involving four woody species (Quercus robur, Quercus pyrenaica, Pinus sylvestris, and Pinus pinaster) grown under different light conditions. The authors propose new methods for quantifying PP, particularly when traditional indices fall short due to non-linear trait responses. Key results and methods include:
+
+1. **Review of Common Methods**: A detailed review of 17 different plasticity indices used in comparative ecological studies.
+2. **Case Study**: Application of these indices to assess growth and shoot-root allocation in seedlings under varying light intensities (1%, 6%, 20%, and 100% full sunlight).
+3. **New Indices**: Introduction of the Relative Distance Plasticity Index (RDPI) and the Environmentally Standardized Plasticity Index (ESPI), which allow for statistical comparisons of PP among species.
+
+
+## Literature Review
+A comprehensive review of studies from 1965 to 2005 was conducted to identify and analyze various indices used to quantify PP.
+
+# Data Design Explanation
+
+In the study, the experiment was designed to investigate the phenotypic plasticity of different tree species under varying light and water conditions. Here’s a detailed explanation of the data design:
+
+## Experiment Design
+
+### Factors and Levels
+The experiment employed a 4 x 4 factorial design, where the two factors were:
+1. **Irradiance Levels (Light Availability)**        
+   - 1% Full Sunlight      
+   - 6% Full Sunlight     
+   - 20% Full Sunlight     
+   - 100% Full Sunlight      
+
+2. **Plant Species**    
+   - Quercus robur (European Oak)     
+   - Quercus pyrenaica (Pyrenean Oak)    
+   - Pinus sylvestris (Scots Pine)    
+   - Pinus pinaster (Maritime Pine)   
+
+### Setup
+Each combination of irradiance level and plant species was represented, resulting in a total of 16 treatment combinations (4 irradiance levels x 4 plant species). 
+
+
+## Data Collection
+
+### Measurements
+1. **Shoot-Root Ratio**: A key trait measured in the study, representing the allocation of biomass between the above-ground (shoot) and below-ground (root) parts of the plants.
+2. **Total Plant Biomass**: The dry mass of the entire plant, which was separated into leaves, stems, branches, and roots and dried to obtain accurate mass measurements.
+3. **Environmental Monitoring**: Light availability (Photosynthetically Active Radiation - PAR) was recorded using external sensors and a data logger.
+
+### Data Analysis
+- **Indices of Phenotypic Plasticity**: Various indices were used to quantify phenotypic plasticity, such as the coefficient of variation, slope of the reaction norm, and the newly proposed Relative Distance Plasticity Index (RDPI).
+- **Statistical Analysis**: One-way ANOVA was used to test for differences in growth (biomass) and shoot-root ratios among species. Interaction effects between species and light treatments were also analyzed.
+
+## Summary
+The factorial design of this experiment allowed for a comprehensive analysis of how different light conditions affect the growth and phenotypic plasticity of various tree species. By carefully controlling soil and water conditions and using multiple replicates, the study aimed to ensure robust and reliable results.
+
+For detailed data, refer to Appendix S1 in the supplementary material.
+
+## New Indices
+- **Relative Distance Plasticity Index (RDPI)**: Quantifies PP based on phenotypic distances among individuals exposed to different environments.
+- **Environmentally Standardized Plasticity Index (ESPI)**: Expresses plasticity per unit of environmental change.
+
+# Results
+
+The study found that traditional indices often yield disparate results and lack statistical power for comparisons. The newly proposed RDPI and ESPI provided more consistent and statistically robust measures of PP.
+
+## Plasticity Scores
+The different plasticity scores used in the study are summarized below:
+
+| Estimator                  | Calculation                                             | Source or Examples               | Complexity | Weak Points                                                                                                 |
+|----------------------------|---------------------------------------------------------|----------------------------------|------------|-------------------------------------------------------------------------------------------------------------|
+| CVt                        | Standard deviation/mean for the whole data set          | Abundant                         | Easy       | Mixes variability within and between environments. Requires normality. Not a proper estimator of plasticity. |
+| Slope of norm of reaction  | Slope of regression of trait vs. environment            | Pemac & Tucic (1998)             | Intermediate| Non-linear responses lead to unreliable values. Statistical limitations.                                     |
+| D (Scope of plastic response) | Mean at high resource availability - mean at low    | Stearns (1992)                   | Easy       | Not standardized, different traits cannot be compared.                                                      |
+| RC (Response Coefficient)  | Ratio of mean values at high and low resource availability | Larcher (1995), Poorter & Nagel (2000) | Easy | Not standardized, different traits cannot be compared.                                                      |
+| CVm                        | Standard deviation of means/mean of means               | Schlichting & Levin (1984)       | Easy       | Assumes normality. Statistical limitations.                                                                 |
+| CVmd                       | Standard deviation of medians/mean of medians           | Present study                    | Easy       | Statistical limitations.                                                                                    |
+| Pi (Grand plasticity)      | Standard deviation of means/mean of adjusted means      | Navas & Garnier (2002)           | Easy       | Assumes normality. Statistical limitations.                                                                 |
+| PPF (Phenotypic Plasticity Index, based on least square means) | 100 x ((least square mean in one environment - least square mean in the other)/least square mean in the first environment) | Cheplick (1995) | Intermediate | Assumes normality. Requires adjustment for covariates.                                                     |
+| PI (Phenotypic Plasticity Index, based on maximum and minimum means) | (Maximum mean - minimum mean)/maximum mean | Valladares et al. (2000a) | Easy | Assumes normality. Statistical limitations.                                                                 |
+| PImd                       | (Maximum median - minimum median)/maximum median        | Present study                    | Easy       | Statistical limitations.                                                                                    |
+| PILSM                      | (Maximum least square mean - minimum least square mean)/maximum least square mean | Present study | Intermediate | Assumes normality. Requires adjustment for covariates.                                                     |
+| RTR                        | (Mean in one end of environmental gradient - mean in the opposite end)/absolute maximum value | Richardson et al. (2001) | Easy | Assumes normality. Sensitive to outliers. Statistical limitations.                                          |
+| PIR                        | (Maximum mean - minimum mean)/mean at which maximum growth rate is achieved | Robinson (1989) | Intermediate | Assumes normality. Requires knowledge of RGR. Statistical limitations.                                       |
+| PIN                        | (Σ(Survivali * performancei))/ (n * SD)                 | Milberg et al. (1999)            | Complex    | Assumes normality. Requires knowledge of survival. Statistical limitations.                                  |
+| RDPI                       | Absolute phenotypic distances among individuals of same genotype in different environments divided by one of the two phenotypic values | Present study | Intermediate | Complex computing for large data sets.                                                                      |
+| RDPIs                      | Absolute phenotypic distances between means of same genotype in different environments divided by one of the two mean phenotypic values | Present study | Intermediate | Not advantageous for small number of environments.                                                          |
+| ESPI                       | (Maximum mean - minimum mean)/absolute distance between environmental values | Present study | Easy | Assumes normality. Choice of appropriate environmental range is crucial.                                     |
+| ESPIID                     | Absolute phenotypic distances between individuals of same genotype in different environments divided by absolute distance between environmental values | Present study | Complex | Determination of phenotypic distances among individuals is complex and time-consuming.                        |
+
+# Discussion
+
+The study emphasizes the importance of selecting appropriate indices for quantifying phenotypic plasticity, particularly when dealing with non-linear trait responses and varying environmental conditions. The newly proposed indices (RDPI and ESPI) provide robust measures for comparative studies and foster a better understanding of plant ecology and evolution.
+
+
