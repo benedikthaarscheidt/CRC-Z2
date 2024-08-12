@@ -280,9 +280,6 @@ For detailed data, refer to Appendix S1 in the supplementary material.
 - **Relative Distance Plasticity Index (RDPI)**: Quantifies PP based on phenotypic distances among individuals exposed to different environments.
 - **Environmentally Standardized Plasticity Index (ESPI)**: Expresses plasticity per unit of environmental change.
 
-# Results
-
-The study found that traditional indices often yield disparate results and lack statistical power for comparisons. The newly proposed RDPI and ESPI provided more consistent and statistically robust measures of PP.
 
 ## Plasticity Scores
 The different plasticity scores used in the study are summarized below:
@@ -306,10 +303,9 @@ The different plasticity scores used in the study are summarized below:
 | RDPI                       | Absolute phenotypic distances among individuals of same genotype in different environments divided by one of the two phenotypic values | Present study | Intermediate | Complex computing for large data sets.                                                                      |
 | RDPIs                      | Absolute phenotypic distances between means of same genotype in different environments divided by one of the two mean phenotypic values | Present study | Intermediate | Not advantageous for small number of environments.                                                          |
 | ESPI                       | (Maximum mean - minimum mean)/absolute distance between environmental values | Present study | Easy | Assumes normality. Choice of appropriate environmental range is crucial.                                     |
-| ESPIID                     | Absolute phenotypic distances between individuals of same genotype in different environments divided by absolute distance between environmental values | Present study | Complex | Determination of phenotypic distances among individuals is complex and time-consuming.                        |
+| ESPIID                     | Absolute phenotypic distances between individuals of same genotype in different environments divided by absolute distance between environmental values | Present study | Complex | Determination of phenotypic distances among individuals is complex and time-consuming.|
 
-# Discussion
+a package containing implementations of some of the plasticity scores can be found under:https://github.com/ameztegui/Plasticity/
 
-The study emphasizes the importance of selecting appropriate indices for quantifying phenotypic plasticity, particularly when dealing with non-linear trait responses and varying environmental conditions. The newly proposed indices (RDPI and ESPI) provide robust measures for comparative studies and foster a better understanding of plant ecology and evolution.
 
 
