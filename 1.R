@@ -3,6 +3,9 @@
 #slope of norm reaction,
 # slope of plastic response (D),
 # response coefficient (RC),
+# Standard deviation of means (CVm)
+#Standard deviation of medians (CVmd)
+
 
 ################################
 
@@ -107,11 +110,12 @@ baseline_values = matrix(
 
 # Define within-environment variance for each trait in each environment
 within_variance = matrix(
-  c(10, 15, 20,   
+  c(10, 15, 10,   
     8, 12, 10,    
-    5, 7, 6),     
+    5, 7, 10),     
   nrow = 3, ncol = 3, byrow = TRUE
 )
+
 
 set.seed(12345)
 synthetic_data1 = generate_synthetic_data(n_plants, baseline_values, within_variance)
@@ -561,133 +565,261 @@ print(CVmd)
 
 
 ###########################
-#' @title Calculate Relative Distance Plasticity Index (RDPI)
+
+
+
+#' Calculate Grand Plasticity (GPi)
 #'
-#' @description
-#' This function computes the RDPI (Relative Distance Plasticity Index) for a given dataset. 
-#' RDPI quantifies the phenotypic plasticity of a trait across different environmental factors. 
-#' The function allows flexibility in the structure of the input data, enabling the user to specify 
-#' which columns should be used for species, traits, and environmental factors, either by name or by index.
+#' This function calculates the Grand Plasticity (GPi), defined as the standard deviation of the means 
+#' divided by the mean of the adjusted means across different environments for a specified trait.
 #'
-#' @param dataframe A data frame containing the data.
-#' @param sp The name or index of the column that identifies the group or species for which RDPI will be calculated.
-#' @param trait The name or index of the column that contains the trait values. This column must be numeric.
-#' @param factor The name or index of the column that contains the environmental factor levels.
-#' RDPI is calculated by comparing trait values across these levels.
-#' 
-#' @return A list containing:
-#'   \item{RDPI_values}{A data frame with RDPI values for each species or group.}
-#'   \item{summary}{A summary statistics table for the RDPI values, including mean, standard deviation, and standard error per species.}
-#'   \item{plot}{A ggplot object representing the boxplot of RDPI values across species or groups.}
-#'   \item{test_result}{The result of a statistical test (t-test or ANOVA) comparing RDPI across species.}
-#' 
-#' @details
-#' This function computes RDPI for each species or group based on the trait values across different levels 
-#' of an environmental factor. The results include a summary of RDPI values, a boxplot for visualization, 
-#' and the result of a statistical test (t-test if there are two groups, ANOVA if there are more than two).
+#' The function assumes normality in the data and calculates GPi as an indicator of plasticity across multiple environments.
 #'
+#' @param data A data frame containing the trait data. The first column should be the environmental indicator, 
+#' and the remaining columns should be the traits. Groupings of multiple environmental factors can be made with the `groupings()`function.
+#' @param trait_col The column number or name of the trait to analyze.
+#' @param env_col The column number or name of the environmental indicator. Defaults to the first column (`data[,1]`) of the dataframe.
+#' @return The Grand Plasticity (GPi) value for the specified trait.
 #' @examples
-#' # Example with a custom dataset
 #' df = data.frame(
-#'   Species = rep(c("A", "B", "C"), each = 10),
-#'   Trait = rnorm(30, mean = 50, sd = 10),
-#'   Env = rep(c("Low", "High"), times = 15)
+#'   Environment = c("Env1", "Env1", "Env2", "Env2", "Env3", "Env3"),
+#'   Height = c(10, 12, 20, 22, 15, 18)
 #' )
-#' result = rdpi(df, sp = "Species", trait = "Trait", factor = "Env")
-#' 
-#' # Example using column indices
-#' result_indices = rdpi(df, sp = 1, trait = 2, factor = 3)
-#'
-#' # Accessing results
-#' print(result$RDPI_values)
-#' print(result$summary)
-#' print(result$plot)
-#' print(result$test_result)
-#'
+#' Pi = calculate_Pi(df, trait_col = "Height")
+#' print(Pi)
 #' @export
-rdpi = function(dataframe, sp, trait, factor) {
-  library(dplyr)
-  # Load only the required functions from necessary packages
-  requireNamespace("dplyr", quietly = TRUE)
-  requireNamespace("ggplot2", quietly = TRUE)
-  requireNamespace("agricolae", quietly = TRUE)
-  requireNamespace("psych", quietly = TRUE)
+calculate_GPi = function(data, trait_col, env_col = 1) {
   
-  # Convert column indices to names if necessary
-  sp = if (is.numeric(sp)) names(dataframe)[sp] else sp
-  trait = if (is.numeric(trait)) names(dataframe)[trait] else trait
-  factor = if (is.numeric(factor)) names(dataframe)[factor] else factor
+  # Ensure the environmental column and trait column are specified correctly
+  env_col = if (is.numeric(env_col)) data[[env_col]] else data[[env_col]]
+  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
   
-  # Create the object (an empty data frame) that will store the results of RDPI
-  RDPI = data.frame(sp = character(0), rdpi = numeric(0))
+  # Calculate the mean of the trait for each environment
+  means = tapply(trait_col, env_col, mean, na.rm = TRUE)
+  print(means)
+  # Calculate the standard deviation of these means
+  sd_of_means = sd(means, na.rm = TRUE)
   
-  # Get the unique levels of the species (or group) column
-  levels_dataframe = levels(droplevels(dataframe %>% pull({{sp}})))
+  # Adjust the means (mean centering: subtract overall mean)
+  overall_mean = mean(trait_col, na.rm = TRUE)
+  adjusted_means = means - overall_mean
   
-  for (a in levels_dataframe) {
-    
-    # Subset the data for the current species or group
-    data_sp = dataframe |> dplyr::filter(.data[[sp]] == a)
-    
-    # Compute RDPI using a custom function (assuming rdpi_matrix is available)
-    RDPI_temp = tryCatch({
-      rdpi_matrix(data_sp, .data[[trait]], .data[[factor]])
-    }, error = function(e) {
-      warning(sprintf("Error in RDPI calculation for %s: %s", a, e$message))
-      return(NA)
-    })
-    
-    RDPI_sp = data.frame(sp = as.character(a),
-                          rdpi = RDPI_temp)
-    
-    RDPI = dplyr::bind_rows(RDPI, RDPI_sp) %>%
-      dplyr::mutate(sp = as.factor(sp))
-  }
+  # Calculate the mean of the adjusted means
+  mean_of_adjusted_means = mean(abs(adjusted_means), na.rm = TRUE)
   
-  # Summary statistics for each species or group
-  summary = RDPI %>%
-    dplyr::group_by(sp) %>%
-    dplyr::summarise(mean = mean(rdpi, na.rm = TRUE),
-                     sd = sd(rdpi, na.rm = TRUE),
-                     se = psych::se(rdpi, na.rm = TRUE))
+  # Calculate Grand Plasticity (Pi)
+  GPi = sd_of_means / mean_of_adjusted_means
   
-  # Boxplot for RDPI values across species or groups
-  boxplot_rdpi = ggplot2::ggplot(RDPI) +
-    ggplot2::geom_boxplot(ggplot2::aes(x = sp, y = rdpi)) +
-    ggplot2::ylab("RDPI") +
-    ggplot2::xlab(sp)
-  
-  print(boxplot_rdpi)
-  
-  # Perform a statistical test (t-test or ANOVA) depending on the number of levels in sp
-  if (nlevels(RDPI$sp) < 3) {
-    fit = try(t.test(RDPI$rdpi ~ RDPI$sp), silent = TRUE)
-    test_result = if (class(fit) != "try-error") fit else "To compute a t-test, the grouping factor must have exactly 2 levels"
-  } else {
-    fit = aov(RDPI$rdpi ~ RDPI$sp)
-    test_result = summary(fit)
-    Tuk = agricolae::HSD.test(fit, trt = "RDPI$sp")
-    Tuk$groups$sp = as.factor(row.names(Tuk$groups))
-    summary = dplyr::left_join(summary, Tuk$groups) %>%
-      dplyr::select(-`RDPI$rdpi`)
-  }
-  
-  # Return the RDPI data, summary, plot, and test result
-  return(list(RDPI_values = RDPI, summary = summary, plot = boxplot_rdpi, test_result = test_result))
+  return(GPi)
 }
 
-result_indices = rdpi(synthetic_data1, sp = 1, trait = 2, factor = 3)
-print(result_indices)
+
+GPi = calculate_GPi(synthetic_data1, trait_col = 3)
+print(GPi)
+
+
+##########################################
+
+#' Combine Internal and External Factors into a Single Dataframe and Return Levels
+#'
+#' This function combines internal and external factors into a single dataframe by creating 
+#' an interaction between them. It returns a modified dataframe with a new column `Combined_Factors` 
+#' that represents the interaction of these factors and a list of levels for the combined factors.
+#'
+#' @param dataframe A data frame containing the data to be analyzed.
+#' @param factors (Optional) A vector of integers or strings specifying the columns that contain the internal factors in the dataframe. 
+#' These can be the names or indices of the columns in the `dataframe`.
+#' @param factors_not_in_dataframe (Optional) A list of vectors representing external factors that are not included in the `dataframe`. 
+#' These vectors should have the same length as the `dataframe` and correspond to the environmental conditions for each observation. 
+#' @return A list containing:
+#'   \item{dataframe}{The modified dataframe with a new column `Combined_Factors` representing the interaction of the provided factors.}
+#'   \item{levels}{A list of the levels for the combined factors.}
+#' @examples
+#' # Example with internal factors
+#' df = data.frame(
+#'   Light = rep(c("Low", "High"), times = 6),
+#'   Water = rep(c("Low", "High"), each = 6)
+#' )
+#' result = combine_factors(df, factors = c("Light", "Water"))
+#' head(result$dataframe)
+#' print(result$levels)
+#' 
+#' # Example with external factors
+#' external_light = rep(c(0.4, 0.6, 0.8), each = 4)
+#' result_external = combine_factors(df, factors_not_in_dataframe = list(external_light))
+#' head(result_external$dataframe)
+#' print(result_external$levels)
+#' @export
+combine_factors = function(dataframe, factors = NULL, factors_not_in_dataframe = NULL) {
+  # Combine internal and external factors into a single dataframe
+  if (!is.null(factors_not_in_dataframe)) {
+    # Ensure the lengths match
+    if (length(factors_not_in_dataframe[[1]]) != nrow(dataframe)) {
+      stop("The length of external factors must match the number of rows in the dataframe.")
+    }
+    # Create a data frame for external factors
+    external_factors_df = as.data.frame(factors_not_in_dataframe)
+    
+    # If there are internal factors, combine them with external factors
+    if (!is.null(factors)) {
+      factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
+      combined_factors_df = cbind(dataframe[factors], external_factors_df)
+    } else {
+      combined_factors_df = external_factors_df
+    }
+    
+    # Create a combined factor interaction
+    dataframe$Combined_Factors = interaction(combined_factors_df, drop = TRUE)
+  } else if (!is.null(factors)) {
+    # If only internal factors are provided
+    factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
+    dataframe$Combined_Factors = interaction(dataframe[factors], drop = TRUE)
+  } else {
+    stop("You must provide either internal factors, external factors, or both.")
+  }
+  
+  # Ensure Combined_Factors is treated as a factor
+  dataframe$Combined_Factors = as.factor(dataframe$Combined_Factors)
+  levels=levels(dataframe$Combined_Factors)
+  print(levels)
+  return(dataframe)
+}
 
 
 
+# Example usage with synthetic data
+external_light = rep(c(0.4, 0.6, 0.8), each = 100)
+external_water = sample(rep(c("Low", "High"), each = 150))
+
+combined_factors= combine_factors(synthetic_data1, factors_not_in_dataframe = list(external_light,external_water), factors=1)
+
+##########################################
+
+##' Calculate the Phenotypic Plasticity Index (PPF) Based on Least Square Means
+#'
+#' This function calculates the Phenotypic Plasticity Index (PPF), which quantifies the phenotypic plasticity 
+#' of a trait between two environments or environmental groupings. The PPF is calculated using the least square means (LSMs) 
+#' of the trait in each environment, with optional adjustment for covariates that may influence the trait.
+#'
+#' ### Calculation Details:
+#' 1. **Fit a Linear Model**: The function first fits a linear model where the trait of interest is predicted by the environmental indicator 
+#'    (and any covariates, if provided). The linear model is of the form:
+#'    \[
+#'    \text{Trait} \sim \text{Environment} + \text{Covariates}
+#'    \]
+#'    This model allows us to estimate the least square means (LSMs) for the trait in each environment while controlling for the effects of covariates.
+#'
+#' 2. **Estimate Least Square Means (LSMs)**: The LSMs are the estimated average trait values in each environment, adjusted for any covariates 
+#'    included in the model. These means represent the expected trait value in each environment, accounting for the influence of other factors.
+#'
+#' 3. **Calculate PPF**: The Phenotypic Plasticity Index (PPF) is then calculated using the LSMs of the two environments as follows:
+#'    \[
+#'    \text{PPF} = 100 \times \left(\frac{\text{LSM in one environment} - \text{LSM in the other environment}}{\text{LSM in the first environment}}\right)
+#'    \]
+#'    This formula expresses the plasticity as the percentage change in the trait from one environment to the other, relative to the LSM in the first environment.
+#'
+#' 4. **Interpretation**: A higher PPF value indicates greater phenotypic plasticity, meaning the trait shows a larger change in response to the different environments.
+#'    A PPF of 0 would indicate no change in the trait between the two environments.
+#'
+#' Covariates can be included to adjust the model for additional environmental influences or biological factors that might affect the trait.
+#' By including these covariates, the analysis accounts for their effects, allowing the PPF calculation to better isolate the effect of the primary environmental variable on the trait.
+#'
+#' @param data A data frame containing the environmental indicators and trait data.
+#' @param trait_col The column number or name of the trait to analyze.
+#' @param env_col The column number or name of the environmental indicator. Defaults to the first column (`data[,1]`).
+#' @param covariates (Optional) A vector of column names or indices to include as covariates in the model. Covariates represent additional environmental influences or biological factors that could affect the trait.
+#' @return The Phenotypic Plasticity Index (PPF) value.
+#' @examples
+#' df = data.frame(
+#'   Environment = rep(c("Env1", "Env2"), each = 10),
+#'   Height = c(10, 12, 11, 13, 14, 15, 13, 14, 12, 13, 20, 22, 21, 23, 24, 25, 23, 24, 22, 23),
+#'   SoilQuality = c(3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3)
+#' )
+#' 
+#' # Calculate PPF with a covariate
+#' PPF = calculate_PPF(df, trait_col = "Height", env_col = "Environment", covariates = "SoilQuality")
+#' print(PPF)
+#' @export
+calculate_PPF = function(data, trait_col, env_col = 1, covariates = NULL) {
+  
+  # Ensure the environmental column and trait column are specified correctly
+  env_col = if (is.numeric(env_col)) data[[env_col]] else data[[env_col]]
+  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  
+  # Fit the linear model
+  if (is.null(covariates)) {
+    model = lm(trait_col ~ env_col, data = data)
+  } else {
+    covariates = if (is.numeric(covariates)) names(data)[covariates] else covariates
+    formula = as.formula(paste("trait_col ~ env_col +", paste(covariates, collapse = " + ")))
+    model = lm(formula, data = data)
+  }
+  
+  # Calculate least square means (LSMs) for each environment
+  lsm = as.data.frame(emmeans::emmeans(model, ~ env_col))
+  
+  # Ensure there are exactly two environments
+  if (nrow(lsm) != 2) {
+    stop("PPF calculation requires exactly two environments.")
+  }
+  
+  # Calculate PPF using the formula: 100 x ((LSM in one environment - LSM in the other) / LSM in the first environment)
+  PPF = 100 * abs((lsm[1, "emmean"] - lsm[2, "emmean"]) / lsm[1, "emmean"])
+  
+  return(PPF)
+}
+
+synthetic_data2=combine_factors(synthetic_data1,factors=NULL, factors_not_in_dataframe=list(external_water))
+
+PFF= calculate_PPF(synthetic_data2, trait_col = 3,env_col=5)
+print(PFF)
+###########################################
 
 
 
+YOU NEED TO WORK ON THIS STILL 
 
-
-
-
+#' Calculate the Phenotypic Plasticity Index (Pi)
+#'
+#' This function calculates the Phenotypic Plasticity Index (Pi), defined as the 
+#' difference between the maximum and minimum values of a trait divided by the maximum value.
+#'
+#' @param data A numeric vector, data frame, or matrix containing the trait data. 
+#' If a data frame or matrix is provided, each column represents a trait.
+#' @param trait_col (Optional) The column number or name of the trait to analyze if `data` is a data frame or matrix.
+#' @return The Phenotypic Plasticity Index (Pi) value(s).
+#' @examples
+#' # Example with a numeric vector
+#' trait_data <- c(100, 110, 105, 115, 120)
+#' Pi <- calculate_Phenotypic_Plasticity_Index(trait_data)
+#' print(Pi)
+#'
+#' # Example with a data frame
+#' df <- data.frame(
+#'   Trait1 = c(100, 110, 105, 115, 120),
+#'   Trait2 = c(90, 85, 95, 92, 100)
+#' )
+#' Pi_trait1 <- calculate_Phenotypic_Plasticity_Index(df, trait_col = "Trait1")
+#' Pi_trait2 <- calculate_Phenotypic_Plasticity_Index(df, trait_col = "Trait2")
+#' print(Pi_trait1)
+#' print(Pi_trait2)
+#' @export
+calculate_Phenotypic_Plasticity_Index <- function(data, trait_col = NULL) {
+  if (is.null(trait_col)) {
+    # If trait_col is not provided, assume data is a numeric vector
+    max_value <- max(data, na.rm = TRUE)
+    min_value <- min(data, na.rm = TRUE)
+  } else {
+    # If trait_col is provided, assume data is a data frame or matrix
+    max_value <- max(data[[trait_col]], na.rm = TRUE)
+    min_value <- min(data[[trait_col]], na.rm = TRUE)
+  }
+  
+  # Calculate Pi as (Max - Min) / Max
+  Pi <- (max_value - min_value) / max_value
+  
+  return(Pi)
+}
 
 
 
