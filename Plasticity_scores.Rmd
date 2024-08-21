@@ -308,4 +308,131 @@ The different plasticity scores used in the study are summarized below:
 a package containing implementations of some of the plasticity scores can be found under:https://github.com/ameztegui/Plasticity/
 
 
+## Plant Plasticity Scores to Be Implemented
+
+### 1. Phenotypic Plasticity Index (PPI)
+Quantifies the extent of phenotypic variation in response to environmental changes.
+
+### 2. Plasticity Variance (PV)
+Assesses the variance in phenotypic traits due to environmental factors.
+
+### 3. Environmental Sensitivity Index (ESI)
+Measures how sensitive a plant's phenotype is to environmental changes.
+
+### 4. Reaction Norm Slope (RNS)
+Quantifies the change in phenotype across different environmental conditions.
+
+### 5. Plasticity Coefficient (PC)
+Measures the extent of trait value change in response to environmental variation compared to its average value.
+
+
+## List of Pending Scores
+
+1. **Drought Stress Index (DSI)**
+   - **Description:** Measures the effect of drought on plant performance by comparing traits under drought conditions to traits under well-watered conditions.
+
+2. **Growth Rate Index (GRI)**
+   - **Description:** Assesses the rate of growth of plants over time, often calculated as the difference in biomass or height over a period.
+
+3. **Relative Growth Rate (RGR)**
+   - **Description:** Measures the increase in plant size (biomass, height) relative to the initial size over a specific period.
+
+4. **Resource Use Efficiency (RUE)**
+   - **Description:** Evaluates the efficiency with which plants use resources (e.g., water, nutrients) for growth, often calculated as growth per unit resource.
+
+5. **Leaf Area Ratio (LAR)**
+   - **Description:** Represents the ratio of leaf area to plant biomass, which can provide insights into the allocation of resources to leaf production versus other plant tissues.
+
+6. **Specific Leaf Area (SLA)**
+   - **Description:** Measures the area of leaf per unit of leaf dry mass, providing information on leaf thickness and density.
+
+7. **Maximum Photosynthetic Rate (Pmax)**
+   - **Description:** The highest rate of photosynthesis observed under optimal conditions, reflecting the maximum capacity of the plant for carbon fixation.
+
+8. **Chlorophyll Content (CC)**
+   - **Description:** Quantifies the amount of chlorophyll in the leaves, which is related to the plant's photosynthetic capacity.
+
+9. **Water Use Efficiency (WUE)**
+   - **Description:** The ratio of biomass produced to the amount of water used, indicating how effectively a plant converts water into growth.
+
+10. **Biomass Allocation Ratio (BAR)**
+    - **Description:** The proportion of total biomass allocated to different plant organs (e.g., leaves, stems, roots), reflecting the plant's strategy for resource allocation.
+
+11. **Net Assimilation Rate (NAR)**
+    - **Description:** Measures the rate of increase in plant biomass per unit of leaf area, indicating the efficiency of photosynthesis and growth.
+
+12. **Seedling Survival Rate (SSR)**
+    - **Description:** The percentage of seedlings that survive to a specific age or stage, providing insights into plant establishment and resilience.
+
+13. **Root-to-Shoot Ratio (RSR)**
+    - **Description:** The ratio of root biomass to shoot biomass, which can indicate how plants allocate resources between root and shoot growth.
+
+14. **Functional Diversity Index (FDI)**
+    - **Description:** Quantifies the diversity of functional traits within a plant community, reflecting the range of strategies for resource acquisition and utilization.
+
+15. **Root Growth Rate (RGR)**
+    - **Description:** Measures the increase in root length or biomass over time, which is crucial for understanding root development and resource acquisition.
+
+16. **Photosynthetic Efficiency (PE)**
+    - **Description:** Assesses the efficiency of photosynthesis, often measured as the ratio of carbon fixed to light absorbed.
+1. **Plant Height Growth Rate (PHGR)**
+   - **Description:** Measures the increase in plant height over time to evaluate overall growth performance.
+
+2. **Leaf Expansion Rate (LER)**
+   - **Description:** Assesses the rate at which leaf area increases, providing insights into leaf development and plant health.
+
+3. **Root Length Density (RLD)**
+   - **Description:** The length of roots per unit of soil volume, indicating the root system's capacity for resource exploration.
+
+4. **Leaf Dry Matter Content (LDMC)**
+   - **Description:** The ratio of leaf dry mass to leaf fresh mass, reflecting leaf density and water content.
+
+5. **Total Leaf Area (TLA)**
+   - **Description:** The sum of leaf area per plant, related to the plant's photosynthetic potential and overall growth.
+
+6. **Root Biomass Density (RBD)**
+   - **Description:** The mass of roots per unit of soil volume, reflecting investment in root growth relative to soil volume.
+
+7. **Chlorophyll a/b Ratio**
+   - **Description:** The ratio of chlorophyll a to chlorophyll b in leaves, providing insights into the plant's photosynthetic efficiency.
+
+8. **Stomatal Conductance (gs)**
+   - **Description:** Measures the rate of gas exchange through stomata, crucial for understanding water use and photosynthesis.
+
+9. **Leaf Nitrogen Content (LNC)**
+   - **Description:** The amount of nitrogen in leaves, indicating leaf protein levels and photosynthetic capacity.
+
+10. **Photosynthetic Yield (PY)**
+    - **Description:** The amount of carbon fixed per unit of absorbed light, indicating photosynthetic efficiency.
+
+11. **Root-to-Shoot Ratio (RSR) under Stress**
+    - **Description:** Measures the ratio of root biomass to shoot biomass under stress conditions, like drought or salinity.
+
+12. **Root Surface Area (RSA)**
+    - **Description:** The total surface area of the roots, important for understanding root interactions with the soil environment.
+
+13. **Leaf Temperature (LT)**
+    - **Description:** Measures the temperature of the leaf surface, providing insights into plant water status and stress responses.
+
+14. **Water Content (WC)**
+    - **Description:** The amount of water in plant tissues, expressed as a percentage of tissue mass, indicating plant hydration levels.
+
+15. **Net Primary Productivity (NPP)**
+    - **Description:** The rate of biomass production by plants, reflecting energy capture through photosynthesis and conversion into growth.
+
+16. **Tolerance Index (TI)**
+    - **Description:** Measures how well a plant tolerates stress conditions relative to non-stress conditions.
+
+17. **Growth Efficiency Index (GEI)**
+    - **Description:** The ratio of growth rate to resource input, providing insight into how effectively a plant converts resources into biomass.
+
+18. **Root Architecture Complexity Index (RACI)**
+    - **Description:** Quantifies the complexity of the root system's branching pattern, affecting the plant's ability to explore soil resources.
+
+19. **Relative Leaf Water Content (RLWC)**
+    - **Description:** Measures the water content of leaves relative to their total potential water content, indicating the plant’s water status.
+
+20. **Biomass Accumulation Rate (BAR)**
+    - **Description:** The rate at which plant biomass accumulates over time, useful for evaluating growth performance under various conditions.
+
 

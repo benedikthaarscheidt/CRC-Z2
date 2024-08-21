@@ -270,7 +270,15 @@ overall_CVt = calculate_CVt(synthetic_data1[,-1], traitwise = FALSE)
 #' )
 #' slope = calculate_reaction_norm_slope(df, trait_col = 2, plot = TRUE)
 #' @export
-calculate_reaction_norm_slope = function(data, env_col=1 ,trait_col = 2, plot = FALSE) {
+calculate_reaction_norm_slope = function(data, env_col ,trait_col = 2, plot = FALSE) {
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_indicators = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    # If env_col is a vector, keep it as is
+    env_indicators = env_col
+  } else {
+    env_indicators = data[[env_col]]
+  }
   if (!is.numeric(data[[trait_col]])) {
     stop("The specified column is not numeric.")
   }
@@ -279,8 +287,6 @@ calculate_reaction_norm_slope = function(data, env_col=1 ,trait_col = 2, plot = 
     stop("There are missing values in your data. Consider using the function impute().")
   }
   
-  # Extract the environment indicators from the first column
-  env_indicators = data[[env_col]]
   
   if (length(env_indicators) != nrow(data)) {
     stop("Length of env_indicators must match the number of rows in the data.")
@@ -306,14 +312,14 @@ calculate_reaction_norm_slope = function(data, env_col=1 ,trait_col = 2, plot = 
   return(slope)
 }
 
-slope=calculate_reaction_norm_slope(synthetic_data1,plot=F)
+slope=calculate_reaction_norm_slope(synthetic_data1,1,plot=F)
 print(slope)
 
 ################################
 
 
 #NOTE: if the resource availability is an actual measurement of a metabolite which is being used by the plant then the grouping of the plants into high vs low resource availability should be done by clustering.
-# Sadly I am missing the isight into the common practices in the field.
+# Sadly I am missing the insight into the common practices in the field.
 
 
 #' Calculate the D Slope for a Specific Trait Between High and Low Resource Availability
@@ -321,54 +327,52 @@ print(slope)
 #' This function calculates the D slope, which is the difference in the mean value of a specified trait 
 #' between high and low resource availability conditions. The D slope quantifies the scope of the plastic response.
 #' 
-#' By default, the function assumes that the environmental indicator is in the first column of the data frame. 
-#' The first column should be numeric and sorted from low to high resource availability. 
-#' The function will then automatically assume that the lowest values represent the low resource environment and 
-#' the highest values represent the high resource environment. 
-#' 
-#' Alternatively, if a separate vector containing environmental information is provided, the function will use this vector 
-#' instead of the first column to determine the environment categories.
+#' The function assumes that the environmental indicator is in the `env_col` column of the data frame or passed as a vector. 
+#' The function will automatically assume that the lowest values represent the low resource environment and 
+#' the highest values represent the high resource environment.
 #'
-#' @param data A data frame containing the environmental indicators and trait data. By default, the first column is assumed to be the environmental indicator.
-#' @param env_col The column number or name of the environmental indicator. Defaults to 1 if not specified.
+#' @param data A data frame containing the environmental indicators and trait data.
+#' @param env_col The column number, name, or a vector representing the environmental conditions. Defaults to 1 if not specified.
 #' @param trait_col The column number or name of the trait to analyze.
-#' @param env_vector An optional vector specifying the environmental resource availability ("Low" or "High"). If provided, this vector is used instead of the environmental indicator column in the data frame.
 #' @return The D slope, representing the difference in mean trait values between high and low resource conditions.
 #' @examples
 #' df = data.frame(
 #'   Environment = c(1, 2, 3, 4),
 #'   Height = c(10, 12, 20, 22)
 #' )
-#' # Assuming Environment is sorted from low to high resource availability
 #' D_slope = calculate_D_slope(df, trait_col = "Height")
 #' print(D_slope)
 #' 
 #' # With an explicit environment vector
 #' env_vector = c("Low", "Low", "High", "High")
-#' D_slope = calculate_D_slope(df, trait_col = "Height", env_vector = env_vector)
+#' D_slope = calculate_D_slope(df, trait_col = "Height", env_col = env_vector)
 #' print(D_slope)
 #' @export
-calculate_D_slope = function(data, env_col = 1, trait_col, env_vector = NULL) {
-  if (is.null(env_vector)) {
-    # Use the specified or default environmental column
-    env_data = data[[env_col]]
-    # Sort the data based on the environmental indicator
-    sorted_data = data[order(env_data), ]
-    
-    # Assume the lowest values represent "Low" and the highest values represent "High"
-    num_rows = nrow(sorted_data)
-    mid_point = ceiling(num_rows / 2)
-    env_vector = c(rep("Low", mid_point), rep("High", num_rows - mid_point))
+calculate_D_slope = function(data, env_col, trait_col) {
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    # If env_col is a vector, keep it as is
+    env_col = env_col
   } else {
-    # Ensure the length of env_vector matches the number of rows in data
-    if (length(env_vector) != nrow(data)) {
-      stop("Length of env_vector must match the number of rows in the data.")
-    }
+    env_col = data[[env_col]]
   }
   
-  # Extract the relevant data for the "High" and "Low" conditions
-  trait_high = data[[trait_col]][env_vector == "High"]
-  trait_low = data[[trait_col]][env_vector == "Low"]
+  # Combine env_col with the data to maintain alignment after sorting
+  sorted_data = data[order(env_col), ]
+  sorted_env_col = env_col[order(env_col)]
+  
+  # Determine the midpoint for splitting
+  num_rows = nrow(sorted_data)
+  mid_point = ceiling(num_rows / 2)
+  
+  # Assign "Low" to the first half and "High" to the second half
+  env_vector = c(rep("Low", mid_point), rep("High", num_rows - mid_point))
+  
+  # Extract the trait data aligned with "High" and "Low" conditions
+  trait_high = sorted_data[[trait_col]][env_vector == "High"]
+  trait_low = sorted_data[[trait_col]][env_vector == "Low"]
   
   # Calculate the mean trait value for each condition
   mean_high = mean(trait_high, na.rm = TRUE)
@@ -390,53 +394,51 @@ print(D)
 #' This function calculates the Response Coefficient (RC), which is the ratio of the mean value 
 #' of a specified trait between high and low resource availability conditions.
 #' 
-#' By default, the function assumes that the environmental indicator is in the first column of the data frame. 
-#' The first column should be numeric and sorted from low to high resource availability. 
-#' The function will then automatically assume that the lowest values represent the low resource environment and 
-#' the highest values represent the high resource environment. 
-#' 
-#' Alternatively, if a separate vector containing environmental information is provided, the function will use this vector 
-#' instead of the first column to determine the environment categories.
+#' The function assumes that the environmental indicator is in the `env_col` column of the data frame or passed as a vector.
+#' The function will automatically assume that the lowest values represent the low resource environment and 
+#' the highest values represent the high resource environment.
 #'
-#' @param data A data frame containing the environmental indicators and trait data. By default, the first column is assumed to be the environmental indicator.
-#' @param env_col The column number or name of the environmental indicator. Defaults to 1 if not specified.
+#' @param data A data frame containing the environmental indicators and trait data.
+#' @param env_col The column number, name, or a vector representing the environmental conditions. Defaults to 1 if not specified.
 #' @param trait_col The column number or name of the trait to analyze.
-#' @param env_vector An optional vector specifying the environmental resource availability ("Low" or "High"). If provided, this vector is used instead of the environmental indicator column in the data frame.
 #' @return The Response Coefficient (RC), representing the ratio of mean trait values between high and low resource conditions.
 #' @examples
 #' df = data.frame(
 #'   Environment = c(1, 2, 3, 4),
 #'   Height = c(10, 12, 20, 22)
 #' )
-#' # Assuming Environment is sorted from low to high resource availability
 #' RC = calculate_RC(df, trait_col = "Height")
 #' print(RC)
 #' 
 #' # With an explicit environment vector
 #' env_vector = c("Low", "Low", "High", "High")
-#' RC = calculate_RC(df, trait_col = "Height", env_vector = env_vector)
+#' RC = calculate_RC(df, trait_col = "Height", env_col = env_vector)
 #' print(RC)
 #' @export
-calculate_RC = function(data, env_col = 1, trait_col, env_vector = NULL) {
-  if (is.null(env_vector)) {
-    # Use the specified or default environmental column
-    env_data = data[[env_col]]
-    # Sort the data based on the environmental indicator
-    sorted_data = data[order(env_data), ]
-    # Assume the lowest values represent "Low" and the highest values represent "High"
-    num_rows = nrow(sorted_data)
-    mid_point = ceiling(num_rows / 2)
-    env_vector = c(rep("Low", mid_point), rep("High", num_rows - mid_point))
+calculate_RC = function(data, env_col = 1, trait_col) {
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
   } else {
-    # Ensure the length of env_vector matches the number of rows in data
-    if (length(env_vector) != nrow(data)) {
-      stop("Length of env_vector must match the number of rows in the data.")
-    }
+    env_col = data[[env_col]]
   }
   
+  # Sort the data based on the environmental indicator
+  sorted_indices = order(env_col)
+  sorted_data = data[sorted_indices, ]
+  
+  # Determine the midpoint for splitting
+  num_rows = nrow(sorted_data)
+  mid_point = ceiling(num_rows / 2)
+  
+  # Assign "Low" to the first half and "High" to the second half
+  env_vector = c(rep("Low", mid_point), rep("High", num_rows - mid_point))
+  
   # Extract the relevant data for the "High" and "Low" conditions
-  trait_high = data[[trait_col]][env_vector == "High"]
-  trait_low = data[[trait_col]][env_vector == "Low"]
+  trait_high = sorted_data[[trait_col]][env_vector == "High"]
+  trait_low = sorted_data[[trait_col]][env_vector == "Low"]
   
   # Calculate the mean trait value for each condition
   mean_high = mean(trait_high, na.rm = TRUE)
@@ -448,6 +450,7 @@ calculate_RC = function(data, env_col = 1, trait_col, env_vector = NULL) {
   return(RC)
 }
 
+
 RC= calculate_RC(synthetic_data1,trait_col=2)
 print(RC)
 
@@ -458,34 +461,37 @@ print(RC)
 #' This function calculates the Coefficient of Variation of Means (CVm), 
 #' which is the standard deviation of the means divided by the mean of the means across different environments.
 #'
-#' The function allows for flexible grouping of the data. By default, it groups data using a specified column from the data frame 
-#' (with the first column as the default). Alternatively, an external grouping vector can be provided. If an external vector is provided, 
-#' it will be used for grouping instead of any column from the data frame.
+#' The function allows for flexible grouping of the data. The grouping can be specified using `env_col`, which can be 
+#' either a column index/name from the data or an external grouping vector.
 #'
 #' @param data A data frame containing the trait data.
 #' @param trait_col The column number or name of the trait to analyze.
-#' @param env_col The column number or name of the environmental indicator, used to group the data. Defaults to the first column (`data[,1]`).
-#' @param env_vector An optional vector specifying the grouping (e.g., environmental conditions). If provided, this vector is used instead of `env_col` for grouping.
-#' @return The CVmd, representing the ratio of the standard deviation of medians to the mean of medians.
+#' @param env_col The column number, name, or a vector representing the grouping (e.g., environmental conditions).
+#' @return The CVm, representing the ratio of the standard deviation of means to the mean of means.
 #' @examples
 #' df = data.frame(
 #'   Environment = c("Env1", "Env1", "Env2", "Env2", "Env3", "Env3"),
 #'   Height = c(10, 12, 20, 22, 15, 18)
 #' )
-#' CVm = calculate_CVm(df, env_col = "Environment", trait_col = "Height")
+#' CVm = calculate_CVm(df, trait_col = "Height", env_col = "Environment")
 #' print(CVm)
 #' @export
-calculate_CVm = function(data, trait_col, env_col = data[,1], env_vector = NULL) {
-  # Use the external vector if provided; otherwise, use the specified column from the data
-  if (!is.null(env_vector)) {
-    group_var = env_vector
+calculate_CVm = function(data, trait_col, env_col = 1) {
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
   } else {
-    group_var = env_col
+    env_col = data[[env_col]]
   }
-  means = tapply(data[[trait_col]], group_var, mean, na.rm = TRUE)
+  
+  # Calculate the means for each group
+  means = tapply(data[[trait_col]], env_col, mean, na.rm = TRUE)
+  
   # Calculate the standard deviation of the means
   sd_of_means = sd(means, na.rm = TRUE)
-
+  
   # Calculate the mean of the means
   mean_of_means = mean(means, na.rm = TRUE)
   
@@ -494,6 +500,7 @@ calculate_CVm = function(data, trait_col, env_col = data[,1], env_vector = NULL)
   
   return(CVm)
 }
+
 
 CVm=calculate_CVm(synthetic_data1,trait_col = 3)
 print(CVm)
@@ -507,14 +514,12 @@ print(CVm)
 #' This function calculates the Coefficient of Variation of Medians (CVmd), 
 #' which is the standard deviation of the medians divided by the mean of the medians across different environments or groups.
 #'
-#' The function allows for flexible grouping of the data. By default, it groups data using a specified column from the data frame 
-#' (with the first column as the default). Alternatively, an external grouping vector can be provided. If an external vector is provided, 
-#' it will be used for grouping instead of any column from the data frame.
+#' The function allows for flexible grouping of the data. The grouping can be specified using `env_col`, which can be 
+#' either a column index/name from the data or an external grouping vector.
 #'
 #' @param data A data frame containing the trait data.
 #' @param trait_col The column number or name of the trait to analyze.
-#' @param env_col The column number or name of the environmental indicator, used to group the data. Defaults to the first column (`data[,1]`).
-#' @param env_vector An optional vector specifying the grouping (e.g., environmental conditions). If provided, this vector is used instead of `env_col` for grouping.
+#' @param env_col The column number, name, or a vector representing the grouping (e.g., environmental conditions).
 #' @return The CVmd, representing the ratio of the standard deviation of medians to the mean of medians.
 #' @examples
 #' df = data.frame(
@@ -522,26 +527,27 @@ print(CVm)
 #'   Height = c(10, 12, 20, 22, 15, 18)
 #' )
 #' 
-#' # Calculate CVmd using the default environment column
-#' CVmd_default = calculate_CVmd(df, trait_col = "Height")
+#' # Calculate CVmd using the environment column
+#' CVmd_default = calculate_CVmd(df, trait_col = "Height", env_col = "Environment")
 #' print(CVmd_default)
 #' 
 #' # Calculate CVmd using an external grouping vector
 #' env_vector = c("Low", "Low", "High", "High", "Medium", "Medium")
-#' CVmd_vector = calculate_CVmd(df, trait_col = "Height", env_vector = env_vector)
+#' CVmd_vector = calculate_CVmd(df, trait_col = "Height", env_col = env_vector)
 #' print(CVmd_vector)
 #' @export
-calculate_CVmd = function(data, trait_col, env_col = data[,1], env_vector = NULL) {
-  
-  # Use the external vector if provided; otherwise, use the specified column from the data
-  if (!is.null(env_vector)) {
-    group_var = env_vector
+calculate_CVmd = function(data, trait_col, env_col) {
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
   } else {
-    group_var = env_col
+    env_col = data[[env_col]]
   }
   
   # Calculate the medians for each group
-  medians = tapply(data[[trait_col]], group_var, median, na.rm = TRUE)
+  medians = tapply(data[[trait_col]], env_col, median, na.rm = TRUE)
   
   # Calculate the standard deviation of the medians
   sd_of_medians = sd(medians, na.rm = TRUE)
@@ -555,18 +561,8 @@ calculate_CVmd = function(data, trait_col, env_col = data[,1], env_vector = NULL
   return(CVmd)
 }
 
-CVmd=calculate_CVmd(synthetic_data1,trait_col = 3)
+CVmd=calculate_CVmd(synthetic_data1,3,1)
 print(CVmd)
-
-#note that if the distribution of the trait values within each environment is roughly symmetric, then the mean and median of the data will be close to each other.
-#As a result, both the CVm and CVmd will likely be close because the standard deviation and mean calculated from the means will be similar to those calculated 
-#from the medians. If the data within each group is skewed, the mean and median will differ more significantly.
-
-
-
-###########################
-
-
 
 #' Calculate Grand Plasticity (GPi)
 #'
@@ -578,25 +574,30 @@ print(CVmd)
 #' @param data A data frame containing the trait data. The first column should be the environmental indicator, 
 #' and the remaining columns should be the traits. Groupings of multiple environmental factors can be made with the `groupings()`function.
 #' @param trait_col The column number or name of the trait to analyze.
-#' @param env_col The column number or name of the environmental indicator. Defaults to the first column (`data[,1]`) of the dataframe.
+#' @param env_col The column number, name, or a vector representing the environmental conditions.
 #' @return The Grand Plasticity (GPi) value for the specified trait.
 #' @examples
 #' df = data.frame(
 #'   Environment = c("Env1", "Env1", "Env2", "Env2", "Env3", "Env3"),
 #'   Height = c(10, 12, 20, 22, 15, 18)
 #' )
-#' Pi = calculate_Pi(df, trait_col = "Height")
-#' print(Pi)
+#' GPi = calculate_GPi(df, trait_col = "Height")
+#' print(GPi)
 #' @export
 calculate_GPi = function(data, trait_col, env_col = 1) {
-  
-  # Ensure the environmental column and trait column are specified correctly
-  env_col = if (is.numeric(env_col)) data[[env_col]] else data[[env_col]]
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
+  } else {
+    env_col = data[[env_col]]
+  }
   trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
   
   # Calculate the mean of the trait for each environment
   means = tapply(trait_col, env_col, mean, na.rm = TRUE)
-  print(means)
+  
   # Calculate the standard deviation of these means
   sd_of_means = sd(means, na.rm = TRUE)
   
@@ -607,7 +608,7 @@ calculate_GPi = function(data, trait_col, env_col = 1) {
   # Calculate the mean of the adjusted means
   mean_of_adjusted_means = mean(abs(adjusted_means), na.rm = TRUE)
   
-  # Calculate Grand Plasticity (Pi)
+  # Calculate Grand Plasticity (GPi)
   GPi = sd_of_means / mean_of_adjusted_means
   
   return(GPi)
@@ -695,39 +696,18 @@ combined_factors= combine_factors(synthetic_data1, factors_not_in_dataframe = li
 
 ##########################################
 
-##' Calculate the Phenotypic Plasticity Index (PPF) Based on Least Square Means
+#' Calculate the Phenotypic Plasticity Index (PPF) Based on Least Square Means
 #'
 #' This function calculates the Phenotypic Plasticity Index (PPF), which quantifies the phenotypic plasticity 
 #' of a trait between two environments or environmental groupings. The PPF is calculated using the least square means (LSMs) 
 #' of the trait in each environment, with optional adjustment for covariates that may influence the trait.
 #'
-#' ### Calculation Details:
-#' 1. **Fit a Linear Model**: The function first fits a linear model where the trait of interest is predicted by the environmental indicator 
-#'    (and any covariates, if provided). The linear model is of the form:
-#'    \[
-#'    \text{Trait} \sim \text{Environment} + \text{Covariates}
-#'    \]
-#'    This model allows us to estimate the least square means (LSMs) for the trait in each environment while controlling for the effects of covariates.
-#'
-#' 2. **Estimate Least Square Means (LSMs)**: The LSMs are the estimated average trait values in each environment, adjusted for any covariates 
-#'    included in the model. These means represent the expected trait value in each environment, accounting for the influence of other factors.
-#'
-#' 3. **Calculate PPF**: The Phenotypic Plasticity Index (PPF) is then calculated using the LSMs of the two environments as follows:
-#'    \[
-#'    \text{PPF} = 100 \times \left(\frac{\text{LSM in one environment} - \text{LSM in the other environment}}{\text{LSM in the first environment}}\right)
-#'    \]
-#'    This formula expresses the plasticity as the percentage change in the trait from one environment to the other, relative to the LSM in the first environment.
-#'
-#' 4. **Interpretation**: A higher PPF value indicates greater phenotypic plasticity, meaning the trait shows a larger change in response to the different environments.
-#'    A PPF of 0 would indicate no change in the trait between the two environments.
-#'
 #' Covariates can be included to adjust the model for additional environmental influences or biological factors that might affect the trait.
-#' By including these covariates, the analysis accounts for their effects, allowing the PPF calculation to better isolate the effect of the primary environmental variable on the trait.
 #'
 #' @param data A data frame containing the environmental indicators and trait data.
 #' @param trait_col The column number or name of the trait to analyze.
-#' @param env_col The column number or name of the environmental indicator. Defaults to the first column (`data[,1]`).
-#' @param covariates (Optional) A vector of column names or indices to include as covariates in the model. Covariates represent additional environmental influences or biological factors that could affect the trait.
+#' @param env_col The column number, name, or a vector representing the environmental conditions.
+#' @param covariates (Optional) A vector of column names or indices to include as covariates in the model.
 #' @return The Phenotypic Plasticity Index (PPF) value.
 #' @examples
 #' df = data.frame(
@@ -740,10 +720,16 @@ combined_factors= combine_factors(synthetic_data1, factors_not_in_dataframe = li
 #' PPF = calculate_PPF(df, trait_col = "Height", env_col = "Environment", covariates = "SoilQuality")
 #' print(PPF)
 #' @export
-calculate_PPF = function(data, trait_col, env_col = 1, covariates = NULL) {
-  
-  # Ensure the environmental column and trait column are specified correctly
-  env_col = if (is.numeric(env_col)) data[[env_col]] else data[[env_col]]
+calculate_PPF = function(data, trait_col, env_col, covariates = NULL) {
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
+  } else {
+    env_col = data[[env_col]]
+  }
+  env_col=as.factor(env_col)
   trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
   
   # Fit the linear model
@@ -776,50 +762,296 @@ print(PFF)
 ###########################################
 
 
-
-YOU NEED TO WORK ON THIS STILL 
-
 #' Calculate the Phenotypic Plasticity Index (Pi)
 #'
 #' This function calculates the Phenotypic Plasticity Index (Pi), defined as the 
 #' difference between the maximum and minimum values of a trait divided by the maximum value.
+#' For the calculation of the Pi of all traits, the function needs to be called repeatedly.
 #'
 #' @param data A numeric vector, data frame, or matrix containing the trait data. 
 #' If a data frame or matrix is provided, each column represents a trait.
 #' @param trait_col (Optional) The column number or name of the trait to analyze if `data` is a data frame or matrix.
 #' @return The Phenotypic Plasticity Index (Pi) value(s).
-#' @examples
-#' # Example with a numeric vector
-#' trait_data <- c(100, 110, 105, 115, 120)
-#' Pi <- calculate_Phenotypic_Plasticity_Index(trait_data)
-#' print(Pi)
-#'
-#' # Example with a data frame
-#' df <- data.frame(
-#'   Trait1 = c(100, 110, 105, 115, 120),
-#'   Trait2 = c(90, 85, 95, 92, 100)
-#' )
-#' Pi_trait1 <- calculate_Phenotypic_Plasticity_Index(df, trait_col = "Trait1")
-#' Pi_trait2 <- calculate_Phenotypic_Plasticity_Index(df, trait_col = "Trait2")
-#' print(Pi_trait1)
-#' print(Pi_trait2)
+
 #' @export
-calculate_Phenotypic_Plasticity_Index <- function(data, trait_col = NULL) {
+calculate_Phenotypic_Plasticity_Index = function(data, trait_col = NULL) {
   if (is.null(trait_col)) {
     # If trait_col is not provided, assume data is a numeric vector
-    max_value <- max(data, na.rm = TRUE)
-    min_value <- min(data, na.rm = TRUE)
+    max_value = max(data, na.rm = TRUE)
+    min_value = min(data, na.rm = TRUE)
   } else {
     # If trait_col is provided, assume data is a data frame or matrix
-    max_value <- max(data[[trait_col]], na.rm = TRUE)
-    min_value <- min(data[[trait_col]], na.rm = TRUE)
+    max_value = max(data[[trait_col]], na.rm = TRUE)
+    min_value = min(data[[trait_col]], na.rm = TRUE)
   }
   
   # Calculate Pi as (Max - Min) / Max
-  Pi <- (max_value - min_value) / max_value
+  Pi = (max_value - min_value) / max_value
   
   return(Pi)
 }
+PI=calculate_Phenotypic_Plasticity_Index(synthetic_data2,trait_col = 3)
+print(PI)
+
+
+####################################
+
+#' Calculate the Proportional Inter-Median Difference (PImd)
+#'
+#' This function calculates the Proportional Inter-Median Difference (PImd), 
+#' defined as the difference between the maximum and minimum medians of a trait 
+#' across different environmental conditions divided by the maximum median. 
+#' It provides a measure of the relative variability in the trait across the specified conditions.
+#'
+#' @param data A data frame containing the trait and environmental condition data.
+#' @param trait_col The column number or name of the trait to analyze. It can be a column index (integer) 
+#' or a column name (string) within the data frame.
+#' @param env_col The column number, name, or a vector representing the environmental conditions. 
+#' It can be a column index (integer), a column name (string), or a vector of values.
+#' @return The Proportional Inter-Median Difference (PImd) value.
+#' @examples
+#' # Example usage with a data frame
+#' data = data.frame(
+#'   trait_col = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+#'   env_col = factor(c("A", "A", "B", "B", "C", "C", "A", "B", "C", "A"))
+#' )
+#' result = calculate_PImd(data, "trait_col", "env_col")
+#' print(result)
+#' @export
+calculate_PImd = function(data, trait_col, env_col) {
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    # If env_col is a vector, keep it as is
+    env_col = env_col
+  } else {
+    env_col = data[[env_col]]
+  }
+  
+  # Handle trait_col
+  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  
+  # Ensure env_col is a factor to use levels
+  if (!is.factor(env_col)) {
+    env_col = factor(env_col)
+  }
+  # Get levels of env_col
+  levels = levels(env_col)
+  medians=c()
+  for (level in levels){
+    medians=c(medians,median(trait_col[env_col==level]))
+  }
+  PImd=(max(medians)-min(medians))/max(medians)
+  return(PImd)
+}
+
+
+PImd=calculate_PImd(synthetic_data1,trait_col=3,env_col=1)
+print(PImd)
+
+###############################################
+
+
+
+#' Calculate the Proportional Inter-Least Square Mean Difference (PILSM)
+#' and Plot LSMs Against the Trait Data
+#'
+#' This function calculates the Proportional Inter-Least Square Mean Difference (PILSM), 
+#' defined as the difference between the maximum and minimum least square means (LSMs) 
+#' of a trait across different environments, divided by the maximum LSM.
+#' Additionally, it plots the fitted LSMs against the original trait data.
+#'
+#' The function assumes normality in the data and can optionally adjust for covariates.
+#'
+#' @param data A data frame containing the trait data and environmental indicators.
+#' @param trait_col The column number or name of the trait to analyze.
+#' @param env_col The column number, name, or a vector representing the environmental conditions.
+#' @param covariates (Optional) A vector of column names or indices to include as covariates in the model.
+#' @return A list with the PILSM value and the LSM plot.
+#' @examples
+#' df = data.frame(
+#'   Environment = rep(c("Env1", "Env2", "Env3"), each = 10),
+#'   Height = c(10, 12, 11, 13, 14, 15, 13, 14, 12, 13, 
+#'             20, 22, 21, 23, 24, 25, 23, 24, 22, 23,
+#'             30, 32, 31, 33, 34, 35, 33, 34, 32, 33),
+#'   SoilQuality = c(rep(3, 10), rep(4, 10), rep(5, 10))
+#' )
+#' 
+#' # Calculate PILSM with a covariate and plot
+#' result = calculate_PILSM(df, trait_col = "Height", env_col = "Environment", covariates = "SoilQuality")
+#' print(result$PILSM)
+#' print(result$plot)
+#' @export
+calculate_PILSM = function(data, trait_col, env_col, covariates = NULL) {
+  # List of required packages
+  required_packages = c("emmeans", "ggplot2")
+  
+  # Function to check and install missing packages
+  check_and_install_packages = function(packages) {
+    for (pkg in packages) {
+      if (!requireNamespace(pkg, quietly = TRUE)) {
+        install.packages(pkg)
+        library(pkg, character.only = TRUE)
+      } else {
+        library(pkg, character.only = TRUE)
+      }
+    }
+  }
+  
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
+  } else {
+    env_col = data[[env_col]]
+  }
+  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  env_col=as.factor(env_col)
+  # Fit the linear model
+  if (is.null(covariates)) {
+    model = lm(trait_col ~ env_col, data = data)
+  } else {
+    covariates = if (is.numeric(covariates)) names(data)[covariates] else covariates
+    formula = as.formula(paste("trait_col ~ env_col +", paste(covariates, collapse = " + ")))
+    model = lm(formula, data = data)
+  }
+  
+  # Calculate least square means (LSMs) for each environment using emmeans
+  lsm = as.data.frame(emmeans::emmeans(model, ~ env_col))
+  print(lsm)
+  # Calculate PILSM
+  max_lsm = max(lsm$emmean, na.rm = TRUE)
+  min_lsm = min(lsm$emmean, na.rm = TRUE)
+  print(max_lsm)
+  print(min_lsm)
+  PILSM = (max_lsm - min_lsm) / max_lsm
+  
+  # Plot the LSMs against the original data
+  plot_data = data.frame(Environment = env_col, Trait = trait_col)
+  lsm_plot = ggplot(plot_data, aes(x = Environment, y = Trait)) +
+    geom_point(color = "blue", alpha = 0.5) +
+    geom_point(data = lsm, aes(x = env_col, y = emmean), color = "red", size = 3) +
+    geom_line(data = lsm, aes(x = env_col, y = emmean), color = "red", linetype = "dashed") +
+    labs(title = "Least Square Means (LSMs) by Environment", x = "Environment", y = "Trait") +
+    theme_minimal()
+  
+  return(list(PILSM = PILSM, plot = lsm_plot))
+}
+
+# Calculate PILSM with a covariate
+
+
+
+calculate_PILSM(synthetic_data1,trait_col=3,env_col=1)
+
+
+################################################
+
+
+#' Calculate the Relative Trait Response (RTR)
+#'
+#' This function calculates the Relative Trait Response (RTR) score, defined as the 
+#' difference between the mean trait value at one end of an environmental gradient 
+#' and the mean trait value at the opposite end, divided by the absolute maximum value of the trait.
+#'
+#' @param data A data frame containing the trait data and environmental conditions.
+#' @param trait_col The column name or number for the trait to analyze.
+#' @param env_col The column name or number for the environmental conditions.
+#' @param env_low The value of the environmental condition representing one end of the gradient.
+#' @param env_high The value of the environmental condition representing the opposite end of the gradient.
+#' @return The RTR value.
+#' @examples
+#' df = data.frame(
+#'   Environment = rep(c("Low", "High"), each = 10),
+#'   Height = c(10, 12, 11, 13, 14, 15, 13, 14, 12, 13, 
+#'             20, 22, 21, 23, 24, 25, 23, 24, 22, 23)
+#' )
+#' 
+#' RTR = calculate_RTR(df, trait_col = "Height", env_col = "Environment", env_low = "Low", env_high = "High")
+#' print(RTR)
+#' @export
+calculate_RTR = function(data, trait_col, env_col, env_low, env_high) {
+  
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
+  } else {
+    env_col = data[[env_col]]
+  }
+  
+  # Subset data for the specified environmental conditions
+  data_low = data[env_col == env_low, ]
+  data_high = data[env_col == env_high, ]
+  # Calculate mean trait values for each end of the gradient
+  mean_low = mean(data_low[[trait_col]], na.rm = TRUE)
+  mean_high = mean(data_high[[trait_col]], na.rm = TRUE)
+  
+  # Calculate the RTR value
+  RTR = (mean_high - mean_low) / max(abs(trait_col), na.rm = TRUE)
+  
+  return(RTR)
+}
+
+calculate_RTR(synthetic_data1,trait_col=3,env_col=1,env_low=1,env_high=3)
+
+
+
+######################################
+
+
+calculate_PIR = function(data, trait_col, env_col, rgr_col) {
+  
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
+  } else {
+    env_col = data[[env_col]]
+  }
+  
+  # Handle rgr_col
+  if (is.numeric(rgr_col) && length(rgr_col) == 1) {
+    rgr_col = data[[rgr_col]]
+  } else if (is.vector(rgr_col) && length(rgr_col) == nrow(data)) {
+    rgr_col = rgr_col
+  } else {
+    rgr_col = data[[rgr_col]]
+  }
+  
+  # Convert env_col to a factor
+  env_col = as.factor(env_col)
+  
+  # Handle trait_col
+  trait_col = if (is.numeric(trait_col) && length(trait_col) == 1) data[[trait_col]] else trait_col
+  
+  # Calculate mean trait values for each environment
+  means = tapply(trait_col, env_col, mean, na.rm = TRUE)
+
+  # Identify maximum and minimum means
+  max_mean = max(means, na.rm = TRUE)
+  min_mean = min(means, na.rm = TRUE)
+  
+  # Identify the environment with the maximum growth rate
+  max_rgr_env = levels(env_col)[which.max(tapply(rgr_col, env_col, mean, na.rm = TRUE))]
+  
+  # Find the mean of the trait at the environment where the growth rate is maximum
+  mean_at_max_rgr = means[max_rgr_env]
+  
+  # Calculate PIR
+  PIR = (max_mean - min_mean) / mean_at_max_rgr
+  
+  return(PIR)
+}
+
+specific_growthrate=rnorm(300,0.5,0.2)
+
+calculate_PIR(synthetic_data1 , trait_col = 3 , env_col = 1, rgr_col = specific_growthrate)
+
 
 
 
