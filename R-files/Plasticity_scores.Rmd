@@ -308,28 +308,10 @@ The different plasticity scores used in the study are summarized below:
 a package containing implementations of some of the plasticity scores can be found under:https://github.com/ameztegui/Plasticity/
 
 
-## Plant Plasticity Scores to Be Implemented
-
-### 1. Phenotypic Plasticity Index (PPI)
-Quantifies the extent of phenotypic variation in response to environmental changes.
-
-### 2. Plasticity Variance (PV)
-Assesses the variance in phenotypic traits due to environmental factors.
-
-### 3. Environmental Sensitivity Index (ESI)
-Measures how sensitive a plant's phenotype is to environmental changes.
-
-### 4. Reaction Norm Slope (RNS)
-Quantifies the change in phenotype across different environmental conditions.
-
-### 5. Plasticity Coefficient (PC)
-Measures the extent of trait value change in response to environmental variation compared to its average value.
-
 
 ## List of Pending Scores
 
-1. **Drought Stress Index (DSI)**
-   - **Description:** Measures the effect of drought on plant performance by comparing traits under drought conditions to traits under well-watered conditions.
+
 
 2. **Growth Rate Index (GRI)**
    - **Description:** Assesses the rate of growth of plants over time, often calculated as the difference in biomass or height over a period.
@@ -436,3 +418,423 @@ Measures the extent of trait value change in response to environmental variation
     - **Description:** The rate at which plant biomass accumulates over time, useful for evaluating growth performance under various conditions.
 
 
+
+# Scores/indices to be implemented 
+
+## Polynomial Reaction Norm
+
+### Mathematical Formulation
+
+To express the relationship between a phenotype (\(z(a)\)) and environmental gradient (\(a\)), the reaction norm is modeled as an \(m\)-degree polynomial:
+\[
+z(a) = b_0 + b_1 \cdot a + b_2 \cdot a^2 + \dots + b_m \cdot a^m
+\]
+Where:
+- \(z(a)\) is the phenotype in environment \(a\),
+- \(b_0\) is the intercept,
+- \(b_1, b_2, \dots, b_m\) are the coefficients representing the amount and pattern of phenotypic change across environments,
+- \(m\) is one fewer than the number of environments.
+
+### Coefficients as Plasticity Scores
+
+- **Linear plasticity** is captured by the **first-order coefficient** \(b_1\), which represents the **slope** of the trait change across environments.
+- **Non-linear plasticity** is captured by the **higher-order coefficients** \(b_2, b_3, \dots\), which represent more complex patterns of change (e.g., quadratic or cubic).
+- The **plasticity score** is derived from the magnitude of these coefficients:
+  \[
+  \text{Plasticity Score} = |b_1| + |b_2| + \dots + |b_m|
+  \]
+  This score reflects both the magnitude and complexity of the phenotypic response across environments.
+
+### Best Model Selection
+
+- The **best-fitting polynomial model** (linear, quadratic, cubic, etc.) should be determined using statistical criteria such as **goodness-of-fit** or **AIC/BIC**.
+- Nonlinear regression is used to estimate the coefficients for each genome.
+- Once the best model is selected, the coefficients can be used to calculate the plasticity score for each genome. 
+
+### Comparison with Pairwise Difference Method
+
+An alternative measure of plasticity is the **difference in trait means** between two environments. This method is equivalent to using a **first-degree polynomial** (straight-line), which only captures the **magnitude** of change but not the **pattern**. While simple, it doesn't provide the same depth of information as polynomial regression.
+
+### Citation
+
+* GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M. Scheiner
+* https://www.ugr.es/~jmgreyes/Adaptive%20phenotypic%20plasticity.pdf
+
+
+## Drought Resistance Index (DRI) According to Fisher and Maurer (1978)
+
+The **Drought Resistance Index (DRI)** was developed by Fisher and Maurer (1978) as an improvement over simply expressing yield under stress as a percentage of yield under non-stress conditions. The DRI compares the reduction in yield due to stress for a specific genotype against the mean reduction over all genotypes in the same test.
+
+The formula for calculating DRI is:
+
+\[
+\text{DRI} = \left(\frac{Y_s}{Y_n}\right) / \left(\frac{M_s}{M_n}\right)
+\]
+
+Where:
+- \( Y_s \) = yield (or biomass) of the specific genotype under stress.
+- \( Y_n \) = yield (or biomass) of the specific genotype under non-stress.
+- \( M_s \) = mean yield (or biomass) of all genotypes under stress.
+- \( M_n \) = mean yield (or biomass) of all genotypes under non-stress.
+
+This index reflects how well a specific genotype resists yield reduction under stress compared to others. Although some have argued that the index is biased by yield potential (with genotypes that perform better under non-stress conditions tending to show a lower DRI), this bias is rooted in biological grounds rather than being a statistical flaw, as discussed by Blum (1995).
+
+This index is widely used by breeders as it accounts for both stress and non-stress yield performance and allows comparisons across genotypes.
+
+### References
+Fisher, R.A. and Maurer, R. (1978). Drought Resistance in Spring Wheat Cultivars. *Australian Journal of Agricultural Research*, 29(5), 897-912. 
+
+Blum, A. (1995). Drought resistance, water-use efficiency, and yield potential - are they compatible, dissonant, or mutually exclusive? *Australian Journal of Agricultural Research*, 56, 1159–1168.
+
+
+## Drought Resistance Index (DRI) According to Bidinger et al. (1982)
+
+The **Drought Resistance Index (DRI)** proposed by Bidinger et al. (1982) is used to assess drought resistance in cultivars by analyzing variation in grain yield under stress that cannot be explained by yield potential or drought escape (e.g., early flowering). Unlike traditional measures that rely solely on yield potential under stress or non-stress conditions, this DRI method isolates the specific drought resistance of a cultivar independent of these factors.
+
+### Procedure for DRI Calculation:
+1. **Initial Regression**: 
+   - Yield under stress is regressed on potential yield (measured under non-stress) and drought escape (days to heading under non-stress) across all cultivars.
+   - The estimated yield under stress for each cultivar is calculated from this regression.
+
+2. **Second Regression**: 
+   - The actual measured yield under stress is regressed on the estimated stress yield for each cultivar from the initial regression.
+   - The deviation of each cultivar from this regression line indicates its drought resistance. A positive deviation suggests drought resistance, while a negative deviation suggests drought susceptibility.
+   - The drought resistance of a cultivar is quantified as the **studentized residual** from this second regression, which can be calculated using most statistical software packages.
+
+3. **Interpretation**:
+   - Cultivars with a positive deviation (or high residuals) are considered drought-resistant, while those with negative deviations are considered susceptible.
+   - The magnitude of the index (residual) is important, with values greater than **1.3** typically indicating significant drought resistance.
+   - While using this index in breeding programs, it is considered alongside other factors like absolute yield under stress, biotic stress resistance, and product quality.
+
+### References
+Bidinger, F.R., Mahalakshmi, V., & Rao, G.D.P. (1982). Assessment of Drought Resistance in Pearl Millet [Pennisetum americanum (L.) Leeke]. *Proceedings of the International Pearl Millet Workshop*, 14-19.
+
+
+
+
+## Variance of Polynomial Coefficients
+
+### Mathematical Formulation
+
+When genomes differ in their **reaction norm functions**, these differences can be captured by the **first and higher-order polynomial coefficients** (\(b_1, b_2, \dots\)). The **genetic variation for plasticity** is represented by the **variance among these coefficients**:
+\[
+Var(b_i), \quad \text{for } i = 1, 2, \dots, m
+\]
+This method quantifies genetic variation by capturing how genomes vary in terms of their **slopes and curvatures** across environments.
+
+### Citation
+
+* GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M. Scheiner
+
+## Cross-environment Correlation/Covariance for Linear Norms
+
+### Mathematical Formulation
+
+For **linear reaction norms** or when there are **only two environments**, genetic variation can also be expressed as the **cross-environment correlation** or **covariance** between traits:
+\[
+Cov(z_1, z_2)
+\]
+Where \(z_1\) and \(z_2\) represent the trait values in two different environments. This method captures the **genetic variance for plasticity** by measuring the covariance in trait expressions across environments. For linear norms, the variance is simply related to the slope of the reaction norm.
+
+### Citation
+
+* GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M. Scheiner
+
+## Eigenfunctions of Covariance Matrices (for Nonlinear Norms)
+
+### Mathematical Formulation
+
+For more complex, **nonlinear reaction norms**, a more advanced approach involves using **covariance matrices** and transforming them into **eigenfunctions**:
+1. **Covariance matrix** of within-environment genetic variances and cross-environment covariances is generated.
+2. **Eigenvectors** are derived from this matrix to describe the pattern of covariance:
+   \[
+   Cov(z_1, z_2, \dots, z_n) = \lambda_1 \mathbf{v}_1 + \lambda_2 \mathbf{v}_2 + \dots + \lambda_n \mathbf{v}_n
+   \]
+3. **Legendre polynomials** are used to convert these eigenvectors into continuous **eigenfunctions**:
+   \[
+   f(x) = \sum_{i=1}^n \lambda_i \cdot P_i(x)
+   \]
+   where \(P_i(x)\) are the Legendre polynomials. This method can handle **any shaped reaction norm** and is more comprehensive than the covariance method alone.
+   
+   #### Citation
+
+* GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M. Scheiner
+
+## Partitioning Phenotypic Variance (for Linear Norms)
+
+### Mathematical Formulation
+
+Another method is based on **variance partitioning** through **analysis of variance** (ANOVA). The **total phenotypic variance** can be divided into:
+\[
+\sigma^2_{\text{total}} = \sigma^2_g + \sigma^2_{\text{plasticity}}
+\]
+Where:
+- \(\sigma^2_g\) is the genetic variance independent of the environment,
+- \(\sigma^2_{\text{plasticity}}\) is the variance due to plastic effects (dependent on the environment).
+
+For **linear reaction norms**, this method provides a simple measure of genetic variation for plasticity by partitioning the total variance.
+
+### Citation
+
+* GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M. Scheiner
+
+## Genetic Variation for Plasticity in Linear Norms
+
+### Mathematical Formulation
+
+For **linear reaction norms**, Gavrilets & Scheiner (Adaptive phenotypic plasticity) provide an estimation of genetic variation for plasticity:
+\[
+\sigma^2_{\text{plasticity}} = g_1^2 \cdot Var(a)
+\]
+Where:
+- \(g_1\) is the mean slope of the reaction norms across all families or genomes,
+- \(Var(a)\) is the variance of the environmental gradient.
+
+For **genetic variation for slopes**:
+\[
+\sigma^2_{\text{plasticity}} = G_1 \cdot Var(a)
+\]
+Where \(G_1\) is the genetic variation for the slopes, representing the **genetic variation for plasticity**.
+
+
+## Genetic Variance and Heritability in Plasticity
+
+From:GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY (Samuel M. Scheiner)
+
+### Overview
+
+Genetic variance is a key component in understanding how traits vary due to genetics and how these traits respond to selection. In the context of phenotypic plasticity, genetic variance explains how much of the variation in the plastic response (i.e., changes in traits across different environments) is due to genetic differences.
+
+#### 1. Estimating Genetic Variance
+
+The total phenotypic variance (\(\sigma^2_p\)) can be split into genetic variance (\(G\)) and environmental variance (\(E\)):
+
+\[
+\sigma^2_p = G + E
+\]
+
+Where:
+- \(G\) represents the **genetic variance**, which accounts for differences between genotypes.
+- \(E\) represents the **environmental variance**, which captures variation due to environmental differences.
+
+Genetic variance is often estimated using experimental designs such as **full-sibling** or **half-sibling** designs. By comparing individuals with known relationships, it is possible to partition phenotypic variance into genetic and environmental components.
+
+#### 2. Genetic Variance in Phenotypic Plasticity
+
+For phenotypic plasticity, genetic variance is calculated by measuring how trait expression changes across environments (reaction norm). The **slope of the reaction norm** can be used to estimate the genetic variance for plasticity:
+
+\[
+G_1 = \text{Variance of the slope of the reaction norm across environments}
+\]
+
+This means that the genetic variance for plasticity depends on how much the slope (or shape) of the trait’s change across environments differs between genotypes.
+
+#### 3. Heritability of Plasticity
+
+Heritability in the context of plasticity refers to the proportion of phenotypic variation in plasticity that is due to genetic factors. Heritability measures are particularly important when making predictions about how a population might respond to selection.
+
+### Heritability: Descriptive and Predictive Measures
+
+#### 3.1 Descriptive Measures of Genetic Variation
+
+When the goal is to understand the relative amounts of genetic variation that are dependent or independent of the environment, heritability is averaged across environments. Two key heritability measures exist for this purpose:
+
+- **\( h_m^2 \)**: The heritability of the **environmentally independent portion** of the trait (mean trait value across environments).
+- **\( h_{\pi}^2 \)**: The heritability of the **environmentally dependent portion** (plasticity).
+
+These are calculated as follows:
+
+\[
+h_m^2 = \frac{G_0}{\sigma_p^2}, \quad h_{\pi}^2 = \frac{G_1}{\sigma_p^2}
+\]
+
+Where:
+- \( G_0 \) is the genetic variance for the **mean trait** value across environments (environmentally independent portion).
+- \( G_1 \) is the genetic variance for the **plasticity** (environmentally dependent portion).
+- \( \sigma_p^2 \) is the total phenotypic variation across all environments.
+
+These measures provide insight into the amount of genetic variation that influences traits and plasticity, helping to compare different traits, studies, and species on a scale-free metric.
+
+#### 3.2 Predictive Measures for Plasticity Under Selection
+
+When predicting the **response to selection on plasticity**, a different heritability measure is used. In this case, the heritability is often measured in the context of **family selection** on a plasticity index.
+
+For family selection on plasticity, the heritability is calculated as:
+
+\[
+h_{\text{plasticity}}^2 = \frac{\sigma_f^2}{\sigma_p^2}
+\]
+
+Where:
+- \( \sigma_f^2 \) is the genetic variation among families for the plasticity index.
+- \( \sigma_p^2 \) is the total phenotypic variation for the plasticity index.
+
+If the study involves only two environments, the plasticity index typically measures the **difference in family means** between environments. To obtain accurate heritability values, the total phenotypic variation must be corrected for errors in estimating family means.
+
+
+## Water Use Efficiency (WUE) 
+
+### Definition
+Water use efficiency (WUE) represents the overall delivery efficiency of an irrigation system. It is mathematically defined as the ratio of the annual volume of crop water demand to the annual volume of irrigation supply:
+
+\[
+E_{WUE} = \left( \frac{\text{Annual volume of crop water demand (MCM)}}{\text{Annual volume of irrigation supply (MCM)}} \right) \times 100\%
+\]
+
+### Interpretation
+- **Efficient system**: If the WUE value is greater than 60%, the irrigation system is considered efficient.
+- **Good system**: A WUE value between 30% and 60% is classified as good.
+- **Poor system**: A WUE value below 30% is regarded as poor, indicating inefficiency in water usage for crop demand.
+
+
+### Citation
+
+https://www.sciencedirect.com/science/article/abs/pii/B9780128117484000145
+
+
+
+
+## Multivariate Vector of Plasticity
+
+The **Multivariate Vector of Plasticity** evaluates the distance moved by each trait between different environmental conditions. This multivariate approach considers multiple traits and calculates the Euclidean distance between the trait values in different environments.
+
+### Mathematical Approach
+
+The vector of plasticity for a given trait can be computed using the formula:
+
+\[
+\text{Vector of Plasticity} = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2 + \cdots}
+\]
+
+Where:
+- \(x_1, y_1, \ldots\) are the trait values in the first environment, and
+- \(x_2, y_2, \ldots\) are the corresponding trait values in the second environment.
+
+This formula calculates the Euclidean distance, representing the overall change in trait values across environments.
+
+### Citation
+
+https://royalsocietypublishing.org/doi/10.1098/rspb.2015.1651
+
+## θplast: Angle Between Vectors of Plasticity
+
+**θplast** is a measure of the direction of plasticity between different environments. It is calculated as the angle between the plasticity vectors of two environments using the dot product formula. This angle helps determine whether traits respond in similar or different directions under different environmental conditions.
+
+### Formula
+
+\[
+\cos(\theta_{\text{plast}}) = \frac{\mathbf{v}_1 \cdot \mathbf{v}_2}{\|\mathbf{v}_1\|\|\mathbf{v}_2\|}
+\]
+
+Where:
+- \(\mathbf{v}_1\) and \(\mathbf{v}_2\) are the vectors of plasticity for two different environments.
+- \(\|\mathbf{v}_1\|\) and \(\|\mathbf{v}_2\|\) are the magnitudes of the vectors.
+- The angle \(\theta_{\text{plast}}\) provides insight into the degree of similarity or divergence in trait plasticity between environments.
+
+### Citation
+
+https://royalsocietypublishing.org/doi/10.1098/rspb.2015.1651
+
+
+
+## Plasticity Coefficient (PC)
+
+### Mathematical Formulation
+
+The **Plasticity Coefficient (PC)** is a simple measure of phenotypic plasticity, calculated as the relative change between the maximum and minimum trait values across environments, normalized by the average trait value.
+
+\[
+PC = \frac{\text{Maximum Trait Value} - \text{Minimum Trait Value}}{\text{Average Trait Value}}
+\]
+
+Where:
+- **Maximum Trait Value**: The highest observed trait value across environments.
+- **Minimum Trait Value**: The lowest observed trait value across environments.
+- **Average Trait Value**: The mean of the trait values across environments.
+
+### Citation
+
+This method is conceptually similar to the **Phenotypic Plasticity Index (PI)** by Valladares et al. (2000), which also uses maximum and minimum trait values to quantify plasticity.
+
+- Valladares, F., Wright, S.J., Lasso, E., Kitajima, K., & Pearcy, R.W. (2000). *Plastic phenotypic responses to light of 16 congeneric shrubs from a Panamanian rainforest*. Ecology, 81(7), 1925-1936.
+
+
+
+## Shannon’s Diversity Index (H')
+
+### Formula
+\[
+H' = -\sum p_i \log p_i
+\]
+Where:
+- \(p_i\) is the proportion of individuals with a given phenotype in each environment.
+
+### Description
+Originally used for measuring biodiversity (Shannon, 1948), Shannon’s Diversity Index can be adapted to quantify phenotypic plasticity by calculating the diversity of trait values across different environments.
+
+### Citation
+- Shannon, C. E. (1948). *A mathematical theory of communication*. Bell System Technical Journal, 27(3), 379-423.
+
+## Mahalanobis Distance
+
+### Formula
+\[
+D^2 = (\mathbf{x} - \mathbf{m})^T \mathbf{S}^{-1} (\mathbf{x} - \mathbf{m})
+\]
+Where:
+- \(\mathbf{x}\) is the trait vector for an environment.
+- \(\mathbf{m}\) is the mean trait vector across environments.
+- \(\mathbf{S}\) is the covariance matrix.
+
+### Description
+Mahalanobis distance, introduced by Mahalanobis (1936), measures the deviation from the mean trait vector across environments and accounts for multivariate traits. It is useful for identifying phenotypic plasticity across environments.
+
+### Citation
+- Mahalanobis, P. C. (1936). *On the generalized distance in statistics*. Proceedings of the National Institute of Sciences of India, 2(1), 49-55.
+
+## Variance Partitioning (VP)
+
+### Formula
+\[
+VP = \frac{\sigma^2_{\text{plasticity}}}{\sigma^2_{\text{total}}}
+\]
+Where:
+- \(\sigma^2_{\text{plasticity}}\) is the variance due to plasticity.
+- \(\sigma^2_{\text{total}}\) is the total phenotypic variance.
+
+### Description
+Variance partitioning is a common statistical technique (Falconer & Mackay, 1996) that quantifies the proportion of total phenotypic variance attributable to environmental plasticity. It helps in understanding the genetic and environmental contributions to trait variation.
+
+### Citation
+- Falconer, D. S., & Mackay, T. F. (1996). *Introduction to quantitative genetics* (4th ed.). Longman.
+
+## Mean Trait Difference (MTD)
+
+### Formula
+\[
+MTD = \frac{\sum (z_{\text{env1}} - z_{\text{env2}})}{n}
+\]
+Where:
+- \(z_{\text{env1}}\) and \(z_{\text{env2}}\) are trait values in two environments.
+- \(n\) is the number of individuals.
+
+### Description
+Mean Trait Difference (MTD) is a straightforward measure of phenotypic plasticity that calculates the average difference in trait values between two environments. It has been applied in various ecological studies to assess phenotypic change (Schlichting & Pigliucci, 1998).
+
+### Citation
+- Schlichting, C. D., & Pigliucci, M. (1998). *Phenotypic evolution: A reaction norm perspective*. Sinauer Associates.
+
+##  Range of Reaction Norm
+
+### Formula
+\[
+R = z_{\text{max}} - z_{\text{min}}
+\]
+Where:
+- \(z_{\text{max}}\) and \(z_{\text{min}}\) are the maximum and minimum trait values across environments.
+
+### Description
+The range of reaction norm measures the total range of trait expression across environments, which is an important indicator of phenotypic plasticity. This concept was elaborated in Stearns (1992) to describe how organisms respond to environmental variation.
+
+### Citation
+- Stearns, S. C. (1992). *The evolution of life histories*. Oxford University Press.

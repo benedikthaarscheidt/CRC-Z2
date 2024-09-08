@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bene" />
 
-<meta name="date" content="2024-08-20" />
+<meta name="date" content="2024-09-08" />
 
 <title>Trait Analysis in Arabidopsis thaliana and Capsella bursa-pastoris</title>
 
@@ -1482,7 +1482,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Trait Analysis in Arabidopsis thaliana and
 Capsella bursa-pastoris</h1>
 <h4 class="author">Bene</h4>
-<h4 class="date">2024-08-20</h4>
+<h4 class="date">2024-09-08</h4>
 
 </div>
 
@@ -2192,32 +2192,825 @@ and time-consuming.</td>
 <p>a package containing implementations of some of the plasticity scores
 can be found under:<a href="https://github.com/ameztegui/Plasticity/" class="uri">https://github.com/ameztegui/Plasticity/</a></p>
 </div>
-<div id="plant-plasticity-scores-to-be-implemented" class="section level2">
-<h2>Plant Plasticity Scores to Be Implemented</h2>
-<div id="phenotypic-plasticity-index-ppi" class="section level3">
-<h3>1. Phenotypic Plasticity Index (PPI)</h3>
-<p>Quantifies the extent of phenotypic variation in response to
-environmental changes.</p>
+<div id="list-of-pending-scores" class="section level2">
+<h2>List of Pending Scores</h2>
+<ol start="2" style="list-style-type: decimal">
+<li><strong>Growth Rate Index (GRI)</strong>
+<ul>
+<li><strong>Description:</strong> Assesses the rate of growth of plants
+over time, often calculated as the difference in biomass or height over
+a period.</li>
+</ul></li>
+<li><strong>Relative Growth Rate (RGR)</strong>
+<ul>
+<li><strong>Description:</strong> Measures the increase in plant size
+(biomass, height) relative to the initial size over a specific
+period.</li>
+</ul></li>
+<li><strong>Resource Use Efficiency (RUE)</strong>
+<ul>
+<li><strong>Description:</strong> Evaluates the efficiency with which
+plants use resources (e.g., water, nutrients) for growth, often
+calculated as growth per unit resource.</li>
+</ul></li>
+<li><strong>Leaf Area Ratio (LAR)</strong>
+<ul>
+<li><strong>Description:</strong> Represents the ratio of leaf area to
+plant biomass, which can provide insights into the allocation of
+resources to leaf production versus other plant tissues.</li>
+</ul></li>
+<li><strong>Specific Leaf Area (SLA)</strong>
+<ul>
+<li><strong>Description:</strong> Measures the area of leaf per unit of
+leaf dry mass, providing information on leaf thickness and density.</li>
+</ul></li>
+<li><strong>Maximum Photosynthetic Rate (Pmax)</strong>
+<ul>
+<li><strong>Description:</strong> The highest rate of photosynthesis
+observed under optimal conditions, reflecting the maximum capacity of
+the plant for carbon fixation.</li>
+</ul></li>
+<li><strong>Chlorophyll Content (CC)</strong>
+<ul>
+<li><strong>Description:</strong> Quantifies the amount of chlorophyll
+in the leaves, which is related to the plant’s photosynthetic
+capacity.</li>
+</ul></li>
+<li><strong>Water Use Efficiency (WUE)</strong>
+<ul>
+<li><strong>Description:</strong> The ratio of biomass produced to the
+amount of water used, indicating how effectively a plant converts water
+into growth.</li>
+</ul></li>
+<li><strong>Biomass Allocation Ratio (BAR)</strong>
+<ul>
+<li><strong>Description:</strong> The proportion of total biomass
+allocated to different plant organs (e.g., leaves, stems, roots),
+reflecting the plant’s strategy for resource allocation.</li>
+</ul></li>
+<li><strong>Net Assimilation Rate (NAR)</strong>
+<ul>
+<li><strong>Description:</strong> Measures the rate of increase in plant
+biomass per unit of leaf area, indicating the efficiency of
+photosynthesis and growth.</li>
+</ul></li>
+<li><strong>Seedling Survival Rate (SSR)</strong>
+<ul>
+<li><strong>Description:</strong> The percentage of seedlings that
+survive to a specific age or stage, providing insights into plant
+establishment and resilience.</li>
+</ul></li>
+<li><strong>Root-to-Shoot Ratio (RSR)</strong>
+<ul>
+<li><strong>Description:</strong> The ratio of root biomass to shoot
+biomass, which can indicate how plants allocate resources between root
+and shoot growth.</li>
+</ul></li>
+<li><strong>Functional Diversity Index (FDI)</strong>
+<ul>
+<li><strong>Description:</strong> Quantifies the diversity of functional
+traits within a plant community, reflecting the range of strategies for
+resource acquisition and utilization.</li>
+</ul></li>
+<li><strong>Root Growth Rate (RGR)</strong>
+<ul>
+<li><strong>Description:</strong> Measures the increase in root length
+or biomass over time, which is crucial for understanding root
+development and resource acquisition.</li>
+</ul></li>
+<li><strong>Photosynthetic Efficiency (PE)</strong>
+<ul>
+<li><strong>Description:</strong> Assesses the efficiency of
+photosynthesis, often measured as the ratio of carbon fixed to light
+absorbed.</li>
+</ul></li>
+<li><strong>Plant Height Growth Rate (PHGR)</strong>
+<ul>
+<li><strong>Description:</strong> Measures the increase in plant height
+over time to evaluate overall growth performance.</li>
+</ul></li>
+<li><strong>Leaf Expansion Rate (LER)</strong>
+<ul>
+<li><strong>Description:</strong> Assesses the rate at which leaf area
+increases, providing insights into leaf development and plant
+health.</li>
+</ul></li>
+<li><strong>Root Length Density (RLD)</strong>
+<ul>
+<li><strong>Description:</strong> The length of roots per unit of soil
+volume, indicating the root system’s capacity for resource
+exploration.</li>
+</ul></li>
+<li><strong>Leaf Dry Matter Content (LDMC)</strong>
+<ul>
+<li><strong>Description:</strong> The ratio of leaf dry mass to leaf
+fresh mass, reflecting leaf density and water content.</li>
+</ul></li>
+<li><strong>Total Leaf Area (TLA)</strong>
+<ul>
+<li><strong>Description:</strong> The sum of leaf area per plant,
+related to the plant’s photosynthetic potential and overall growth.</li>
+</ul></li>
+<li><strong>Root Biomass Density (RBD)</strong>
+<ul>
+<li><strong>Description:</strong> The mass of roots per unit of soil
+volume, reflecting investment in root growth relative to soil
+volume.</li>
+</ul></li>
+<li><strong>Chlorophyll a/b Ratio</strong>
+<ul>
+<li><strong>Description:</strong> The ratio of chlorophyll a to
+chlorophyll b in leaves, providing insights into the plant’s
+photosynthetic efficiency.</li>
+</ul></li>
+<li><strong>Stomatal Conductance (gs)</strong>
+<ul>
+<li><strong>Description:</strong> Measures the rate of gas exchange
+through stomata, crucial for understanding water use and
+photosynthesis.</li>
+</ul></li>
+<li><strong>Leaf Nitrogen Content (LNC)</strong>
+<ul>
+<li><strong>Description:</strong> The amount of nitrogen in leaves,
+indicating leaf protein levels and photosynthetic capacity.</li>
+</ul></li>
+<li><strong>Photosynthetic Yield (PY)</strong>
+<ul>
+<li><strong>Description:</strong> The amount of carbon fixed per unit of
+absorbed light, indicating photosynthetic efficiency.</li>
+</ul></li>
+<li><strong>Root-to-Shoot Ratio (RSR) under Stress</strong>
+<ul>
+<li><strong>Description:</strong> Measures the ratio of root biomass to
+shoot biomass under stress conditions, like drought or salinity.</li>
+</ul></li>
+<li><strong>Root Surface Area (RSA)</strong>
+<ul>
+<li><strong>Description:</strong> The total surface area of the roots,
+important for understanding root interactions with the soil
+environment.</li>
+</ul></li>
+<li><strong>Leaf Temperature (LT)</strong>
+<ul>
+<li><strong>Description:</strong> Measures the temperature of the leaf
+surface, providing insights into plant water status and stress
+responses.</li>
+</ul></li>
+<li><strong>Water Content (WC)</strong>
+<ul>
+<li><strong>Description:</strong> The amount of water in plant tissues,
+expressed as a percentage of tissue mass, indicating plant hydration
+levels.</li>
+</ul></li>
+<li><strong>Net Primary Productivity (NPP)</strong>
+<ul>
+<li><strong>Description:</strong> The rate of biomass production by
+plants, reflecting energy capture through photosynthesis and conversion
+into growth.</li>
+</ul></li>
+<li><strong>Tolerance Index (TI)</strong>
+<ul>
+<li><strong>Description:</strong> Measures how well a plant tolerates
+stress conditions relative to non-stress conditions.</li>
+</ul></li>
+<li><strong>Growth Efficiency Index (GEI)</strong>
+<ul>
+<li><strong>Description:</strong> The ratio of growth rate to resource
+input, providing insight into how effectively a plant converts resources
+into biomass.</li>
+</ul></li>
+<li><strong>Root Architecture Complexity Index (RACI)</strong>
+<ul>
+<li><strong>Description:</strong> Quantifies the complexity of the root
+system’s branching pattern, affecting the plant’s ability to explore
+soil resources.</li>
+</ul></li>
+<li><strong>Relative Leaf Water Content (RLWC)</strong>
+<ul>
+<li><strong>Description:</strong> Measures the water content of leaves
+relative to their total potential water content, indicating the plant’s
+water status.</li>
+</ul></li>
+<li><strong>Biomass Accumulation Rate (BAR)</strong>
+<ul>
+<li><strong>Description:</strong> The rate at which plant biomass
+accumulates over time, useful for evaluating growth performance under
+various conditions.</li>
+</ul></li>
+</ol>
 </div>
-<div id="plasticity-variance-pv" class="section level3">
-<h3>2. Plasticity Variance (PV)</h3>
-<p>Assesses the variance in phenotypic traits due to environmental
-factors.</p>
 </div>
-<div id="environmental-sensitivity-index-esi" class="section level3">
-<h3>3. Environmental Sensitivity Index (ESI)</h3>
-<p>Measures how sensitive a plant’s phenotype is to environmental
-changes.</p>
+<div id="scoresindices-to-be-implemented" class="section level1">
+<h1>Scores/indices to be implemented</h1>
+<div id="polynomial-reaction-norm" class="section level2">
+<h2>Polynomial Reaction Norm</h2>
+<div id="mathematical-formulation" class="section level3">
+<h3>Mathematical Formulation</h3>
+<p>To express the relationship between a phenotype (<span class="math inline">\(z(a)\)</span>) and environmental gradient (<span class="math inline">\(a\)</span>), the reaction norm is modeled as an
+<span class="math inline">\(m\)</span>-degree polynomial: <span class="math display">\[
+z(a) = b_0 + b_1 \cdot a + b_2 \cdot a^2 + \dots + b_m \cdot a^m
+\]</span> Where: - <span class="math inline">\(z(a)\)</span> is the
+phenotype in environment <span class="math inline">\(a\)</span>, - <span class="math inline">\(b_0\)</span> is the intercept, - <span class="math inline">\(b_1, b_2, \dots, b_m\)</span> are the coefficients
+representing the amount and pattern of phenotypic change across
+environments, - <span class="math inline">\(m\)</span> is one fewer than
+the number of environments.</p>
 </div>
-<div id="reaction-norm-slope-rns" class="section level3">
-<h3>4. Reaction Norm Slope (RNS)</h3>
-<p>Quantifies the change in phenotype across different environmental
-conditions.</p>
+<div id="coefficients-as-plasticity-scores" class="section level3">
+<h3>Coefficients as Plasticity Scores</h3>
+<ul>
+<li><strong>Linear plasticity</strong> is captured by the
+<strong>first-order coefficient</strong> <span class="math inline">\(b_1\)</span>, which represents the
+<strong>slope</strong> of the trait change across environments.</li>
+<li><strong>Non-linear plasticity</strong> is captured by the
+<strong>higher-order coefficients</strong> <span class="math inline">\(b_2, b_3, \dots\)</span>, which represent more
+complex patterns of change (e.g., quadratic or cubic).</li>
+<li>The <strong>plasticity score</strong> is derived from the magnitude
+of these coefficients: <span class="math display">\[
+\text{Plasticity Score} = |b_1| + |b_2| + \dots + |b_m|
+\]</span> This score reflects both the magnitude and complexity of the
+phenotypic response across environments.</li>
+</ul>
 </div>
-<div id="plasticity-coefficient-pc" class="section level3">
-<h3>5. Plasticity Coefficient (PC)</h3>
-<p>Measures the extent of trait value change in response to
-environmental variation compared to its average value.</p>
+<div id="best-model-selection" class="section level3">
+<h3>Best Model Selection</h3>
+<ul>
+<li>The <strong>best-fitting polynomial model</strong> (linear,
+quadratic, cubic, etc.) should be determined using statistical criteria
+such as <strong>goodness-of-fit</strong> or
+<strong>AIC/BIC</strong>.</li>
+<li>Nonlinear regression is used to estimate the coefficients for each
+genome.</li>
+<li>Once the best model is selected, the coefficients can be used to
+calculate the plasticity score for each genome.</li>
+</ul>
+</div>
+<div id="comparison-with-pairwise-difference-method" class="section level3">
+<h3>Comparison with Pairwise Difference Method</h3>
+<p>An alternative measure of plasticity is the <strong>difference in
+trait means</strong> between two environments. This method is equivalent
+to using a <strong>first-degree polynomial</strong> (straight-line),
+which only captures the <strong>magnitude</strong> of change but not the
+<strong>pattern</strong>. While simple, it doesn’t provide the same
+depth of information as polynomial regression.</p>
+</div>
+<div id="citation" class="section level3">
+<h3>Citation</h3>
+<ul>
+<li>GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M.
+Scheiner</li>
+<li><a href="https://www.ugr.es/~jmgreyes/Adaptive%20phenotypic%20plasticity.pdf" class="uri">https://www.ugr.es/~jmgreyes/Adaptive%20phenotypic%20plasticity.pdf</a></li>
+</ul>
+</div>
+</div>
+<div id="drought-resistance-index-dri-according-to-fisher-and-maurer-1978" class="section level2">
+<h2>Drought Resistance Index (DRI) According to Fisher and Maurer
+(1978)</h2>
+<p>The <strong>Drought Resistance Index (DRI)</strong> was developed by
+Fisher and Maurer (1978) as an improvement over simply expressing yield
+under stress as a percentage of yield under non-stress conditions. The
+DRI compares the reduction in yield due to stress for a specific
+genotype against the mean reduction over all genotypes in the same
+test.</p>
+<p>The formula for calculating DRI is:</p>
+<p><span class="math display">\[
+\text{DRI} = \left(\frac{Y_s}{Y_n}\right) / \left(\frac{M_s}{M_n}\right)
+\]</span></p>
+<p>Where: - <span class="math inline">\(Y_s\)</span> = yield (or
+biomass) of the specific genotype under stress. - <span class="math inline">\(Y_n\)</span> = yield (or biomass) of the specific
+genotype under non-stress. - <span class="math inline">\(M_s\)</span> =
+mean yield (or biomass) of all genotypes under stress. - <span class="math inline">\(M_n\)</span> = mean yield (or biomass) of all
+genotypes under non-stress.</p>
+<p>This index reflects how well a specific genotype resists yield
+reduction under stress compared to others. Although some have argued
+that the index is biased by yield potential (with genotypes that perform
+better under non-stress conditions tending to show a lower DRI), this
+bias is rooted in biological grounds rather than being a statistical
+flaw, as discussed by Blum (1995).</p>
+<p>This index is widely used by breeders as it accounts for both stress
+and non-stress yield performance and allows comparisons across
+genotypes.</p>
+<div id="references" class="section level3">
+<h3>References</h3>
+<p>Fisher, R.A. and Maurer, R. (1978). Drought Resistance in Spring
+Wheat Cultivars. <em>Australian Journal of Agricultural Research</em>,
+29(5), 897-912.</p>
+<p>Blum, A. (1995). Drought resistance, water-use efficiency, and yield
+potential - are they compatible, dissonant, or mutually exclusive?
+<em>Australian Journal of Agricultural Research</em>, 56, 1159–1168.</p>
+</div>
+</div>
+<div id="drought-resistance-index-dri-according-to-bidinger-et-al.-1982" class="section level2">
+<h2>Drought Resistance Index (DRI) According to Bidinger et
+al. (1982)</h2>
+<p>The <strong>Drought Resistance Index (DRI)</strong> proposed by
+Bidinger et al. (1982) is used to assess drought resistance in cultivars
+by analyzing variation in grain yield under stress that cannot be
+explained by yield potential or drought escape (e.g., early flowering).
+Unlike traditional measures that rely solely on yield potential under
+stress or non-stress conditions, this DRI method isolates the specific
+drought resistance of a cultivar independent of these factors.</p>
+<div id="procedure-for-dri-calculation" class="section level3">
+<h3>Procedure for DRI Calculation:</h3>
+<ol style="list-style-type: decimal">
+<li><strong>Initial Regression</strong>:
+<ul>
+<li>Yield under stress is regressed on potential yield (measured under
+non-stress) and drought escape (days to heading under non-stress) across
+all cultivars.</li>
+<li>The estimated yield under stress for each cultivar is calculated
+from this regression.</li>
+</ul></li>
+<li><strong>Second Regression</strong>:
+<ul>
+<li>The actual measured yield under stress is regressed on the estimated
+stress yield for each cultivar from the initial regression.</li>
+<li>The deviation of each cultivar from this regression line indicates
+its drought resistance. A positive deviation suggests drought
+resistance, while a negative deviation suggests drought
+susceptibility.</li>
+<li>The drought resistance of a cultivar is quantified as the
+<strong>studentized residual</strong> from this second regression, which
+can be calculated using most statistical software packages.</li>
+</ul></li>
+<li><strong>Interpretation</strong>:
+<ul>
+<li>Cultivars with a positive deviation (or high residuals) are
+considered drought-resistant, while those with negative deviations are
+considered susceptible.</li>
+<li>The magnitude of the index (residual) is important, with values
+greater than <strong>1.3</strong> typically indicating significant
+drought resistance.</li>
+<li>While using this index in breeding programs, it is considered
+alongside other factors like absolute yield under stress, biotic stress
+resistance, and product quality.</li>
+</ul></li>
+</ol>
+</div>
+<div id="references-1" class="section level3">
+<h3>References</h3>
+<p>Bidinger, F.R., Mahalakshmi, V., &amp; Rao, G.D.P. (1982). Assessment
+of Drought Resistance in Pearl Millet [Pennisetum americanum (L.)
+Leeke]. <em>Proceedings of the International Pearl Millet Workshop</em>,
+14-19.</p>
+</div>
+</div>
+<div id="variance-of-polynomial-coefficients" class="section level2">
+<h2>Variance of Polynomial Coefficients</h2>
+<div id="mathematical-formulation-1" class="section level3">
+<h3>Mathematical Formulation</h3>
+<p>When genomes differ in their <strong>reaction norm
+functions</strong>, these differences can be captured by the
+<strong>first and higher-order polynomial coefficients</strong> (<span class="math inline">\(b_1, b_2, \dots\)</span>). The <strong>genetic
+variation for plasticity</strong> is represented by the <strong>variance
+among these coefficients</strong>: <span class="math display">\[
+Var(b_i), \quad \text{for } i = 1, 2, \dots, m
+\]</span> This method quantifies genetic variation by capturing how
+genomes vary in terms of their <strong>slopes and curvatures</strong>
+across environments.</p>
+</div>
+<div id="citation-1" class="section level3">
+<h3>Citation</h3>
+<ul>
+<li>GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M.
+Scheiner</li>
+</ul>
+</div>
+</div>
+<div id="cross-environment-correlationcovariance-for-linear-norms" class="section level2">
+<h2>Cross-environment Correlation/Covariance for Linear Norms</h2>
+<div id="mathematical-formulation-2" class="section level3">
+<h3>Mathematical Formulation</h3>
+<p>For <strong>linear reaction norms</strong> or when there are
+<strong>only two environments</strong>, genetic variation can also be
+expressed as the <strong>cross-environment correlation</strong> or
+<strong>covariance</strong> between traits: <span class="math display">\[
+Cov(z_1, z_2)
+\]</span> Where <span class="math inline">\(z_1\)</span> and <span class="math inline">\(z_2\)</span> represent the trait values in two
+different environments. This method captures the <strong>genetic
+variance for plasticity</strong> by measuring the covariance in trait
+expressions across environments. For linear norms, the variance is
+simply related to the slope of the reaction norm.</p>
+</div>
+<div id="citation-2" class="section level3">
+<h3>Citation</h3>
+<ul>
+<li>GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M.
+Scheiner</li>
+</ul>
+</div>
+</div>
+<div id="eigenfunctions-of-covariance-matrices-for-nonlinear-norms" class="section level2">
+<h2>Eigenfunctions of Covariance Matrices (for Nonlinear Norms)</h2>
+<div id="mathematical-formulation-3" class="section level3">
+<h3>Mathematical Formulation</h3>
+<p>For more complex, <strong>nonlinear reaction norms</strong>, a more
+advanced approach involves using <strong>covariance matrices</strong>
+and transforming them into <strong>eigenfunctions</strong>: 1.
+<strong>Covariance matrix</strong> of within-environment genetic
+variances and cross-environment covariances is generated. 2.
+<strong>Eigenvectors</strong> are derived from this matrix to describe
+the pattern of covariance: <span class="math display">\[
+   Cov(z_1, z_2, \dots, z_n) = \lambda_1 \mathbf{v}_1 + \lambda_2
+\mathbf{v}_2 + \dots + \lambda_n \mathbf{v}_n
+   \]</span> 3. <strong>Legendre polynomials</strong> are used to
+convert these eigenvectors into continuous
+<strong>eigenfunctions</strong>: <span class="math display">\[
+   f(x) = \sum_{i=1}^n \lambda_i \cdot P_i(x)
+   \]</span> where <span class="math inline">\(P_i(x)\)</span> are the
+Legendre polynomials. This method can handle <strong>any shaped reaction
+norm</strong> and is more comprehensive than the covariance method
+alone.</p>
+<p>#### Citation</p>
+<ul>
+<li>GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M.
+Scheiner</li>
+</ul>
+</div>
+</div>
+<div id="partitioning-phenotypic-variance-for-linear-norms" class="section level2">
+<h2>Partitioning Phenotypic Variance (for Linear Norms)</h2>
+<div id="mathematical-formulation-4" class="section level3">
+<h3>Mathematical Formulation</h3>
+<p>Another method is based on <strong>variance partitioning</strong>
+through <strong>analysis of variance</strong> (ANOVA). The <strong>total
+phenotypic variance</strong> can be divided into: <span class="math display">\[
+\sigma^2_{\text{total}} = \sigma^2_g + \sigma^2_{\text{plasticity}}
+\]</span> Where: - <span class="math inline">\(\sigma^2_g\)</span> is
+the genetic variance independent of the environment, - <span class="math inline">\(\sigma^2_{\text{plasticity}}\)</span> is the
+variance due to plastic effects (dependent on the environment).</p>
+<p>For <strong>linear reaction norms</strong>, this method provides a
+simple measure of genetic variation for plasticity by partitioning the
+total variance.</p>
+</div>
+<div id="citation-3" class="section level3">
+<h3>Citation</h3>
+<ul>
+<li>GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M.
+Scheiner</li>
+</ul>
+</div>
+</div>
+<div id="genetic-variation-for-plasticity-in-linear-norms" class="section level2">
+<h2>Genetic Variation for Plasticity in Linear Norms</h2>
+<div id="mathematical-formulation-5" class="section level3">
+<h3>Mathematical Formulation</h3>
+<p>For <strong>linear reaction norms</strong>, Gavrilets &amp; Scheiner
+(Adaptive phenotypic plasticity) provide an estimation of genetic
+variation for plasticity: <span class="math display">\[
+\sigma^2_{\text{plasticity}} = g_1^2 \cdot Var(a)
+\]</span> Where: - <span class="math inline">\(g_1\)</span> is the mean
+slope of the reaction norms across all families or genomes, - <span class="math inline">\(Var(a)\)</span> is the variance of the
+environmental gradient.</p>
+<p>For <strong>genetic variation for slopes</strong>: <span class="math display">\[
+\sigma^2_{\text{plasticity}} = G_1 \cdot Var(a)
+\]</span> Where <span class="math inline">\(G_1\)</span> is the genetic
+variation for the slopes, representing the <strong>genetic variation for
+plasticity</strong>.</p>
+</div>
+</div>
+<div id="genetic-variance-and-heritability-in-plasticity" class="section level2">
+<h2>Genetic Variance and Heritability in Plasticity</h2>
+<p>From:GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY (Samuel M.
+Scheiner)</p>
+<div id="overview" class="section level3">
+<h3>Overview</h3>
+<p>Genetic variance is a key component in understanding how traits vary
+due to genetics and how these traits respond to selection. In the
+context of phenotypic plasticity, genetic variance explains how much of
+the variation in the plastic response (i.e., changes in traits across
+different environments) is due to genetic differences.</p>
+<div id="estimating-genetic-variance" class="section level4">
+<h4>1. Estimating Genetic Variance</h4>
+<p>The total phenotypic variance (<span class="math inline">\(\sigma^2_p\)</span>) can be split into genetic
+variance (<span class="math inline">\(G\)</span>) and environmental
+variance (<span class="math inline">\(E\)</span>):</p>
+<p><span class="math display">\[
+\sigma^2_p = G + E
+\]</span></p>
+<p>Where: - <span class="math inline">\(G\)</span> represents the
+<strong>genetic variance</strong>, which accounts for differences
+between genotypes. - <span class="math inline">\(E\)</span> represents
+the <strong>environmental variance</strong>, which captures variation
+due to environmental differences.</p>
+<p>Genetic variance is often estimated using experimental designs such
+as <strong>full-sibling</strong> or <strong>half-sibling</strong>
+designs. By comparing individuals with known relationships, it is
+possible to partition phenotypic variance into genetic and environmental
+components.</p>
+</div>
+<div id="genetic-variance-in-phenotypic-plasticity" class="section level4">
+<h4>2. Genetic Variance in Phenotypic Plasticity</h4>
+<p>For phenotypic plasticity, genetic variance is calculated by
+measuring how trait expression changes across environments (reaction
+norm). The <strong>slope of the reaction norm</strong> can be used to
+estimate the genetic variance for plasticity:</p>
+<p><span class="math display">\[
+G_1 = \text{Variance of the slope of the reaction norm across
+environments}
+\]</span></p>
+<p>This means that the genetic variance for plasticity depends on how
+much the slope (or shape) of the trait’s change across environments
+differs between genotypes.</p>
+</div>
+<div id="heritability-of-plasticity" class="section level4">
+<h4>3. Heritability of Plasticity</h4>
+<p>Heritability in the context of plasticity refers to the proportion of
+phenotypic variation in plasticity that is due to genetic factors.
+Heritability measures are particularly important when making predictions
+about how a population might respond to selection.</p>
+</div>
+</div>
+<div id="heritability-descriptive-and-predictive-measures" class="section level3">
+<h3>Heritability: Descriptive and Predictive Measures</h3>
+<div id="descriptive-measures-of-genetic-variation" class="section level4">
+<h4>3.1 Descriptive Measures of Genetic Variation</h4>
+<p>When the goal is to understand the relative amounts of genetic
+variation that are dependent or independent of the environment,
+heritability is averaged across environments. Two key heritability
+measures exist for this purpose:</p>
+<ul>
+<li><strong><span class="math inline">\(h_m^2\)</span></strong>: The
+heritability of the <strong>environmentally independent portion</strong>
+of the trait (mean trait value across environments).</li>
+<li><strong><span class="math inline">\(h_{\pi}^2\)</span></strong>: The
+heritability of the <strong>environmentally dependent portion</strong>
+(plasticity).</li>
+</ul>
+<p>These are calculated as follows:</p>
+<p><span class="math display">\[
+h_m^2 = \frac{G_0}{\sigma_p^2}, \quad h_{\pi}^2 = \frac{G_1}{\sigma_p^2}
+\]</span></p>
+<p>Where: - <span class="math inline">\(G_0\)</span> is the genetic
+variance for the <strong>mean trait</strong> value across environments
+(environmentally independent portion). - <span class="math inline">\(G_1\)</span> is the genetic variance for the
+<strong>plasticity</strong> (environmentally dependent portion). - <span class="math inline">\(\sigma_p^2\)</span> is the total phenotypic
+variation across all environments.</p>
+<p>These measures provide insight into the amount of genetic variation
+that influences traits and plasticity, helping to compare different
+traits, studies, and species on a scale-free metric.</p>
+</div>
+<div id="predictive-measures-for-plasticity-under-selection" class="section level4">
+<h4>3.2 Predictive Measures for Plasticity Under Selection</h4>
+<p>When predicting the <strong>response to selection on
+plasticity</strong>, a different heritability measure is used. In this
+case, the heritability is often measured in the context of
+<strong>family selection</strong> on a plasticity index.</p>
+<p>For family selection on plasticity, the heritability is calculated
+as:</p>
+<p><span class="math display">\[
+h_{\text{plasticity}}^2 = \frac{\sigma_f^2}{\sigma_p^2}
+\]</span></p>
+<p>Where: - <span class="math inline">\(\sigma_f^2\)</span> is the
+genetic variation among families for the plasticity index. - <span class="math inline">\(\sigma_p^2\)</span> is the total phenotypic
+variation for the plasticity index.</p>
+<p>If the study involves only two environments, the plasticity index
+typically measures the <strong>difference in family means</strong>
+between environments. To obtain accurate heritability values, the total
+phenotypic variation must be corrected for errors in estimating family
+means.</p>
+</div>
+</div>
+</div>
+<div id="water-use-efficiency-wue" class="section level2">
+<h2>Water Use Efficiency (WUE)</h2>
+<div id="definition" class="section level3">
+<h3>Definition</h3>
+<p>Water use efficiency (WUE) represents the overall delivery efficiency
+of an irrigation system. It is mathematically defined as the ratio of
+the annual volume of crop water demand to the annual volume of
+irrigation supply:</p>
+<p><span class="math display">\[
+E_{WUE} = \left( \frac{\text{Annual volume of crop water demand
+(MCM)}}{\text{Annual volume of irrigation supply (MCM)}} \right) \times
+100\%
+\]</span></p>
+</div>
+<div id="interpretation-1" class="section level3">
+<h3>Interpretation</h3>
+<ul>
+<li><strong>Efficient system</strong>: If the WUE value is greater than
+60%, the irrigation system is considered efficient.</li>
+<li><strong>Good system</strong>: A WUE value between 30% and 60% is
+classified as good.</li>
+<li><strong>Poor system</strong>: A WUE value below 30% is regarded as
+poor, indicating inefficiency in water usage for crop demand.</li>
+</ul>
+</div>
+<div id="citation-4" class="section level3">
+<h3>Citation</h3>
+<p><a href="https://www.sciencedirect.com/science/article/abs/pii/B9780128117484000145" class="uri">https://www.sciencedirect.com/science/article/abs/pii/B9780128117484000145</a></p>
+</div>
+</div>
+<div id="multivariate-vector-of-plasticity" class="section level2">
+<h2>Multivariate Vector of Plasticity</h2>
+<p>The <strong>Multivariate Vector of Plasticity</strong> evaluates the
+distance moved by each trait between different environmental conditions.
+This multivariate approach considers multiple traits and calculates the
+Euclidean distance between the trait values in different
+environments.</p>
+<div id="mathematical-approach" class="section level3">
+<h3>Mathematical Approach</h3>
+<p>The vector of plasticity for a given trait can be computed using the
+formula:</p>
+<p><span class="math display">\[
+\text{Vector of Plasticity} = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2 +
+\cdots}
+\]</span></p>
+<p>Where: - <span class="math inline">\(x_1, y_1, \ldots\)</span> are
+the trait values in the first environment, and - <span class="math inline">\(x_2, y_2, \ldots\)</span> are the corresponding
+trait values in the second environment.</p>
+<p>This formula calculates the Euclidean distance, representing the
+overall change in trait values across environments.</p>
+</div>
+<div id="citation-5" class="section level3">
+<h3>Citation</h3>
+<p><a href="https://royalsocietypublishing.org/doi/10.1098/rspb.2015.1651" class="uri">https://royalsocietypublishing.org/doi/10.1098/rspb.2015.1651</a></p>
+</div>
+</div>
+<div id="θplast-angle-between-vectors-of-plasticity" class="section level2">
+<h2>θplast: Angle Between Vectors of Plasticity</h2>
+<p><strong>θplast</strong> is a measure of the direction of plasticity
+between different environments. It is calculated as the angle between
+the plasticity vectors of two environments using the dot product
+formula. This angle helps determine whether traits respond in similar or
+different directions under different environmental conditions.</p>
+<div id="formula" class="section level3">
+<h3>Formula</h3>
+<p><span class="math display">\[
+\cos(\theta_{\text{plast}}) = \frac{\mathbf{v}_1 \cdot
+\mathbf{v}_2}{\|\mathbf{v}_1\|\|\mathbf{v}_2\|}
+\]</span></p>
+<p>Where: - <span class="math inline">\(\mathbf{v}_1\)</span> and <span class="math inline">\(\mathbf{v}_2\)</span> are the vectors of
+plasticity for two different environments. - <span class="math inline">\(\|\mathbf{v}_1\|\)</span> and <span class="math inline">\(\|\mathbf{v}_2\|\)</span> are the magnitudes of
+the vectors. - The angle <span class="math inline">\(\theta_{\text{plast}}\)</span> provides insight
+into the degree of similarity or divergence in trait plasticity between
+environments.</p>
+</div>
+<div id="citation-6" class="section level3">
+<h3>Citation</h3>
+<p><a href="https://royalsocietypublishing.org/doi/10.1098/rspb.2015.1651" class="uri">https://royalsocietypublishing.org/doi/10.1098/rspb.2015.1651</a></p>
+</div>
+</div>
+<div id="plasticity-coefficient-pc" class="section level2">
+<h2>Plasticity Coefficient (PC)</h2>
+<div id="mathematical-formulation-6" class="section level3">
+<h3>Mathematical Formulation</h3>
+<p>The <strong>Plasticity Coefficient (PC)</strong> is a simple measure
+of phenotypic plasticity, calculated as the relative change between the
+maximum and minimum trait values across environments, normalized by the
+average trait value.</p>
+<p><span class="math display">\[
+PC = \frac{\text{Maximum Trait Value} - \text{Minimum Trait
+Value}}{\text{Average Trait Value}}
+\]</span></p>
+<p>Where: - <strong>Maximum Trait Value</strong>: The highest observed
+trait value across environments. - <strong>Minimum Trait Value</strong>:
+The lowest observed trait value across environments. - <strong>Average
+Trait Value</strong>: The mean of the trait values across
+environments.</p>
+</div>
+<div id="citation-7" class="section level3">
+<h3>Citation</h3>
+<p>This method is conceptually similar to the <strong>Phenotypic
+Plasticity Index (PI)</strong> by Valladares et al. (2000), which also
+uses maximum and minimum trait values to quantify plasticity.</p>
+<ul>
+<li>Valladares, F., Wright, S.J., Lasso, E., Kitajima, K., &amp; Pearcy,
+R.W. (2000). <em>Plastic phenotypic responses to light of 16 congeneric
+shrubs from a Panamanian rainforest</em>. Ecology, 81(7),
+1925-1936.</li>
+</ul>
+</div>
+</div>
+<div id="shannons-diversity-index-h" class="section level2">
+<h2>Shannon’s Diversity Index (H’)</h2>
+<div id="formula-1" class="section level3">
+<h3>Formula</h3>
+<p><span class="math display">\[
+H&#39; = -\sum p_i \log p_i
+\]</span> Where: - <span class="math inline">\(p_i\)</span> is the
+proportion of individuals with a given phenotype in each
+environment.</p>
+</div>
+<div id="description" class="section level3">
+<h3>Description</h3>
+<p>Originally used for measuring biodiversity (Shannon, 1948), Shannon’s
+Diversity Index can be adapted to quantify phenotypic plasticity by
+calculating the diversity of trait values across different
+environments.</p>
+</div>
+<div id="citation-8" class="section level3">
+<h3>Citation</h3>
+<ul>
+<li>Shannon, C. E. (1948). <em>A mathematical theory of
+communication</em>. Bell System Technical Journal, 27(3), 379-423.</li>
+</ul>
+</div>
+</div>
+<div id="mahalanobis-distance" class="section level2">
+<h2>Mahalanobis Distance</h2>
+<div id="formula-2" class="section level3">
+<h3>Formula</h3>
+<p><span class="math display">\[
+D^2 = (\mathbf{x} - \mathbf{m})^T \mathbf{S}^{-1} (\mathbf{x} -
+\mathbf{m})
+\]</span> Where: - <span class="math inline">\(\mathbf{x}\)</span> is
+the trait vector for an environment. - <span class="math inline">\(\mathbf{m}\)</span> is the mean trait vector
+across environments. - <span class="math inline">\(\mathbf{S}\)</span>
+is the covariance matrix.</p>
+</div>
+<div id="description-1" class="section level3">
+<h3>Description</h3>
+<p>Mahalanobis distance, introduced by Mahalanobis (1936), measures the
+deviation from the mean trait vector across environments and accounts
+for multivariate traits. It is useful for identifying phenotypic
+plasticity across environments.</p>
+</div>
+<div id="citation-9" class="section level3">
+<h3>Citation</h3>
+<ul>
+<li>Mahalanobis, P. C. (1936). <em>On the generalized distance in
+statistics</em>. Proceedings of the National Institute of Sciences of
+India, 2(1), 49-55.</li>
+</ul>
+</div>
+</div>
+<div id="variance-partitioning-vp" class="section level2">
+<h2>Variance Partitioning (VP)</h2>
+<div id="formula-3" class="section level3">
+<h3>Formula</h3>
+<p><span class="math display">\[
+VP = \frac{\sigma^2_{\text{plasticity}}}{\sigma^2_{\text{total}}}
+\]</span> Where: - <span class="math inline">\(\sigma^2_{\text{plasticity}}\)</span> is the
+variance due to plasticity. - <span class="math inline">\(\sigma^2_{\text{total}}\)</span> is the total
+phenotypic variance.</p>
+</div>
+<div id="description-2" class="section level3">
+<h3>Description</h3>
+<p>Variance partitioning is a common statistical technique (Falconer
+&amp; Mackay, 1996) that quantifies the proportion of total phenotypic
+variance attributable to environmental plasticity. It helps in
+understanding the genetic and environmental contributions to trait
+variation.</p>
+</div>
+<div id="citation-10" class="section level3">
+<h3>Citation</h3>
+<ul>
+<li>Falconer, D. S., &amp; Mackay, T. F. (1996). <em>Introduction to
+quantitative genetics</em> (4th ed.). Longman.</li>
+</ul>
+</div>
+</div>
+<div id="mean-trait-difference-mtd" class="section level2">
+<h2>Mean Trait Difference (MTD)</h2>
+<div id="formula-4" class="section level3">
+<h3>Formula</h3>
+<p><span class="math display">\[
+MTD = \frac{\sum (z_{\text{env1}} - z_{\text{env2}})}{n}
+\]</span> Where: - <span class="math inline">\(z_{\text{env1}}\)</span>
+and <span class="math inline">\(z_{\text{env2}}\)</span> are trait
+values in two environments. - <span class="math inline">\(n\)</span> is
+the number of individuals.</p>
+</div>
+<div id="description-3" class="section level3">
+<h3>Description</h3>
+<p>Mean Trait Difference (MTD) is a straightforward measure of
+phenotypic plasticity that calculates the average difference in trait
+values between two environments. It has been applied in various
+ecological studies to assess phenotypic change (Schlichting &amp;
+Pigliucci, 1998).</p>
+</div>
+<div id="citation-11" class="section level3">
+<h3>Citation</h3>
+<ul>
+<li>Schlichting, C. D., &amp; Pigliucci, M. (1998). <em>Phenotypic
+evolution: A reaction norm perspective</em>. Sinauer Associates.</li>
+</ul>
+</div>
+</div>
+<div id="range-of-reaction-norm" class="section level2">
+<h2>Range of Reaction Norm</h2>
+<div id="formula-5" class="section level3">
+<h3>Formula</h3>
+<p><span class="math display">\[
+R = z_{\text{max}} - z_{\text{min}}
+\]</span> Where: - <span class="math inline">\(z_{\text{max}}\)</span>
+and <span class="math inline">\(z_{\text{min}}\)</span> are the maximum
+and minimum trait values across environments.</p>
+</div>
+<div id="description-4" class="section level3">
+<h3>Description</h3>
+<p>The range of reaction norm measures the total range of trait
+expression across environments, which is an important indicator of
+phenotypic plasticity. This concept was elaborated in Stearns (1992) to
+describe how organisms respond to environmental variation.</p>
+</div>
+<div id="citation-12" class="section level3">
+<h3>Citation</h3>
+<ul>
+<li>Stearns, S. C. (1992). <em>The evolution of life histories</em>.
+Oxford University Press.</li>
+</ul>
 </div>
 </div>
 </div>

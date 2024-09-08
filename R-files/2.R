@@ -136,6 +136,12 @@ check_and_install_packages = function(packages) {
 #' which columns should be used for species (optional), traits, and environmental factors, either by name or by index.
 #' The function generates boxplots to visualize RDPI distributions and performs ANOVA to determine significant differences in RDPI values 
 #' across environmental groups and traits, followed by Tukey's HSD for pairwise comparisons.
+#' 
+#' RDPI Calculation:
+#' For each pair of environmental combinations, it calculates the absolute difference between their mean trait values.
+#' This difference is normalized by dividing it by the overall mean trait value across all environmental combinations.
+#' The RDPI for a given trait is the average of these normalized differences across all pairs of environmental combinations.
+
 #'
 #' @param dataframe A data frame containing the data to be analyzed. This should include the traits of interest and the environmental factors. 
 #' The species identifier column is optional and only necessary if multiple species/groups are being analyzed.
@@ -350,15 +356,8 @@ external_light = rep(c(0.4, 0.6, 0.8), each = 100)
 external_water = sample(rep(c("Low", "High"), each = 150))
 
 # Calculate RDPI with factors not in the dataframe
-result = rdpi_calculation(synthetic_data1, sp = NULL, traits = c(3, 4), factors = 2, factors_not_in_dataframe = list(external_light, external_water))
+RDPI= rdpi_calculation(synthetic_data1, sp = NULL, traits = c(3, 4), factors = 2, factors_not_in_dataframe = list(external_light, external_water))
 
-# Print the RDPI results and plot the boxplots
-print(result$all_results)
-print(result$trait_boxplots)
-
-# View ANOVA and Tukey's HSD results
-print(result$anova_results)
-print(result$tukey_results)
 
 #####################################################
 
@@ -796,22 +795,22 @@ print(espiid)
 #' print(results$all_results)
 #' 
 #' @export
-evwpi_calculation <- function(dataframe, traits, sp = NULL, environments, factors, use_median = FALSE) {
+evwpi_calculation = function(dataframe, traits, sp = NULL, environments, factors, use_median = FALSE) {
   #NOTE:this was an idea but needs to be worked on
   # Convert traits and sp from column indices to names if necessary
   if (!is.null(sp) && is.numeric(sp)) {
-    sp <- names(dataframe)[sp]
+    sp = names(dataframe)[sp]
   }
-  traits <- if (is.numeric(traits)) names(dataframe)[traits] else traits
+  traits = if (is.numeric(traits)) names(dataframe)[traits] else traits
   
   # Handle environments: if it's a vector of indices, extract the columns; if it's a list of vectors, use directly
   if (is.numeric(environments)) {
-    environments <- dataframe[[names(dataframe)[environments]]]
+    environments = dataframe[[names(dataframe)[environments]]]
   }
   
   # Handle factors: if factors is a vector of indices/names, extract the columns; if it's a list of vectors, use directly
   if (is.numeric(factors) || is.character(factors)) {
-    factors <- lapply(factors, function(f) dataframe[[f]])
+    factors = lapply(factors, function(f) dataframe[[f]])
   }
   
   # Ensure the factors are correctly handled and match the length of the dataframe
@@ -820,30 +819,30 @@ evwpi_calculation <- function(dataframe, traits, sp = NULL, environments, factor
   }
   
   # Step 1: Calculate the variance induced by each factor
-  variance_scores <- sapply(factors, function(factor) {
+  variance_scores = sapply(factors, function(factor) {
     var(factor, na.rm = TRUE)
   })
   
   # Normalize the variance scores to get the weights
-  total_variance <- sum(variance_scores, na.rm = TRUE)
-  weights <- variance_scores / total_variance
+  total_variance = sum(variance_scores, na.rm = TRUE)
+  weights = variance_scores / total_variance
   
-  all_results <- list()
+  all_results = list()
   
   if (is.null(sp)) {
-    unique_species <- list("Single_Group" = dataframe)
+    unique_species = list("Single_Group" = dataframe)
   } else {
-    unique_species <- split(dataframe, dataframe[[sp]])
+    unique_species = split(dataframe, dataframe[[sp]])
   }
   
   # Loop over each species or group
   for (species_name in names(unique_species)) {
-    species_data <- unique_species[[species_name]]
+    species_data = unique_species[[species_name]]
     
-    EVWPI_results <- list()
+    EVWPI_results = list()
     
     # Initialize a data frame to store EVWPI values for each pair of environments
-    EVWPI_values <- data.frame(sp = character(), trait = character(), evwpi = numeric())
+    EVWPI_values = data.frame(sp = character(), trait = character(), evwpi = numeric())
     unique_envs=unique(environments)
     
     # Loop over each trait
@@ -851,31 +850,31 @@ evwpi_calculation <- function(dataframe, traits, sp = NULL, environments, factor
       for (i in 1:(length(unique_envs) - 1)) {
         for (j in (i + 1):length(unique_envs)) {
           
-          env_i <- unique_envs[i]
-          env_j <- unique_envs[j]
+          env_i = unique_envs[i]
+          env_j = unique_envs[j]
           
-          trait_i <- species_data[[trait]][environments == env_i]
-          trait_j <- species_data[[trait]][environments == env_j]
-          abs_diff <- abs(outer(trait_i, trait_j, "-"))
+          trait_i = species_data[[trait]][environments == env_i]
+          trait_j = species_data[[trait]][environments == env_j]
+          abs_diff = abs(outer(trait_i, trait_j, "-"))
           
           # Calculate mean or median absolute phenotypic distance
-          mean_abs_diff <- if (use_median) median(abs_diff, na.rm = TRUE) else mean(abs_diff, na.rm = TRUE)
+          mean_abs_diff = if (use_median) median(abs_diff, na.rm = TRUE) else mean(abs_diff, na.rm = TRUE)
           
           # Calculate the weighted environmental distance using the variance-based weights
-          weighted_env_distance <- sum(weights)
+          weighted_env_distance = sum(weights)
           
           
           # Calculate EVWPI for this pair of environments
-          evwpi_value <- if (weighted_env_distance != 0) mean_abs_diff / weighted_env_distance else NaN
+          evwpi_value = if (weighted_env_distance != 0) mean_abs_diff / weighted_env_distance else NaN
         
           
           # Store the results
-          EVWPI_values <- rbind(EVWPI_values, data.frame(sp = species_name, trait = trait, evwpi = evwpi_value))
+          EVWPI_values = rbind(EVWPI_values, data.frame(sp = species_name, trait = trait, evwpi = evwpi_value))
         }
       }
     }
     
-    all_results[[species_name]] <- EVWPI_values
+    all_results[[species_name]] = EVWPI_values
   }
   
   return(all_results)
@@ -889,4 +888,4 @@ evwpi_calculation <- function(dataframe, traits, sp = NULL, environments, factor
 
 external_ph = sample(rep(c(1, 6, 18), each = 100))
 evwpi=evwpi_calculation(synthetic_data1,traits = 3,environments=1, factors=list(external_ph))
-print(evwpi)
+print(evwpi)xs
