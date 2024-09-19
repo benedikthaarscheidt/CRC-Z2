@@ -1,10 +1,21 @@
-#this files contains the following indices: 
-#coefficient-of variation total 
-#slope of norm reaction,
-# slope of plastic response (D),
-# response coefficient (RC),
-# Standard deviation of means (CVm)
-#Standard deviation of medians (CVmd)
+#this files contains the following indices/functions: 
+#generate_synthetic_data,
+#impute,
+#coefficient-of variation total (calculate_CVt)
+#slope of norm reaction (calculate_reaction_norm_slope),
+#slope of plastic response (D) (calculate_D_slope),
+#response coefficient (RC) (calculate_RC),
+#Standard deviation of means (CVm) (calculate_CVm),
+#Standard deviation of medians (CVmd)(calculate_CVmd),
+#Grand plasticity (calculate_GPi),
+#combine_factors,
+#Phenotypic Plasticity Index (calculate_GPi),
+#Phenotypic Plasticity Index (calculate_PPF),
+#Phenotypic Plasticity Index (calculate_Phenotypic_Plasticity_Index),
+#PImd (calculate_PImd),
+#PILSM (calculate_PILSM),
+#RTR (calculate_RTR),
+#PIR (calculate_PIR)
 
 
 ################################
@@ -885,7 +896,7 @@ print(PImd)
 #' @export
 calculate_PILSM = function(data, trait_col, env_col, covariates = NULL) {
   # List of required packages
-  required_packages = c("emmeans", "ggplot2")
+  required_packages = c("emmeans", "ggplot2","ggplot")
   
   # Function to check and install missing packages
   check_and_install_packages = function(packages) {
@@ -930,12 +941,13 @@ calculate_PILSM = function(data, trait_col, env_col, covariates = NULL) {
   
   # Plot the LSMs against the original data
   plot_data = data.frame(Environment = env_col, Trait = trait_col)
-  lsm_plot = ggplot(plot_data, aes(x = Environment, y = Trait)) +
-    geom_point(color = "blue", alpha = 0.5) +
-    geom_point(data = lsm, aes(x = env_col, y = emmean), color = "red", size = 3) +
-    geom_line(data = lsm, aes(x = env_col, y = emmean), color = "red", linetype = "dashed") +
-    labs(title = "Least Square Means (LSMs) by Environment", x = "Environment", y = "Trait") +
-    theme_minimal()
+  lsm_plot = ggplot2::ggplot(plot_data, ggplot2::aes(x = Environment, y = Trait)) +
+    ggplot2::geom_point(color = "blue", alpha = 0.5) +
+    ggplot2::geom_point(data = lsm, ggplot2::aes(x = env_col, y = emmean), color = "red", size = 3) +
+    ggplot2::geom_line(data = lsm, ggplot2::aes(x = env_col, y = emmean), color = "red", linetype = "dashed") +
+    ggplot2::labs(title = "Least Square Means (LSMs) by Environment", x = "Environment", y = "Trait") +
+    ggplot2::theme_minimal()
+  
   
   return(list(PILSM = PILSM, plot = lsm_plot))
 }

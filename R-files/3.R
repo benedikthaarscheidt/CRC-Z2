@@ -1,3 +1,11 @@
+#this files contains the following indices/functions: 
+#generate_synthetic_data,
+#Phenotypic Stability Index (calculate_PSI),
+#Relative Plasticity Index (calculate_RPI),
+#Plasticity Quotient (calculate_PQ),
+#Norm of reaction width (calculate_NRW)
+
+
 #' Generate Synthetic Plant Plasticity Data with Sequential Environments
 #'
 #' This function generates a synthetic dataset for plant plasticity measurements across multiple environments. 
@@ -190,8 +198,263 @@ print(PSI)
 ##################################
 
 
+#this files contains the following indices: 
+#' Calculate Relative Plasticity Index (RPI)
+#'
+#' This function calculates the Relative Plasticity Index (RPI) for a given trait across two environments.
+#' The RPI quantifies the relative change in a trait between two specified environments using the formula:
+#' 
+#' \deqn{RPI = \frac{|TraitValueEnv1 - TraitValueEnv2|}{TraitValueEnv1 + TraitValueEnv2}}
+#' 
+#' The user must specify the two environments either by providing the column index for the environment in 
+#' the dataset or by passing an external vector indicating environmental belonging.
+#'
+#' @param data A data frame containing the input data, with one column for the trait and another column or external vector for the environment.
+#' @param trait_col A string or numeric value indicating the column in `data` that contains the trait values.
+#' @param env_col A string, numeric, or vector indicating the column in `data` that contains the environment labels, or an external vector specifying environment belonging.
+#' @param env1 A value indicating the first environment to compare. Must be present in `env_col`.
+#' @param env2 A value indicating the second environment to compare. Must be present in `env_col`.
+#'
+#' @return A numeric value representing the calculated RPI for the specified trait between the two environments.
+#'
+#' @details The RPI is calculated by taking the absolute difference between the trait values in the two environments
+#' and dividing it by the sum of the trait values in the two environments. This index provides a relative measure of 
+#' the trait's plasticity across the two environments.
+#'
+#' @examples
+#' # Example usage with synthetic data
+#' synthetic_data = data.frame(
+#'   Trait = c(100, 110, 120, 130, 140, 150),
+#'   Environment = factor(c(1, 1, 2, 2, 3, 3))
+#' )
+#' 
+#' # Calculate RPI between environment 1 and 2
+#' rpi_value = calculate_RPI(synthetic_data, trait_col = "Trait", env_col = "Environment", env1 = 1, env2 = 2)
+#' print(rpi_value)
+#'
+#' @export
+calculate_RPI = function(data, trait_col, env_col, env1, env2) {
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
+  } else {
+    env_col = data[[env_col]]
+  }
+  
+  # Extract trait data
+  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  
+  # Filter the data for the two specified environments
+  env1_data = trait_col[env_col == env1]
+  env2_data = trait_col[env_col == env2]
+  
+  # Ensure there are equal numbers of values for env1 and env2
+  if (length(env1_data) != length(env2_data)) {
+    stop("The number of trait values for the two environments must be equal.")
+  }
+  
+  # Calculate RPI for each pair of values between the two environments
+  RPI_values = abs(env1_data - env2_data) / (env1_data + env2_data)
+  
+  # Return the average RPI across all data points
+  RPI = mean(RPI_values, na.rm = TRUE)
+  
+  return(RPI)
+}
+
+
+calculate_RPI(synthetic_data1,3,1,1,2)
+
+######################################
+
+#' @title Calculate Plasticity Quotient (PQ)
+#' @description This function calculates the Plasticity Quotient (PQ) based on the range of trait values across different environmental conditions and the corresponding environmental factor range.
+#'
+#' @param data A data frame containing the data for the analysis.
+#' @param trait_col A column name (string) or numeric index representing the trait values in the data. This can also be a vector of trait values with the same length as the number of rows in the data.
+#' @param env_col A column name (string) or numeric index representing the environmental variable in the data, or a vector of environmental values. This specifies the environmental conditions for calculating plasticity.
+#' @param factor_col A column name (string) or numeric index representing a relevant environmental factor (e.g., temperature, moisture) in the data, or a vector of environmental factor values. This will be used for standardizing the trait range.
+#'
+#' @details 
+#' The function first handles the provided column names or indices for `trait_col`, `env_col`, and `factor_col`, ensuring they are correctly extracted from the data. 
+#' 
+#' It then calculates the mean trait values and factor values across the different environmental conditions specified in `env_col`. The range of the mean trait values is computed, and this is divided by the range of the mean factor values to compute the Plasticity Quotient (PQ).
+#'
+#' @return A numeric value representing the Plasticity Quotient (PQ), which is the ratio of the range of trait values to the range of environmental factor values.
+#'
+#' @examples
+#' # Example usage:
+#' # Assuming 'data' is a data frame with columns 'trait', 'env', and 'factor':
+#' PQ = calculate_PQ(data, 'trait', 'env', 'factor')
+#' 
+#' @export
+calculate_PQ = function(data, trait_col, env_col, factor_col){
+  # Handle env_col
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
+  } else {
+    env_col = data[[env_col]]
+  }
+  
+  # Handle factor_col
+  if (is.numeric(factor_col) && length(factor_col) == 1) {
+    factor_col = data[[factor_col]]
+  } else if (is.vector(factor_col) && length(factor_col) == nrow(data)) {
+    factor_col = factor_col
+  } else {
+    factor_col = data[[factor_col]]
+  }
+  
+  # Extract trait data
+  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  
+  # Calculation of PQ
+  mean_values = aggregate(cbind(trait_col, factor_col) ~ env_col, data = data, FUN = mean)
+  range_trait = abs(max(mean_values$trait_col) - min(mean_values$trait_col))
+  env_range = abs(max(mean_values$factor_col) - min(mean_values$factor_col))
+  
+  # Return PQ
+  return(range_trait / env_range)
+}
+
+
+calculate_PQ(synthetic_data1,3,1,2)
+
+###########################################
+
+#' @description This function calculates the Phenotypic Range (PR) for a trait across specified environments. PR is defined as the difference between the maximum and minimum trait values within each environment.
+#'
+#' @param data A data frame containing the data for the analysis.
+#' @param env_col A column name (string), numeric index, or vector representing the environmental variable in the data. This specifies the environment for calculating the PR.
+#' @param trait_col A column name (string) or numeric index representing the trait values in the data. This can also be a vector of trait values with the same length as the number of rows in the data.
+#' @param env Optional. A vector specifying which environments to include in the calculation. If not provided, all unique environments from `env_col` are used.
+#'
+#' @details 
+#' The function calculates the Phenotypic Range (PR) for each specified environment, defined as the range (maximum minus minimum) of trait values within each environment. If `env` is provided, only the specified environments are used; otherwise, it uses all unique environments in `env_col`. 
+#'
+#' @return A numeric vector containing the PR for each environment. The length of the vector is equal to the number of unique environments or the length of the `env` vector (if provided).
+#'
+#' @examples
+#' # Example usage:
+#' # Assuming 'data' is a data frame with columns 'trait' and 'env':
+#' PR = calculate_PR(data, 'env', 'trait')
+#' # Example with specific environments:
+#' PR = calculate_PR(data, 'env', 'trait', env = c("Environment1", "Environment2"))
+#'
+#' @export
+calculate_PR=function(data,env_col,trait_col,env=NULL){
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
+  } else {
+    env_col = data[[env_col]]
+  }
+  
+  # Extract trait data
+  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  
+  
+  if(is.null(env)){
+    env=unique(env_col)
+  }else{
+    env=env
+  }
+  
+  PR=rep(0,length(env))
+  for(i in 1:length(env)){
+    PR[i]=max(trait_col[which(env_col==env[i])])-min(trait_col[which(env_col==env[i])])
+  }
+  
+  return(PR)
+}
+
+calculate_PR(synthetic_data1,1,3)
 
 
 
 
 
+
+##########################
+
+#' @description This function calculates the Norm of Reaction Width (NRW) for a specific genotype or group, measuring the range of trait values across different environments. If no grouping factor is specified, it calculates the NRW for the entire dataset.
+#'
+#' @param data A data frame containing the data for the analysis.
+#' @param trait_col A column name (string) or numeric index representing the trait values in the data. This can also be a vector of trait values with the same length as the number of rows in the data.
+#' @param env_col A column name (string) or numeric index representing the environmental variable in the data, or a vector of environmental values. This specifies the environmental conditions for calculating NRW.
+#' @param group_col Optional. A column name (string) or numeric index representing the grouping factor (e.g., genotype) in the data. If not provided, all data will be treated as one group.
+#'
+#' @details 
+#' The function calculates the Norm of Reaction Width (NRW) by determining the range (maximum minus minimum) of trait values for each group (or the entire dataset if no group is specified) across all environments. It returns a data frame with the NRW for each group.
+#'
+#' @return A data frame with two columns: one for the group identifier and the other for the corresponding Norm of Reaction Width (NRW) for each group.
+#'
+#' @examples
+#' # Example usage:
+#' # Assuming 'data' is a data frame with columns 'trait', 'env', and 'genotype':
+#' NRW = calculate_NRW(data, 'trait', 'env', 'genotype')
+#' # If no grouping factor is provided:
+#' NRW = calculate_NRW(data, 'trait', 'env')
+#'
+#' @export
+calculate_NRW = function(data, trait_col, group_col=NULL) {
+  # Ensure trait_col, env_col, and group_col are properly handled
+  if (is.numeric(trait_col)) trait_col = data[[trait_col]]
+  if (is.null(group_col)){group_col=rep(1,nrow(data))}
+  else{group_col = data[[group_col]]}
+  
+  # Calculate the range (NRW) for each group across environments
+  NRW_df = aggregate(trait_col ~ group_col, data = data, FUN = function(x) max(x) - min(x))
+  
+  # Rename columns to make the result clearer
+  colnames(NRW_df) = c("Group", "NRW")
+  
+  return(NRW_df)
+}
+
+
+calculate_NRW(synthetic_data1,3)
+
+##############################
+
+
+
+calculate_ESP = function(data, trait_col, env_col, env=NULL) {
+  # Handle env_col properly (either column index, column name, or vector)
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col = env_col
+  } else {
+    env_col = data[[env_col]]
+  }
+  
+  # If env is NULL, calculate ESP for all unique environments
+  if (is.null(env)) {
+    env = unique(env_col)
+  }
+  
+  # Extract trait data properly (either column index or column name)
+  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  
+  # Calculate the mean trait value across all environments
+  mean_trait_all_envs = mean(trait_col, na.rm = TRUE)
+  
+  # Initialize ESP vector
+  ESP = rep(1, length(env))
+  
+  # Loop through each environment and calculate ESP
+  for (i in 1:length(env)) {
+    trait_values_env = trait_col[env_col == env[i]]
+    ESP[i] = (mean(trait_values_env, na.rm = TRUE) - mean_trait_all_envs) / mean_trait_all_envs
+  }
+  
+  return(ESP)
+}
+
+calculate_ESP(synthetic_data1,3,1)

@@ -21,16 +21,10 @@ library(ggplot2)
 library(lme4)
 library(emmeans)
 ```
-## Introduction
 
-This study aims to analyze the trait measurment data from two plant species, *Arabidopsis thaliana* and *Capsella bursa-pastoris*, under varying conditions of temperature and nitrogen abundance in the soil. We will compute the reaction norms of the traitgene expression data and calculate various plasticity scores as described in the papers by Zoran Nikoloski and Arnold et al.
+# Intro
 
-## Experimental Setup
-
-- **Species**: *Arabidopsis thaliana* and *Capsella bursa-pastoris*
-- **Growth Conditions**: Different temperature regimes and varying nitrogen levels in the soil
-- **Measurement Variation**: Five distinct parameter combinations for each condition
-
+This document serves as both a summary and a working notebook for Project Z2 in CRC 1622. It is intended to clarify and address open questions related to the project, providing a reference point for ongoing discussions and developments. Please note that this file is distinct from the bi-weekly reports submitted to Prof. Dr. Zoran. As a newcomer to the project, you may find this document useful for gaining an overview of past activities as well as understanding the steps planned for the future. The plasticity scores listed here are implemented in separate R files saved in the same directory and on the same branch on github as this file is.
 
 
 ## Experimental Setup
@@ -48,9 +42,10 @@ This study aims to analyze the trait measurment data from two plant species, *Ar
 
 ## Experimental Treatments and GC-MS Analysis
 
-**GC-MS Analysis (example pipeline on [DOI: 10.1111/pce.14146](https://doi.org/10.1111/pce.14146))**
 
-Gas Chromatography-Mass Spectrometry (GC-MS) is performed to analyze the biochemical changes in plants subjected to stress conditions. The following steps are involved:
+This section provides an overview of the Gas Chromatography-Mass Spectrometry (GC-MS) analysis pipeline which may be used in the data generation process of Project Z2. GC-MS is employed to examine biochemical changes in response to environmental stresses, such as varying temperatures and nitrogen levels.
+
+example pipeline from [DOI: 10.1111/pce.14146](https://doi.org/10.1111/pce.14146)
 
 1. **Sample Preparation:**  
    - Plant tissues (e.g., leaves, roots) are harvested at specified time points.
@@ -79,16 +74,19 @@ Gas Chromatography-Mass Spectrometry (GC-MS) is performed to analyze the biochem
    - The retention times and mass spectra are compared with reference libraries to confirm the identities of the compounds.
    - The relative abundances of the metabolites are calculated to assess the biochemical changes induced by stress treatments.
 
-The GC-MS analysis provides insights into the metabolic adjustments in plants in response to abiotic stresses, revealing how epigenetic modifications might influence these biochemic
- Getting Familiar with the Tasks/Terms/Data/Etc.
 
 ## Diversity Panels
+
 Diversity panels are collections of different accessions (genetically distinct lines) used to study genetic diversity, natural variation, and genotype-phenotype associations.
 
 ## Reaction Norms of the Trait Data
+
  A ‘reaction norm’ describes the sensitivity of an organism, or of a set of organisms of the same genotype (e.g., the members of a clone), to some specific environmental variable. It quantifies phenotypic change (or lack of change) in a selected aspect of the phenotype as a function of variation in the environmental factor of interest. The reaction norm approach treats environmental sensitivity as a continuously variable response. 
 
+# Approaches for Quantifying Plasticity
+
 ## Nominal Approaches for Quantifying Plasticity
+
 Nominal approaches involve analyzing trait data from a single genotype across various environments. These methods rely on the concept of the reaction norm, which visualizes how trait values of a genotype change across different environments. This approach primarily uses two key concepts:
 
 1. **Slope of the Regression Line**
@@ -121,7 +119,7 @@ Relative approaches involve analyzing a single trait across multiple genotypes i
 2. **Genotype-by-Environment Interaction**
    - This interaction measures how plasticity varies across different genotypes, rather than within a single genotype.
 
-### Finlay and Wilkinson Method
+### Example - Finlay and Wilkinson Method
 
 The Finlay-Wilkinson regression is a method used in agronomy and plant breeding to analyze genotype-by-environment interactions (GxE). This technique helps in understanding how different genotypes (e.g., crop varieties) perform across a range of environmental conditions. Finlay-Wilkinson regression is designed to assess the stability and adaptability of different genotypes in varying environments. It aims to identify which genotypes are consistently high-performing across different environments and which ones are more sensitive to environmental changes.
 
@@ -137,7 +135,6 @@ The Finlay-Wilkinson regression is a method used in agronomy and plant breeding 
 - **Relative Measures**
   - The slope and mean square error from these comparisons provide plasticity measures for each genotype.
 
-#### Example for 
 ```{r}
 # Creating a toy dataset
 data <- data.frame(
@@ -186,8 +183,7 @@ ggplot(data, aes(x = EnvMean, y = Yield, color = Genotype)) +
 * A slope greater than 1 indicates that the genotype is more responsive to environmental improvements (high performance in favorable environments but poor performance in unfavorable ones)
 * A slope less than 1 indicates greater stability and lower responsiveness to environmental changes, suggesting the genotype performs relatively consistently across different environments.
 
-
-## Epigenetics and their influence on plasticity
+# Epigenetics and their influence on plasticity
 
 Plants, being sessile, are constantly exposed to various environmental stresses. To survive and adapt to these conditions, they undergo epigenetic modifications. Epigenomics, the study of large-scale epigenetic marks on the genome, includes changes like histone modifications (acetylation, methylation, phosphorylation, ubiquitination) and small RNA machinery. These modifications play a crucial role in gene expression regulation and phenotypic plasticity under stress.
 
@@ -224,61 +220,13 @@ Cold stress induces histone deacetylation and changes in DNA methylation pattern
 Epigenetic modifications provide a mechanism for plants to adapt to various abiotic stresses, enhancing their survival and productivity. Understanding these processes can aid in developing crop improvement strategies to ensure sustainable agricultural production in the face of climate change and environmental challenges.
 
 
-# Summary of Quantitative estimation of phenotypic plastic the gap between the evolutionary concept and applications
+# Summary of Quantitative estimation of phenotypic plastic the gap between the evolutionary concept and applications (Valladares et. al)
 
 This study reviews methods for quantitatively estimating phenotypic plasticity (PP) and applies them to a case study involving four woody species (Quercus robur, Quercus pyrenaica, Pinus sylvestris, and Pinus pinaster) grown under different light conditions. The authors propose new methods for quantifying PP, particularly when traditional indices fall short due to non-linear trait responses. Key results and methods include:
 
 1. **Review of Common Methods**: A detailed review of 17 different plasticity indices used in comparative ecological studies.
 2. **Case Study**: Application of these indices to assess growth and shoot-root allocation in seedlings under varying light intensities (1%, 6%, 20%, and 100% full sunlight).
 3. **New Indices**: Introduction of the Relative Distance Plasticity Index (RDPI) and the Environmentally Standardized Plasticity Index (ESPI), which allow for statistical comparisons of PP among species.
-
-
-## Literature Review
-A comprehensive review of studies from 1965 to 2005 was conducted to identify and analyze various indices used to quantify PP.
-
-# Data Design Explanation
-
-In the study, the experiment was designed to investigate the phenotypic plasticity of different tree species under varying light and water conditions. Here’s a detailed explanation of the data design:
-
-## Experiment Design
-
-### Factors and Levels
-The experiment employed a 4 x 4 factorial design, where the two factors were:
-1. **Irradiance Levels (Light Availability)**        
-   - 1% Full Sunlight      
-   - 6% Full Sunlight     
-   - 20% Full Sunlight     
-   - 100% Full Sunlight      
-
-2. **Plant Species**    
-   - Quercus robur (European Oak)     
-   - Quercus pyrenaica (Pyrenean Oak)    
-   - Pinus sylvestris (Scots Pine)    
-   - Pinus pinaster (Maritime Pine)   
-
-### Setup
-Each combination of irradiance level and plant species was represented, resulting in a total of 16 treatment combinations (4 irradiance levels x 4 plant species). 
-
-
-## Data Collection
-
-### Measurements
-1. **Shoot-Root Ratio**: A key trait measured in the study, representing the allocation of biomass between the above-ground (shoot) and below-ground (root) parts of the plants.
-2. **Total Plant Biomass**: The dry mass of the entire plant, which was separated into leaves, stems, branches, and roots and dried to obtain accurate mass measurements.
-3. **Environmental Monitoring**: Light availability (Photosynthetically Active Radiation - PAR) was recorded using external sensors and a data logger.
-
-### Data Analysis
-- **Indices of Phenotypic Plasticity**: Various indices were used to quantify phenotypic plasticity, such as the coefficient of variation, slope of the reaction norm, and the newly proposed Relative Distance Plasticity Index (RDPI).
-- **Statistical Analysis**: One-way ANOVA was used to test for differences in growth (biomass) and shoot-root ratios among species. Interaction effects between species and light treatments were also analyzed.
-
-## Summary
-The factorial design of this experiment allowed for a comprehensive analysis of how different light conditions affect the growth and phenotypic plasticity of various tree species. By carefully controlling soil and water conditions and using multiple replicates, the study aimed to ensure robust and reliable results.
-
-For detailed data, refer to Appendix S1 in the supplementary material.
-
-## New Indices
-- **Relative Distance Plasticity Index (RDPI)**: Quantifies PP based on phenotypic distances among individuals exposed to different environments.
-- **Environmentally Standardized Plasticity Index (ESPI)**: Expresses plasticity per unit of environmental change.
 
 
 ## Plasticity Scores
@@ -309,116 +257,6 @@ a package containing implementations of some of the plasticity scores can be fou
 
 
 
-## List of Pending Scores
-
-
-
-2. **Growth Rate Index (GRI)**
-   - **Description:** Assesses the rate of growth of plants over time, often calculated as the difference in biomass or height over a period.
-
-3. **Relative Growth Rate (RGR)**
-   - **Description:** Measures the increase in plant size (biomass, height) relative to the initial size over a specific period.
-
-4. **Resource Use Efficiency (RUE)**
-   - **Description:** Evaluates the efficiency with which plants use resources (e.g., water, nutrients) for growth, often calculated as growth per unit resource.
-
-5. **Leaf Area Ratio (LAR)**
-   - **Description:** Represents the ratio of leaf area to plant biomass, which can provide insights into the allocation of resources to leaf production versus other plant tissues.
-
-6. **Specific Leaf Area (SLA)**
-   - **Description:** Measures the area of leaf per unit of leaf dry mass, providing information on leaf thickness and density.
-
-7. **Maximum Photosynthetic Rate (Pmax)**
-   - **Description:** The highest rate of photosynthesis observed under optimal conditions, reflecting the maximum capacity of the plant for carbon fixation.
-
-8. **Chlorophyll Content (CC)**
-   - **Description:** Quantifies the amount of chlorophyll in the leaves, which is related to the plant's photosynthetic capacity.
-
-9. **Water Use Efficiency (WUE)**
-   - **Description:** The ratio of biomass produced to the amount of water used, indicating how effectively a plant converts water into growth.
-
-10. **Biomass Allocation Ratio (BAR)**
-    - **Description:** The proportion of total biomass allocated to different plant organs (e.g., leaves, stems, roots), reflecting the plant's strategy for resource allocation.
-
-11. **Net Assimilation Rate (NAR)**
-    - **Description:** Measures the rate of increase in plant biomass per unit of leaf area, indicating the efficiency of photosynthesis and growth.
-
-12. **Seedling Survival Rate (SSR)**
-    - **Description:** The percentage of seedlings that survive to a specific age or stage, providing insights into plant establishment and resilience.
-
-13. **Root-to-Shoot Ratio (RSR)**
-    - **Description:** The ratio of root biomass to shoot biomass, which can indicate how plants allocate resources between root and shoot growth.
-
-14. **Functional Diversity Index (FDI)**
-    - **Description:** Quantifies the diversity of functional traits within a plant community, reflecting the range of strategies for resource acquisition and utilization.
-
-15. **Root Growth Rate (RGR)**
-    - **Description:** Measures the increase in root length or biomass over time, which is crucial for understanding root development and resource acquisition.
-
-16. **Photosynthetic Efficiency (PE)**
-    - **Description:** Assesses the efficiency of photosynthesis, often measured as the ratio of carbon fixed to light absorbed.
-1. **Plant Height Growth Rate (PHGR)**
-   - **Description:** Measures the increase in plant height over time to evaluate overall growth performance.
-
-2. **Leaf Expansion Rate (LER)**
-   - **Description:** Assesses the rate at which leaf area increases, providing insights into leaf development and plant health.
-
-3. **Root Length Density (RLD)**
-   - **Description:** The length of roots per unit of soil volume, indicating the root system's capacity for resource exploration.
-
-4. **Leaf Dry Matter Content (LDMC)**
-   - **Description:** The ratio of leaf dry mass to leaf fresh mass, reflecting leaf density and water content.
-
-5. **Total Leaf Area (TLA)**
-   - **Description:** The sum of leaf area per plant, related to the plant's photosynthetic potential and overall growth.
-
-6. **Root Biomass Density (RBD)**
-   - **Description:** The mass of roots per unit of soil volume, reflecting investment in root growth relative to soil volume.
-
-7. **Chlorophyll a/b Ratio**
-   - **Description:** The ratio of chlorophyll a to chlorophyll b in leaves, providing insights into the plant's photosynthetic efficiency.
-
-8. **Stomatal Conductance (gs)**
-   - **Description:** Measures the rate of gas exchange through stomata, crucial for understanding water use and photosynthesis.
-
-9. **Leaf Nitrogen Content (LNC)**
-   - **Description:** The amount of nitrogen in leaves, indicating leaf protein levels and photosynthetic capacity.
-
-10. **Photosynthetic Yield (PY)**
-    - **Description:** The amount of carbon fixed per unit of absorbed light, indicating photosynthetic efficiency.
-
-11. **Root-to-Shoot Ratio (RSR) under Stress**
-    - **Description:** Measures the ratio of root biomass to shoot biomass under stress conditions, like drought or salinity.
-
-12. **Root Surface Area (RSA)**
-    - **Description:** The total surface area of the roots, important for understanding root interactions with the soil environment.
-
-13. **Leaf Temperature (LT)**
-    - **Description:** Measures the temperature of the leaf surface, providing insights into plant water status and stress responses.
-
-14. **Water Content (WC)**
-    - **Description:** The amount of water in plant tissues, expressed as a percentage of tissue mass, indicating plant hydration levels.
-
-15. **Net Primary Productivity (NPP)**
-    - **Description:** The rate of biomass production by plants, reflecting energy capture through photosynthesis and conversion into growth.
-
-16. **Tolerance Index (TI)**
-    - **Description:** Measures how well a plant tolerates stress conditions relative to non-stress conditions.
-
-17. **Growth Efficiency Index (GEI)**
-    - **Description:** The ratio of growth rate to resource input, providing insight into how effectively a plant converts resources into biomass.
-
-18. **Root Architecture Complexity Index (RACI)**
-    - **Description:** Quantifies the complexity of the root system's branching pattern, affecting the plant's ability to explore soil resources.
-
-19. **Relative Leaf Water Content (RLWC)**
-    - **Description:** Measures the water content of leaves relative to their total potential water content, indicating the plant’s water status.
-
-20. **Biomass Accumulation Rate (BAR)**
-    - **Description:** The rate at which plant biomass accumulates over time, useful for evaluating growth performance under various conditions.
-
-
-
 # Scores/indices to be implemented 
 
 ## Polynomial Reaction Norm
@@ -430,30 +268,28 @@ To express the relationship between a phenotype (\(z(a)\)) and environmental gra
 z(a) = b_0 + b_1 \cdot a + b_2 \cdot a^2 + \dots + b_m \cdot a^m
 \]
 Where:
-- \(z(a)\) is the phenotype in environment \(a\),
-- \(b_0\) is the intercept,
-- \(b_1, b_2, \dots, b_m\) are the coefficients representing the amount and pattern of phenotypic change across environments,
-- \(m\) is one fewer than the number of environments.
+- \(z(a)\) is the phenotype in environment \(a\),     
+- \(b_0\) is the intercept,     
+- \(b_1, b_2, \dots, b_m\) are the coefficients representing the amount and pattern of phenotypic change across environments,    
+- \(m\) is one fewer than the number of environments.    
 
 ### Coefficients as Plasticity Scores
 
-- **Linear plasticity** is captured by the **first-order coefficient** \(b_1\), which represents the **slope** of the trait change across environments.
-- **Non-linear plasticity** is captured by the **higher-order coefficients** \(b_2, b_3, \dots\), which represent more complex patterns of change (e.g., quadratic or cubic).
+- **Linear plasticity** is captured by the **first-order coefficient** \(b_1\)
+- **Non-linear plasticity** is captured by the **higher-order coefficients** \(b_2, b_3, \dots\)
 - The **plasticity score** is derived from the magnitude of these coefficients:
   \[
   \text{Plasticity Score} = |b_1| + |b_2| + \dots + |b_m|
   \]
-  This score reflects both the magnitude and complexity of the phenotypic response across environments.
+  This score reflects both the magnitude and complexity of the phenotypic response across environments. An obvious problem of this score is that two genotypes can have the same score even if they are different. 
+
+- Another possibility would be applying e.g. max normalization before summing the coefficients of the model. However this still doesn't overcome the problem of possibility of duplicate score even if they're not identical.
 
 ### Best Model Selection
 
 - The **best-fitting polynomial model** (linear, quadratic, cubic, etc.) should be determined using statistical criteria such as **goodness-of-fit** or **AIC/BIC**.
 - Nonlinear regression is used to estimate the coefficients for each genome.
-- Once the best model is selected, the coefficients can be used to calculate the plasticity score for each genome. 
-
-### Comparison with Pairwise Difference Method
-
-An alternative measure of plasticity is the **difference in trait means** between two environments. This method is equivalent to using a **first-degree polynomial** (straight-line), which only captures the **magnitude** of change but not the **pattern**. While simple, it doesn't provide the same depth of information as polynomial regression.
+- Once the best model is selected, the coefficients can be used to calculate the plasticity score for each genotype. 
 
 ### Citation
 
@@ -461,66 +297,15 @@ An alternative measure of plasticity is the **difference in trait means** betwee
 * https://www.ugr.es/~jmgreyes/Adaptive%20phenotypic%20plasticity.pdf
 
 
-## Drought Resistance Index (DRI) According to Fisher and Maurer (1978)
-
-The **Drought Resistance Index (DRI)** was developed by Fisher and Maurer (1978) as an improvement over simply expressing yield under stress as a percentage of yield under non-stress conditions. The DRI compares the reduction in yield due to stress for a specific genotype against the mean reduction over all genotypes in the same test.
-
-The formula for calculating DRI is:
-
-\[
-\text{DRI} = \left(\frac{Y_s}{Y_n}\right) / \left(\frac{M_s}{M_n}\right)
-\]
-
-Where:
-- \( Y_s \) = yield (or biomass) of the specific genotype under stress.
-- \( Y_n \) = yield (or biomass) of the specific genotype under non-stress.
-- \( M_s \) = mean yield (or biomass) of all genotypes under stress.
-- \( M_n \) = mean yield (or biomass) of all genotypes under non-stress.
-
-This index reflects how well a specific genotype resists yield reduction under stress compared to others. Although some have argued that the index is biased by yield potential (with genotypes that perform better under non-stress conditions tending to show a lower DRI), this bias is rooted in biological grounds rather than being a statistical flaw, as discussed by Blum (1995).
-
-This index is widely used by breeders as it accounts for both stress and non-stress yield performance and allows comparisons across genotypes.
-
-### References
-Fisher, R.A. and Maurer, R. (1978). Drought Resistance in Spring Wheat Cultivars. *Australian Journal of Agricultural Research*, 29(5), 897-912. 
-
-Blum, A. (1995). Drought resistance, water-use efficiency, and yield potential - are they compatible, dissonant, or mutually exclusive? *Australian Journal of Agricultural Research*, 56, 1159–1168.
-
-
-## Drought Resistance Index (DRI) According to Bidinger et al. (1982)
-
-The **Drought Resistance Index (DRI)** proposed by Bidinger et al. (1982) is used to assess drought resistance in cultivars by analyzing variation in grain yield under stress that cannot be explained by yield potential or drought escape (e.g., early flowering). Unlike traditional measures that rely solely on yield potential under stress or non-stress conditions, this DRI method isolates the specific drought resistance of a cultivar independent of these factors.
-
-### Procedure for DRI Calculation:
-1. **Initial Regression**: 
-   - Yield under stress is regressed on potential yield (measured under non-stress) and drought escape (days to heading under non-stress) across all cultivars.
-   - The estimated yield under stress for each cultivar is calculated from this regression.
-
-2. **Second Regression**: 
-   - The actual measured yield under stress is regressed on the estimated stress yield for each cultivar from the initial regression.
-   - The deviation of each cultivar from this regression line indicates its drought resistance. A positive deviation suggests drought resistance, while a negative deviation suggests drought susceptibility.
-   - The drought resistance of a cultivar is quantified as the **studentized residual** from this second regression, which can be calculated using most statistical software packages.
-
-3. **Interpretation**:
-   - Cultivars with a positive deviation (or high residuals) are considered drought-resistant, while those with negative deviations are considered susceptible.
-   - The magnitude of the index (residual) is important, with values greater than **1.3** typically indicating significant drought resistance.
-   - While using this index in breeding programs, it is considered alongside other factors like absolute yield under stress, biotic stress resistance, and product quality.
-
-### References
-Bidinger, F.R., Mahalakshmi, V., & Rao, G.D.P. (1982). Assessment of Drought Resistance in Pearl Millet [Pennisetum americanum (L.) Leeke]. *Proceedings of the International Pearl Millet Workshop*, 14-19.
-
-
-
-
 ## Variance of Polynomial Coefficients
 
 ### Mathematical Formulation
 
-When genomes differ in their **reaction norm functions**, these differences can be captured by the **first and higher-order polynomial coefficients** (\(b_1, b_2, \dots\)). The **genetic variation for plasticity** is represented by the **variance among these coefficients**:
+When genotypes differ in their **reaction norm functions**, these differences can be captured by the **first and higher-order polynomial coefficients** (\(b_1, b_2, \dots\)). The **genetic variation for plasticity** is represented by the **variance among these coefficients**:
 \[
 Var(b_i), \quad \text{for } i = 1, 2, \dots, m
 \]
-This method quantifies genetic variation by capturing how genomes vary in terms of their **slopes and curvatures** across environments.
+This method quantifies genetic variation by capturing how genotypes vary in terms of their **slopes and curvatures** across environments.
 
 ### Citation
 
@@ -556,7 +341,7 @@ For more complex, **nonlinear reaction norms**, a more advanced approach involve
    \]
    where \(P_i(x)\) are the Legendre polynomials. This method can handle **any shaped reaction norm** and is more comprehensive than the covariance method alone.
    
-   #### Citation
+### Citation
 
 * GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY - Samuel M. Scheiner
 
@@ -587,7 +372,7 @@ For **linear reaction norms**, Gavrilets & Scheiner (Adaptive phenotypic plastic
 \sigma^2_{\text{plasticity}} = g_1^2 \cdot Var(a)
 \]
 Where:
-- \(g_1\) is the mean slope of the reaction norms across all families or genomes,
+- \(g_1\) is the mean slope of the reaction norms across all genotypes,
 - \(Var(a)\) is the variance of the environmental gradient.
 
 For **genetic variation for slopes**:
@@ -599,7 +384,7 @@ Where \(G_1\) is the genetic variation for the slopes, representing the **geneti
 
 ## Genetic Variance and Heritability in Plasticity
 
-From:GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY (Samuel M. Scheiner)
+from:GENETICS AND EVOLUTION OF PHENOTYPIC PLASTICITY (Samuel M. Scheiner)
 
 ### Overview
 
@@ -672,31 +457,10 @@ Where:
 If the study involves only two environments, the plasticity index typically measures the **difference in family means** between environments. To obtain accurate heritability values, the total phenotypic variation must be corrected for errors in estimating family means.
 
 
-## Water Use Efficiency (WUE) 
-
-### Definition
-Water use efficiency (WUE) represents the overall delivery efficiency of an irrigation system. It is mathematically defined as the ratio of the annual volume of crop water demand to the annual volume of irrigation supply:
-
-\[
-E_{WUE} = \left( \frac{\text{Annual volume of crop water demand (MCM)}}{\text{Annual volume of irrigation supply (MCM)}} \right) \times 100\%
-\]
-
-### Interpretation
-- **Efficient system**: If the WUE value is greater than 60%, the irrigation system is considered efficient.
-- **Good system**: A WUE value between 30% and 60% is classified as good.
-- **Poor system**: A WUE value below 30% is regarded as poor, indicating inefficiency in water usage for crop demand.
-
-
-### Citation
-
-https://www.sciencedirect.com/science/article/abs/pii/B9780128117484000145
-
-
-
 
 ## Multivariate Vector of Plasticity
 
-The **Multivariate Vector of Plasticity** evaluates the distance moved by each trait between different environmental conditions. This multivariate approach considers multiple traits and calculates the Euclidean distance between the trait values in different environments.
+The **Multivariate Vector of Plasticity** evaluates the distance moved by each trait between different environmental conditions. This multivariate approach considers multiple traits and calculates the Euclidean (or other) distance between the trait values in different environments.
 
 ### Mathematical Approach
 
@@ -754,43 +518,63 @@ Where:
 
 ### Citation
 
-This method is conceptually similar to the **Phenotypic Plasticity Index (PI)** by Valladares et al. (2000), which also uses maximum and minimum trait values to quantify plasticity.
+This method is conceptually similar to the **Phenotypic Plasticity Index (PI)** by Valladares et al. (2000). However this score uses the maximum and minimum mean trait values, normalized by the maximum mean trait value to quantify plasticity.
 
 - Valladares, F., Wright, S.J., Lasso, E., Kitajima, K., & Pearcy, R.W. (2000). *Plastic phenotypic responses to light of 16 congeneric shrubs from a Panamanian rainforest*. Ecology, 81(7), 1925-1936.
 
 
 
-## Shannon’s Diversity Index (H')
+## Shannon’s Diversity Index for Phenotypic Plasticity
 
-### Formula
+Shannon’s Diversity Index (H') can be adapted to measure phenotypic plasticity by quantifying the diversity of phenotypic traits across different environments. Two distinct approaches are commonly used: **within-environment diversity** and **across-environment diversity**.
+
+In the **within-environment method**, Shannon’s Diversity Index is calculated separately for each environment using the formula:
+
 \[
-H' = -\sum p_i \log p_i
+H' = - \sum_{i} p_i \log(p_i)
 \]
-Where:
-- \(p_i\) is the proportion of individuals with a given phenotype in each environment.
 
-### Description
-Originally used for measuring biodiversity (Shannon, 1948), Shannon’s Diversity Index can be adapted to quantify phenotypic plasticity by calculating the diversity of trait values across different environments.
+where \( p_i \) is the proportion of individuals exhibiting phenotype \( i \) in a given environment. This method highlights the phenotypic diversity within each environment, allowing for a comparison of how diversity changes across environmental conditions.
 
-### Citation
-- Shannon, C. E. (1948). *A mathematical theory of communication*. Bell System Technical Journal, 27(3), 379-423.
+In the **across-environment method**, the proportion of each phenotype is summed across all environments, and a single Shannon’s Diversity Index is calculated using the same formula:
 
-## Mahalanobis Distance
-
-### Formula
 \[
+H' = - \sum_{i} p_i \log(p_i)
+\]
+
+where \( p_i \) now represents the proportion of individuals exhibiting phenotype \( i \) across all environments combined. This approach provides a measure of overall phenotypic plasticity, reflecting the diversity of trait expression across environments collectively.
+
+### Citations
+
+- Shannon, C. E. (1948). "A Mathematical Theory of Communication." *Bell System Technical Journal*, 27, 379-423.
+- Magurran, A. E. (1988). *Ecological Diversity and Its Measurement*. Princeton University Press.
+- Richards, C. L., Bossdorf, O., & Pigliucci, M. (2010). "What role does heritable epigenetic variation play in phenotypic evolution?" *BioScience*, 60(3), 232-237.
+
+
+### Mahalanobis Distance
+
+**Description:**  
+Mahalanobis distance, introduced by Mahalanobis (1936), is a multivariate distance metric that measures how far a data point (in this case, a vector of trait values) is from the mean of a distribution, accounting for the covariance between traits. It is useful for identifying phenotypic plasticity across environments by evaluating how the trait values of an individual environment deviate from the overall mean trait values across multiple environments. This method is particularly effective when dealing with correlated traits.
+
+**Formula:**
+$$
 D^2 = (\mathbf{x} - \mathbf{m})^T \mathbf{S}^{-1} (\mathbf{x} - \mathbf{m})
-\]
+$$
+
 Where:
-- \(\mathbf{x}\) is the trait vector for an environment.
-- \(\mathbf{m}\) is the mean trait vector across environments.
-- \(\mathbf{S}\) is the covariance matrix.
+- \(\mathbf{x}\) is the vector of trait values for an environment, containing all measured traits for that specific environment.
+- \(\mathbf{m}\) is the mean trait vector, which represents the average trait values across all environments.
+- \(\mathbf{S}\) is the covariance matrix, which captures the covariation between the different traits.
 
-### Description
-Mahalanobis distance, introduced by Mahalanobis (1936), measures the deviation from the mean trait vector across environments and accounts for multivariate traits. It is useful for identifying phenotypic plasticity across environments.
+### Interpretation:
 
-### Citation
-- Mahalanobis, P. C. (1936). *On the generalized distance in statistics*. Proceedings of the National Institute of Sciences of India, 2(1), 49-55.
+- \(D^2\) is the squared Mahalanobis distance. A larger value indicates that the traits in a particular environment differ more from the overall mean traits across environments, potentially suggesting greater phenotypic plasticity.
+- The Mahalanobis distance accounts for the correlation between traits, making it more robust in cases where traits are not independent.
+- This distance can be used to compare how different environments affect the expression of multiple traits simultaneously.
+
+**Reference:**
+- Mahalanobis, P. C. (1936). "On the generalized distance in statistics." Proceedings of the National Institute of Sciences of India, 2(1), 49-55.
+
 
 ## Variance Partitioning (VP)
 
@@ -803,14 +587,17 @@ Where:
 - \(\sigma^2_{\text{total}}\) is the total phenotypic variance.
 
 ### Description
+
 Variance partitioning is a common statistical technique (Falconer & Mackay, 1996) that quantifies the proportion of total phenotypic variance attributable to environmental plasticity. It helps in understanding the genetic and environmental contributions to trait variation.
 
 ### Citation
+
 - Falconer, D. S., & Mackay, T. F. (1996). *Introduction to quantitative genetics* (4th ed.). Longman.
 
 ## Mean Trait Difference (MTD)
 
 ### Formula
+
 \[
 MTD = \frac{\sum (z_{\text{env1}} - z_{\text{env2}})}{n}
 \]
@@ -819,22 +606,765 @@ Where:
 - \(n\) is the number of individuals.
 
 ### Description
+
 Mean Trait Difference (MTD) is a straightforward measure of phenotypic plasticity that calculates the average difference in trait values between two environments. It has been applied in various ecological studies to assess phenotypic change (Schlichting & Pigliucci, 1998).
 
 ### Citation
 - Schlichting, C. D., & Pigliucci, M. (1998). *Phenotypic evolution: A reaction norm perspective*. Sinauer Associates.
 
-##  Range of Reaction Norm
+
+## Diathesis-Stress Model
+
+this yet again is not a plasticity score but a model for prediction purposes. This is listed here because it has caught my interest. 
+
+The **Diathesis-Stress Model** is a widely used framework for explaining how **predisposition** (diathesis) interacts with **environmental stressors** to influence outcomes. Originally applied in psychological research, this model is also applicable in studying **plasticity** in plants or other organisms. In this context, **diathesis** represents the genetic or physiological vulnerability of an organism, while **stress** refers to external environmental factors (e.g., drought, nutrient deficiency). The interaction between these factors determines the observed outcome, such as plant growth or health.
+
+The Diathesis-Stress Model can be mathematically expressed as a **linear regression model** with interaction terms. The basic form of the model is:
+
+\[
+y = \beta_0 + \beta_1 \cdot x_1 + \beta_2 \cdot x_2 + \beta_3 \cdot (x_1 \cdot x_2) + \epsilon
+\]
+
+Where:
+- \( y \): The **outcome variable**, such as plant growth or health.
+- \( x_1 \): The measure of **diathesis** or **genetic vulnerability**, which could be a score representing predisposition to stress.
+- \( x_2 \): The measure of **stress** (e.g., drought intensity or nutrient availability).
+- \( \beta_0 \): The **intercept**, representing the baseline level of the outcome when both diathesis and stress are zero.
+- \( \beta_1 \): The **coefficient** for diathesis, representing the effect of genetic vulnerability on the outcome, holding stress constant.
+- \( \beta_2 \): The **coefficient** for stress, representing the effect of environmental stress on the outcome, holding diathesis constant.
+- \( \beta_3 \): The **interaction term**, representing how the effect of stress on the outcome changes depending on the level of genetic vulnerability (and vice versa).
+- \( \epsilon \): The **error term**, accounting for variance not explained by the model.
+
+
+- **Diathesis (\( x_1 \))**: This term represents an organism’s **predisposition** to stress, which could be genetic or physiological in nature. In plants, this could be a drought sensitivity index or a genetic score that indicates vulnerability.
+  
+- **Stress (\( x_2 \))**: This term represents an **external environmental factor** that acts as a stressor, such as drought, temperature, or nutrient deficiency. The level of stress can vary and is usually measured continuously or categorically (e.g., high or low drought).
+
+- **Interaction (\( x_1 \cdot x_2 \))**: The interaction term is key to the Diathesis-Stress Model, as it explains how the effect of stress on the outcome is **modulated** by the level of diathesis. For example, plants with a high genetic predisposition to drought sensitivity may experience more significant growth reduction under drought stress than plants with lower sensitivity.
+
+
+- **\( \beta_0 \)**: The baseline outcome when both diathesis and stress are zero. For example, it represents the expected plant growth when there is no genetic vulnerability or stress.
+
+- **\( \beta_1 \)**: This coefficient tells us how much the outcome changes for a one-unit increase in **genetic vulnerability** (\( x_1 \)), assuming that stress remains constant.
+
+- **\( \beta_2 \)**: This coefficient tells us how much the outcome changes for a one-unit increase in **stress** (\( x_2 \)), assuming that genetic vulnerability remains constant.
+
+- **\( \beta_3 \)**: The interaction coefficient indicates how the effect of **stress** on the outcome is **dependent** on the level of diathesis. A significant \( \beta_3 \) suggests that the impact of stress on growth is different for plants with varying levels of genetic vulnerability.
+
+
+The Diathesis-Stress Model makes several assumptions typical of linear regression:
+1. **Linearity**: The relationship between the independent variables (diathesis and stress) and the dependent variable (outcome) is linear, including their interaction.
+2. **Independence**: The observations are independent of each other.
+3. **Homoscedasticity**: The variance of the error terms is constant across levels of the independent variables.
+4. **Normality of Residuals**: The residuals (errors) are normally distributed.
+
+### Use Cases in Plant Studies
+
+In plant studies, the Diathesis-Stress Model is particularly useful for exploring how different genotypes (vulnerabilities) interact with environmental conditions (stressors) to affect outcomes like growth, yield, or survival. For example:
+- **Genetic Vulnerability (\( x_1 \))**: This could be quantified based on genetic markers or physiological traits that predict sensitivity to drought.
+- **Stress (\( x_2 \))**: This could be measured as the severity of drought or nutrient deficiency in different environments.
+
+By fitting this model, researchers can assess whether plants with different genetic backgrounds respond differently to environmental stressors, and how these responses influence key outcomes.
+
+### References
+- Zubin, J., & Spring, B. (1977). "Vulnerability: A new view of schizophrenia." *Journal of Abnormal Psychology*, 86(2), 103-126.
+- Monroe, S. M., & Simons, A. D. (1991). "Diathesis-stress theories in the context of life stress research: Implications for the depressive disorders." *Psychological Bulletin*, 110(3), 406-425.
+
+
+
+
+
+## Random Regression Mixed Modeling (RRMM)
+
+
+this is not a score and wont be implemented but it caught my interest and therefor I wanted to include it here. 
+
+**Random Regression Mixed Modeling (RRMM)** is a flexible statistical approach used to model **longitudinal data** or **repeated measures** data where the response variable is measured over time or across different conditions. It is commonly applied in fields like **animal and plant breeding**, **genetics**, and **environmental sciences** to capture the variation in individual trajectories while accounting for both **fixed effects** (common to the population) and **random effects** (specific to individuals or groups).
+
+### Key Components
+
+The general form of a random regression mixed model is:
+
+\[
+y_{ij} = X_{ij} \beta + Z_{ij} u_j + \epsilon_{ij}
+\]
+
+Where:
+- **\( y_{ij} \)**: The observed response for individual \( j \) at time (or condition) \( i \).
+- **\( X_{ij} \beta \)**: The **fixed effects** that apply to the entire population, such as the overall effect of time or environmental conditions.
+- **\( Z_{ij} u_j \)**: The **random effects** that account for individual-specific trajectories or responses, where the intercepts and slopes may vary across individuals.
+- **\( \epsilon_{ij} \)**: The residual error term, representing variability not captured by the model.
+
+
+**Random regression** allows the slope and intercept of the regression line to vary randomly across individuals. This flexibility makes it possible to model how each individual’s response evolves over time or environmental gradients, with individual-specific deviations from the population-level trend.
+
+The typical random regression mixed model includes both **random intercepts** (initial differences between individuals) and **random slopes** (individual-specific rates of change), and can be written as:
+
+\[
+y_{ij} = \beta_0 + \beta_1 \cdot t_i + u_{0j} + u_{1j} \cdot t_i + \epsilon_{ij}
+\]
+
+Where:
+- **\( \beta_0 \)**: Fixed intercept, representing the population average at baseline.
+- **\( \beta_1 \)**: Fixed slope, representing the average rate of change in the population.
+- **\( u_{0j} \)**: Random intercept for individual \( j \), capturing the individual-specific deviation from the population average.
+- **\( u_{1j} \cdot t_i \)**: Random slope for individual \( j \), allowing the rate of change to vary for each individual.
+- **\( \epsilon_{ij} \)**: Residual error for the \( i \)-th measurement of individual \( j \).
+
+
+### Interpretation of Parameters
+
+1. **Fixed Effects** (\( \beta_0, \beta_1 \)): These represent the average population-level effects. For instance, \( \beta_1 \) is the population's average rate of change in the outcome (e.g., growth) over time or environmental gradients.
+
+2. **Random Effects** (\( u_{0j}, u_{1j} \)): These capture the individual-specific variations:
+   - **Random intercepts** represent how each individual differs from the average starting value.
+   - **Random slopes** represent how the rate of change for each individual deviates from the average.
+
+3. **Covariance Structure**: RRMM also models the covariance between random intercepts and random slopes, allowing researchers to see if individuals with higher initial values also experience different rates of change.
+
+### Model Assumptions
+
+- **Linearity**: The relationship between the covariates (e.g., time, environment) and the response variable is linear.
+- **Random Effects**: The random effects (slopes and intercepts) are assumed to follow a normal distribution.
+- **Independence**: Observations from different individuals or groups are independent.
+- **Homoscedasticity**: The residuals (errors) are assumed to have constant variance.
+
+### References
+
+- Schaeffer, L. R. (2004). "Application of random regression models in animal breeding." *Livestock Production Science*, 86(1), 35-45.
+- Meyer, K. (1998). "Estimating covariance functions for longitudinal data using a random regression model." *Genetics Selection Evolution*, 30(3), 221-240.
+- Henderson, C. R. (1982). "Analysis of covariance in the mixed model: Higher level, nonhomogeneous, and random regressions." *Biometrics*, 38(3), 623-640.
+- Meyer, K. (2001). "Estimation of genetic covariance functions." *Livestock Production Science*, 69(2), 95-113.
+
+
+## Relative Plasticity Index (RPI)
+
+**Description:** RPI quantifies the relative change in a trait between two environments.
+
+**Formula:**
+$$
+RPI = \frac{|Trait Value_{Env1} - Trait Value_{Env2}|}{Trait Value_{Env1} + Trait Value_{Env2}}
+$$
+
+
+
+**Reference:** Valladares, F., & Niinemets, Ü. (2008). Shade Tolerance, a Key Plant Feature of Complex Nature and Consequences. *Annual Review of Ecology, Evolution, and Systematics*, 39(1), 237-257.
+
+## Plasticity Quotient (PQ)
+
+**Description:** PQ measures the ratio of trait change to the environmental change.
+
+**Formula:**
+$$
+PQ = \frac{\Delta Trait Value}{\Delta Environmental Change}
+$$
+
+
+
+**Reference:** Scheiner, S. M. (1993). Genetics and Evolution of Phenotypic Plasticity. *Annual Review of Ecology and Systematics*, 24(1), 35-68.
+
+## Plasticity Differential (PD)
+
+**Description:** PD calculates the absolute difference in trait values between control and stress conditions.
+
+**Formula:**
+$$
+PD = |Trait Value_{Stress} - Trait Value_{Control}|
+$$
+
+
+
+**Reference:** DeWitt, T. J., & Scheiner, S. M. (Eds.). (2004). *Phenotypic Plasticity: Functional and Conceptual Approaches*. Oxford University Press.
+
+## Norm of Reaction Width (NRW)
+
+**Description:** NRW measures the total range of trait values across different environments.
+
+**Formula:**
+$$
+NRW = Max Trait Value_{Env} - Min Trait Value_{Env}
+$$
+
+
+
+**Reference:** Stearns, S. C. (1992). *The Evolution of Life Histories*. Oxford University Press.
+
+## Phenotypic Range (PR)
+
+**Description:** PR quantifies the range of trait values, capturing the maximum variation between environments.
+
+**Formula:**
+$$
+PR = Max Trait Value - Min Trait Value
+$$
+
+
+
+**Reference:** Valladares, F., Wright, S. J., Lasso, E., Kitajima, K., & Pearcy, R. W. (2000). Plastic phenotypic responses to light of 16 congeneric shrubs from a Panamanian rainforest. *Ecology*, 81(7), 1925-1936.
+
+## Environment-Specific Plasticity (ESP)
+
+**Description:** ESP measures the trait plasticity for a particular environment relative to the mean across all environments.
+
+**Formula:**
+$$
+ESP_{Env} = \frac{Trait Value_{Env} - Mean Trait Value_{All Envs}}{Mean Trait Value_{All Envs}}
+$$
+
+
+
+**Reference:** Scheiner, S. M. (1993). Genetics and Evolution of Phenotypic Plasticity. *Annual Review of Ecology and Systematics*, 24(1), 35-68.
+
+## Fitness Plasticity Index (FPI)
+
+**Description:** FPI quantifies how fitness-related traits, like survival or biomass, change across environments.
+
+**Formula:**
+$$
+FPI = \frac{Fitness_{Stress} - Fitness_{Control}}{Fitness_{Control}}
+$$
+
+
+
+**Reference:** Nicotra, A. B., Atkin, O. K., Bonser, S. P., Davidson, A. M., Finnegan, E. J., Mathesius, U., ... & van Kleunen, M. (2010). Plant phenotypic plasticity in a changing climate. *Trends in Plant Science*, 15(12), 684-692.
+
+
+## Transplant Plasticity Score (TPS)
+
+**Description:** TPS measures the plasticity of a trait when an organism is transplanted to a different environment.
+
+**Formula:**
+$$
+TPS = \frac{(Trait Value_{Transplanted Env} - Trait Value_{Native Env})}{Trait Value_{Native Env}}
+$$
+
+
+
+**Reference:** Dudley, S. A., & Schmitt, J. (1995). Genetic differentiation in morphological responses to simulated foliage shade between populations of *Impatiens capensis* from open and woodland sites. *Functional Ecology*, 9(4), 655-666.
+
+##  Developmental Plasticity Index (DPI)
+
+this also cannot be considered a real plasticity score as it is bound to time resolved data only. 
+
+**Description:** DPI quantifies plasticity during development by measuring how traits change over time or developmental stages.
+
+**Formula:**
+$$
+DPI = \frac{(Trait Value at Time 2 - Trait Value at Time 1)}{Time Interval}
+$$
+
+
+
+**Reference:** West-Eberhard, M. J. (2003). *Developmental Plasticity and Evolution*. Oxford University Press.
+
+## Coefficient of Environmental Variation (CEV)
+
+**Description:** CEV measures the coefficient of variation of trait values across different environments, providing an indication of trait variability.
+
+**Formula:**
+$$
+CEV = \frac{\text{Standard Deviation of Trait Values Across Environments}}{\text{Mean Trait Value Across Environments}} \times 100
+$$
+
+
+
+**Reference:** Schlichting, C. D. (1986). The evolution of phenotypic plasticity in plants. *Annual Review of Ecology and Systematics*, 17, 667-693.
+
+---
+
+## Plasticity Response Index (PRI)
+
+**Description:** PRI calculates plasticity as the proportional difference in trait values between extreme environments (e.g., best vs. worst condition) divided by the average trait value across environments.
+
+**Formula:**
+$$
+PRI = \frac{\text{Trait Value in Extreme Environment} - \text{Trait Value in Control Environment}}{\text{Mean Trait Value Across All Environments}}
+$$
+
+
+
+**Reference:** Valladares, F., & Niinemets, Ü. (2008). Shade tolerance, a key plant feature of complex nature and consequences. *Annual Review of Ecology, Evolution, and Systematics*, 39(1), 237-257.
+
+---
+
+
+
+## Phenotypic Flexibility Index (PFI)
+
+**Description:** PFI measures the degree of flexibility in trait values over time or environments, particularly useful for reversible plasticity.
+
+**Formula:**
+$$
+PFI = \frac{|\text{Maximum Deviation From Baseline}|}{\text{Baseline Trait Value}}
+$$
+
+
+
+**Reference:** DeWitt, T. J., Sih, A., & Wilson, D. S. (1998). Costs and limits of phenotypic plasticity. *Trends in Ecology & Evolution*, 13(2), 77-81.
+
+---
+
+## Standardized Plasticity Index (SPI)
+
+**Description:** SPI standardizes trait plasticity by comparing trait values across environments relative to a reference trait or genotype.
+
+**Formula:**
+$$
+SPI = \frac{(\text{Trait Value}_{Env2} - \text{Trait Value}_{Env1})}{\text{Standard Deviation of Reference Trait Values}}
+$$
+
+
+
+**Reference:** Scheiner, S. M. (1993). Genetics and evolution of phenotypic plasticity. *Annual Review of Ecology and Systematics*, 24(1), 35-68.
+
+---
+
+
+## Absolute Plasticity Coefficient (APC)
+
+**Description:** APC quantifies absolute plasticity by calculating the average absolute difference in trait values between environments.
+
+**Formula:**
+$$
+APC = \frac{1}{n-1} \sum_{i=1}^{n-1} |\text{Trait Value}_{Env_{i+1}} - \text{Trait Value}_{Env_i}|
+$$
+
+
+
+**Reference:** Nicotra, A. B., Atkin, O. K., Bonser, S. P., Davidson, A. M., Finnegan, E. J., Mathesius, U., et al. (2010). Plant phenotypic plasticity in a changing climate. *Trends in Plant Science*, 15(12), 684-692.
+
+---
+
+## Stability Index
+
+The **Stability Index** quantifies the stability of a trait across environments, measuring how consistent a genotype's trait expression is in varying conditions.
 
 ### Formula
+
 \[
-R = z_{\text{max}} - z_{\text{min}}
+\text{Stability Index (SI)} = \frac{\text{Variance across environments}}{\text{Mean trait value across environments}}
+\]
+
+Where:
+- **Variance across environments**: The variability of trait values across different environments.
+- **Mean trait value across environments**: The average trait value across environments.
+
+### Reference
+
+- Finlay, K. W., & Wilkinson, G. N. (1963). The analysis of adaptation in a plant-breeding programme. *Australian Journal of Agricultural Research*, 14(6), 742-754.
+
+---
+
+## Relative Stability Index (RSI)
+
+**Description:** RSI measures the relative stability of a trait across environments, focusing on trait stability despite environmental fluctuations.
+
+**Formula:**
+$$
+RSI = 1 - \frac{\text{Standard Deviation of Trait Values Across Environments}}{\text{Mean Trait Value Across Environments}}
+$$
+
+
+
+**Reference:** Finlay, K. W., & Wilkinson, G. N. (1963). The analysis of adaptation in a plant-breeding programme. *Australian Journal of Agricultural Research*, 14(6), 742-754.
+
+---
+
+## Environmental Variance Sensitivity (EVS)
+
+**Description:** EVS captures how sensitive a trait is to changes in environmental variance.
+
+**Formula:**
+$$
+EVS = \frac{\Delta \text{Trait Variance}}{\Delta \text{Environmental Variance}}
+$$
+
+
+**Reference:** Schlichting, C. D., & Pigliucci, M. (1998). *Phenotypic Evolution: A Reaction Norm Perspective*. Sinauer Associates.
+
+---
+
+## Plasticity Stability Ratio (PSR)
+
+**Description:** PSR combines plasticity and stability by measuring the ratio between plasticity and stability across environments.
+
+**Formula:**
+$$
+PSR = \frac{\text{Plasticity Score}}{\text{Stability Score}}
+$$
+
+
+**Reference:** Lande, R. (1982). A quantitative genetic theory of life history evolution. *Ecology*, 63(3), 607-615.
+
+
+## Multivariate Plasticity Index (MVPi)
+
+**Description**:  
+The Multivariate Plasticity Index (MVPi) is a multiscale and integrative plasticity index based on ordination methods like Canonical Variate Analysis (CVA). It condenses multiple phenotypic traits into a single index, representing the overall phenotypic state of a genotype in a given environment. MVPi quantifies plasticity as the Euclidean distance between phenotypic states across environments, offering a comprehensive and standardized way to compare plastic responses between species or genotypes.
+
+### Canonical Variate Analysis (CVA) and its Role:
+
+Canonical Variate Analysis (CVA) is a multivariate statistical method that transforms high-dimensional phenotypic data (many traits) into a set of new orthogonal axes (canonical variates), which are ranked based on how well they separate predefined groups (such as different environments or genotypes). Each genotype or environment is assigned a set of scores (CV1, CV2, CV3, etc.) on these axes. The MVPi uses these scores to calculate the Euclidean distances between phenotypic states in different environments.
+
+### Note to CVA
+
+At the first glimps PCA and CVA seem like closely related mutivariat methods which can be used interchangeably. However this perception is not correct. Here a clarification:
+
+PCA is a very widespread multivariate method and it is useful whenever the data matrix is composed by a set of independent subjects, for which we have recorded a number of variables and we are only interested in the differences between those independent subjects. In contrast to this, data from experiments with replicates are not composed by independent subjects, but there are groups of subjects treated alike. PCA is not the right tool in this case, because it looks at the distance between individuals, but we are more concerned about the distance between groups of individuals, which is a totally different concept. Canonical Variate Analysis (CVA) is much better suited to the purpose of group discrimination.
+
+from:https://www.statforbiology.com/2023/stat_multivar_cva/
+
+### Mathematical Formulation:
+
+The MVPi uses the Euclidean distances (ED) between phenotypic states represented by their Cartesian projections on the dimensions of a Canonical Variate Analysis (CVA). The number of dimensions \(k\) in the CVA is equal to the number of quantitative phenotypic parameters evaluated. The coordinates of an individual \( i \) and a quantitative phenotypic parameter \( k \) on the s-axis are given by the following equations:
+
+\[
+I_s(i) = \frac{1}{\sqrt{\lambda_s}} \sum_{k} x_{ik} m_k QP_s(k)
+\]
+
+\[
+QP_s(k) = \frac{1}{\sqrt{\lambda_s}} \sum_{i} x_{ik} p_i I_s(i)
+\]
+
+Where:
+- \( I_s(i) \) is the coordinate of individual \( i \) on the s-axis.               
+- \( QP_s(k) \) is the coordinate of the quantitative phenotypic parameter \( k \) on the s-axis.               
+- \( \lambda_s \) is the eigenvalue associated with the s-axis.               
+- \( x_{ik} \) is the matrix element representing the phenotypic value of individual \( i \) for parameter \( k \).               
+- \( m_k \) is the weight associated with parameter \( k \), and \( p_i \) is the weight related to individual \( i \).               
+
+### Euclidean Distance Calculation:  
+
+The phenotypic plasticity is measured as the Euclidean distance between two phenotypic states (e.g., environment \( A \) and environment \( B \)) in the multidimensional space defined by the CVA. The Euclidean distance between two environments (A and B) with coordinates \( (CV1, CV2, \dots, CVk) \) is computed as:
+
+\[
+\text{ED}_{AB} = \sqrt{\sum_{i=1}^{k} (CV_{Ai} - CV_{Bi})^2}
+\]
+
+Where:
+- \( CV_{Ai} \) and \( CV_{Bi} \) are the scores of environments \( A \) and \( B \) on the \( i \)-th canonical variate axis.
+
+Finally, the MVPi is estimated as the average distance across all combinations of phenotypic states between replicates in environments \( A \) and \( B \):
+
+\[
+\text{MVPi} = \frac{\sum (\text{ED}_{1-1} + \cdots + \text{ED}_{1-m} + \cdots + \text{ED}_{n-1} + \text{ED}_{n-m})}{n \cdot m}
+\]
+
+Where:
+- \( ED \) represents the Euclidean distance between phenotypic states in environments \( A \) and \( B \).      
+- \( n \) and \( m \) are the number of replicates in environments \( A \) and \( B \), respectively.      
+
+               
+### Reference
+
+A systemic approach to the quantification of the phenotypic plasticity of plant physiological traits: the multivariate plasticity index (https://doi.org/10.1093/jxb/eraa545)
+
+
+## Standardized Plasticity Metric (SPM)
+
+**Description:** The standardized plasticity metric (SPM) quantifies phenotypic plasticity by comparing trait values between resident and nonresident environments. The metric ranges from 0 to infinity, where values near 0 indicate low or no plasticity, and larger values indicate increasing levels of plasticity.
+
+**Formula:**
+$$
+\text{SPM} = \frac{| \text{AinA} - \text{AinB} |}{\text{AinA}} \quad \text{or} \quad \frac{| \text{BinB} - \text{BinA} |}{\text{BinB}}
+$$
+
+Where:
+- \( \text{AinA} \) and \( \text{BinB} \): Trait values in the resident environment.
+- \( \text{AinB} \) and \( \text{BinA} \): Trait values in the nonresident environment.
+
+
+**Reference:** The ubiquity of phenotypic plasticity in plants: a synthesis, https://doi.org/10.1002/ece3.1603
+
+## SSpop/SStotal Plasticity Ratio
+
+**Description:**  
+This plasticity score quantifies the relative contribution of population differences to overall phenotypic variability across different environments. It is calculated as the ratio of the sum of squares between populations (\(SSpop\)) to the total sum of squares (\(SStotal\)) from a one-way ANOVA. This ratio can be interpreted as a measure of phenotypic divergence and plasticity at the population level.
+
+### Formula:
+\[
+\text{Plasticity Ratio} = \frac{SS_{pop}}{SS_{total}}
 \]
 Where:
-- \(z_{\text{max}}\) and \(z_{\text{min}}\) are the maximum and minimum trait values across environments.
+- **\(SS_{pop}\)**: The sum of squares due to population differences (between-population variability).
+- **\(SS_{total}\)**: The total sum of squares (total phenotypic variability) across populations and environments.
 
-### Description
-The range of reaction norm measures the total range of trait expression across environments, which is an important indicator of phenotypic plasticity. This concept was elaborated in Stearns (1992) to describe how organisms respond to environmental variation.
+This ratio ranges from 0 to 1:
+- A value close to **0** indicates low plasticity or minimal variation between populations.
+- A value closer to **1** suggests that most phenotypic variability is driven by population differences, indicating higher plasticity.
 
-### Citation
-- Stearns, S. C. (1992). *The evolution of life histories*. Oxford University Press.
+
+### Reference:
+Invasion strategies in clonal aquatic plants: are phenotypic differences caused by phenotypic plasticity or local adaptation? https://doi.org/10.1093/aob/mcq176
+
+
+## Multivariate Trait Integration and Plasticity Approach
+
+**Description:**  
+This approach combines the use of Principal Component Analysis (PCA) to reduce the dimensionality of phenotypic data and Generalized Linear Mixed Models (GLMM) to analyze the effect of genotypes and environmental interactions on phenotypic traits. It provides a multivariate way of exploring how traits integrate and respond to environmental conditions across different genotypes.
+
+### Steps:
+
+1. **Principal Component Analysis (PCA)**:
+   - **Goal**: To reduce the dimensionality of the dataset by transforming the original data into a smaller set of uncorrelated variables (principal components).
+   - **Method**: The dataset is transformed, and only principal components with eigenvalues greater than 1 are retained for further analysis.
+   - **Formula**:
+     \[
+     PC_k = \sum_{i=1}^{n} a_i X_i
+     \]
+     Where:
+     - \(PC_k\) is the \(k\)-th principal component.
+     - \(a_i\) is the weight (loading) assigned to the \(i\)-th trait (variable) in the data.
+     - \(X_i\) is the standardized value of the \(i\)-th trait.
+   - **Interpretation**: Principal components are linear combinations of the original variables, and factor loadings with an absolute value greater than 0.4 are considered biologically relevant.
+
+2. **Generalized Linear Mixed Models (GLMM)**:
+   - **Goal**: To examine the effects of genotype, environment (e.g., light and water treatments), and their interactions on the principal component scores.
+   - **Model**: The GLMMs include both fixed and random effects. The genotype is treated as a random effect, while environmental conditions (light, water) are fixed effects.
+   - **Formula**:
+     \[
+     Y = \mu + G + E_W + E_L + G \times E_W + G \times E_L + E_W \times E_L + G \times E_W \times E_L + \epsilon
+     \]
+     Where:
+     - \(Y\) is the principal component score.
+     - \(\mu\) is the overall mean.
+     - \(G\) represents the random effect of genotype.
+     - \(E_W\) and \(E_L\) are the fixed effects of water and light environments.
+     - \(G \times E_W\), \(G \times E_L\), and \(G \times E_W \times E_L\) represent the interaction terms.
+     - \(\epsilon\) is the residual error.
+
+
+### Reference
+
+The plasticity of phenotypic integration in response to light and water availability in the pepper grass, Lepidium bonariense,
+
+## Two-State Multivariate Vector Plasticity Approach
+
+**Description:**  
+This method compares phenotypic responses across environments using multivariate reaction norms for different populations. Phenotypic plasticity is quantified based on the magnitude and direction of multivariate vectors, representing the change in trait values across environments. The approach is designed to compare how populations respond to environmental changes by analyzing both the amount and direction of trait covariation.
+
+### Mathematical Formulation:
+
+1. **Reaction Norm Vector (ΔX):**  
+   The multivariate reaction norm for a population is calculated as the difference between the phenotypic trait means in two environments (i and j):
+   \[
+   \Delta X = \bar{X}_i - \bar{X}_j
+   \]
+   Where:
+   - \(\bar{X}_i\) and \(\bar{X}_j\) are vectors of mean trait values in environment \(i\) and \(j\), respectively.
+
+2. **Magnitude of Phenotypic Change (D):**  
+   The Euclidean distance of a population’s reaction norm vector, representing the magnitude of phenotypic change, is calculated as:
+   \[
+   D = \sqrt{\Delta X^\top \Delta X}
+   \]
+   Where:
+   - \(\Delta X^\top\) is the transpose of \(\Delta X\).
+
+3. **Direction of Phenotypic Change (θ):**  
+   The similarity in orientation between the reaction norm vectors of two populations (denoted 1 and 2) is described by the angle between the vectors. First, the vector correlation (VC) is calculated:
+   \[
+   VC_{1,2} = \frac{\Delta X_1^\top \Delta X_2}{|\Delta X_1||\Delta X_2|}
+   \]
+   Then, the angle between the vectors is calculated as:
+   \[
+   \theta_{1,2} = \cos^{-1}(VC_{1,2})
+   \]
+   Small angles (\(\theta_{1,2} \rightarrow 0\)) indicate similar orientations between the vectors.
+
+### Application:  
+This approach was applied to compare the phenotypic plasticity of native and invasive populations of *purple loosestrife* in four environments with varying water and nutrient levels. The multivariate reaction norm was used to analyze both the magnitude and direction of phenotypic change across environments for life history traits.
+
+**Reference:**  
+PHENOTYPIC PLASTICITY OF NATIVE VS. INVASIVE PURPLE LOOSESTRIFE: A TWO-STATE MULTIVARIATE APPROACH, https://doi.org/10.1890/06-0856
+
+
+
+## Multivariate Phenotypic Plasticity (Collyer & Adams 2007)
+
+**Description:**
+Multivariate phenotypic plasticity is measured by calculating the magnitude and direction of phenotypic change vectors in a multivariate trait space. This method involves performing a PCA on population trait means from different environments and calculating vectors that represent the phenotypic change between those environments. The magnitude of the vector reflects the **quantitative difference** in trait values between environments, while the direction of the vector indicates the **covariation of traits** across environments.
+
+**Formula:**
+1. **PCA for Phenotypic Space:**
+   - Perform a PCA on the scaled and centered population trait means across environments (e.g., well-watered and dry).
+   - Compute the **phenotypic change vector** for each population.
+   
+2. **Vector Magnitude:**
+   \[
+   \text{Magnitude (Length)} = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2 + \dots}
+   \]
+   Where \(x_1, y_1, \dots\) are trait values in one environment, and \(x_2, y_2, \dots\) are the corresponding values in another environment.
+
+3. **Vector Direction (Angle):**
+   The direction of the vector can be described as the angle (\(\theta\)) of the phenotypic change vector in multivariate space.
+
+   \[
+   \theta = \arccos\left(\frac{\mathbf{v}_1 \cdot \mathbf{v}_2}{|\mathbf{v}_1||\mathbf{v}_2|}\right)
+   \]
+   Where:
+   - \(\mathbf{v}_1\) and \(\mathbf{v}_2\) are vectors representing phenotypic traits across environments.
+
+**Interpretation:**
+- **Vector Magnitude** reflects the overall phenotypic change between environments, quantifying the extent of plasticity.
+- **Vector Direction** indicates which traits are most involved in the phenotypic response and how trait covariation differs across environments.
+
+
+
+**Reference:**  
+Collyer, M. L., & Adams, D. C. (2007). Phenotypic trajectory analysis: comparison of shape change patterns in evolution and ecology. *Hystrix*, 18(1), 75-90.
+Multi-trait genetic variation in resource-use strategies and phenotypic plasticity correlates with local climate across the range of a Mediterranean oak (Quercus faginea), https://doi.org/10.1111/nph.17968
+
+
+
+## Phenotypic Dissimilarity Index (PDI)
+
+**Description**: The Phenotypic Dissimilarity Index (PDI) captures the overall phenotypic variation between two environments, generalized across multiple traits. It measures the relative deviation in trait values between environments.
+
+**Formula**:
+\[
+PDI = \frac{1}{n} \sum_{i=1}^{n} \left| \frac{T_{Env1_i} - T_{Env2_i}}{T_{Env1_i} + T_{Env2_i}} \right|
+\]
+Where \(T_{Env1_i}\) and \(T_{Env2_i}\) represent trait values in environments 1 and 2, and \(n\) is the number of traits.
+
+**Reference**:  
+- Valladares, F., & Niinemets, Ü. (2008). Shade tolerance, a key plant feature of complex nature and consequences. *Annual Review of Ecology, Evolution, and Systematics*, 39(1), 237-257.
+
+---
+
+## Plasticity Residual Variance (PRV)
+
+**Description**: PRV measures the residual variance in trait values after accounting for the main environmental effect. It evaluates how much variation remains unexplained, reflecting unmodeled plastic responses.
+
+**Formula**:
+\[
+PRV = \frac{\sum (T_{observed} - T_{predicted})^2}{n}
+\]
+Where \(T_{observed}\) is the observed trait value in each environment and \(T_{predicted}\) is the expected trait value based on environmental means.
+
+**Reference**:  
+- Lande, R. (1982). A quantitative genetic theory of life history evolution. *Ecology*, 63(3), 607-615.
+
+---
+
+## Adaptability Index (AI)
+
+**Description**: The Adaptability Index reflects a genotype's ability to maintain performance across a range of environments.
+
+**Formula**:
+\[
+AI = \frac{\text{Mean Trait Value in Favorable Environments}}{\text{Mean Trait Value Across All Environments}}
+\]
+
+**Reference**:  
+- Nicotra, A. B., et al. (2010). Plant phenotypic plasticity in a changing climate. *Trends in Plant Science*, 15(12), 684-692.
+
+---
+
+## Response Variability Coefficient (RVC)
+
+**Description**: RVC captures the variability in trait responses across environments relative to the mean trait value.
+
+**Formula**:
+\[
+RVC = \frac{\sigma_T}{\mu_T}
+\]
+Where \(\sigma_T\) is the standard deviation of trait values across environments, and \(\mu_T\) is the mean trait value.
+
+**Reference**:  
+- Scheiner, S. M. (1993). Genetics and evolution of phenotypic plasticity. *Annual Review of Ecology and Systematics*, 24(1), 35-68.
+
+---
+
+## Performance Stability Ratio (PSR)
+
+**Description**: PSR assesses the balance between plasticity and stability by calculating the ratio of plasticity to stability.
+
+**Formula**:
+\[
+PSR = \frac{\text{Plasticity Coefficient}}{\text{Stability Index}}
+\]
+
+**Reference**:  
+- Falconer, D. S., & Mackay, T. F. (1996). *Introduction to quantitative genetics* (4th ed.). Longman#.
+
+
+## Statistical methods
+
+NPMANOVA
+
+
+
+## Categorization of Plasticity Scores
+
+### Nominal Approaches
+Nominal approaches quantify plasticity for a single genotype across multiple environments, often using reaction norms and measures of statistical dispersion.
+
+| **Category**                        | **Scores**                                                                 |
+|-------------------------------------|----------------------------------------------------------------------------|
+| **Reaction Norms & Slope-Based**    | Reaction Norm Slope (RNS), Polynomial Reaction Norm, Coefficients of Polynomial Reaction Norm, Variance of Polynomial Coefficients, |
+| **Statistical Dispersion**          | Coefficient of Variation (CV), Phenotypic Range (PR), Norm of Reaction Width (NRW), Maximum-Minimum Plasticity Index (MMPI), Absolute Plasticity Coefficient (APC), Stability Index, Shannon Entropy, SSpop/SStotal Plasticity Ratio, Mahalanobis Distance, Variance Partitioning (VP) |
+
+---
+
+### Relative Approaches
+Relative approaches analyze a trait across multiple genotypes and environments, often using modifications of ANOVA and regression-based methods to quantify plasticity.
+
+| **Category**                        | **Scores**                                                                 |
+|-------------------------------------|----------------------------------------------------------------------------|
+| **Regression & Slope-Based**        | Finlay-Wilkinson Regression, Relative Plasticity Index (RPI), Plasticity Quotient (PQ), Environment-Specific Plasticity (ESP), Sensitivity Index (SI), Transplant Plasticity Score (TPS), Standardized Plasticity Index (SPI), Plasticity Coefficient (PC), Plasticity Differential (PD), Reaction Norm Slope, Mean Trait Difference (MTD) |
+| **ANOVA-Based & Variance Measures** | Cross-environment Correlation/Covariance, Variance of Polynomial Coefficients, Partitioning Phenotypic Variance, Environmental Variance Sensitivity (EVS), Random Regression Mixed Modeling (RRMM), Plasticity Stability Ratio (PSR) |
+
+---
+
+### Quantitative Genetics Approaches
+Quantitative genetics approaches focus on identifying genetic loci that control plasticity, typically using variance-based and advanced statistical models.
+
+| **Category**                        | **Scores**                                                                 |
+|-------------------------------------|----------------------------------------------------------------------------|
+| **Variance-Based & Genetic Models** | Genetic Variation for Plasticity in Linear Norms, Polynomial Reaction Norm, Eigenfunctions of Covariance Matrices, Random Regression Mixed Modeling (RRMM), Relative Stability Index (RSI), Plasticity Stability Ratio (PSR), Phenotypic Flexibility Index (PFI), Developmental Plasticity Index (DPI), Heritability of Plasticity, Genetic Variance in Plasticity, Multivariate Vector of Plasticity, θplast (Angle Between Plasticity Vectors), Multivariate Trait Integration and Plasticity Approach, Two-State Multivariate Vector Plasticity Approach |
+
+
+
+
+
+Publications scraped 10.09.24:
+
+* A systemic approach to the quantification of the phenotypic plasticity of plant physiological traits: the multivariate plasticity index
+* Relatedness predicts phenotypic plasticity in plants better than weediness
+* The ubiquity of phenotypic plasticity in plants: a synthesis
+* A modular concept of phenotypic plasticity in plants
+* Plasticity genes and plasticity costs: a new approach using an Arabidopsis recombinant inbred population
+* Invasion strategies in clonal aquatic plants: are phenotypic differences caused by phenotypic plasticity or local adaptation?
+* Quantification of plasticity of plant traits in response to light intensity: comparing phenotypes at a common weight
+* Phenotypic Plasticity Index as a Strategy for Selecting Water-Stress-Adapted Coffee Genotypes
+* Plant phenotypic plasticity belowground: a phylogenetic perspective on root foraging trade-offs
+* Phenotypic plasticity in response to environmental heterogeneity contributes to fluctuating asymmetry in plants: first empirical evidence
+* Adaptive plasticity and epigenetic variation in response to warming in an Alpine plant
+* Trait convergence and plasticity among native and invasive species in resource-poor environments
+* Linking the spatial scale of environmental variation and the evolution of phenotypic plasticity: selection favors adaptive plasticity in fine-grained environments
+* Dynamic phenotypic plasticity for root growth in Polygonum: a comparative study
+* The role of phenotypic plasticity and rapid adaptation in determining invasion success of Plantago virginica
+* Leaf phenotypic plasticity coupled with integration facilitates the adaptation of plants to enhanced N deposition
+* The plasticity of phenotypic integration in response to light and water availability in the pepper grass, Lepidium bonariense
+* Intraspecific trait variation and phenotypic plasticity mediate alpine plant species response to climate change
+* Phenotypic plasticity of native vs. invasive purple loosestrife: a two-state multivariate approach
+* Variability in growth and biomass allocation and the phenotypic plasticity of seven Prosopis pallida populations in response to water availability
+* Phenotypic Diversity and Altered Environmental Plasticity in Arabidopsis thaliana with Reduced Hsp90 Levels
+* Testing the adaptive plasticity hypothesis: density-dependent selection on manipulated stem length in Impatiens capensis
+* Genomic architecture of phenotypic plasticity in response to water stress in tetraploid wheat
+* Epigenetic correlates of plant phenotypic plasticity: DNA methylation differs between prickly and nonprickly leaves in heterophyllous Ilex aquifolium (Aquifoliaceae)
+* Different genotypes of Phragmites australis show distinct phenotypic plasticity in response to nutrient availability and temperature
+* Multi-trait genetic variation in resource-use strategies and phenotypic plasticity correlates with local climate across the range of a Mediterranean oak (Quercus)
+* Phenotypic plasticity of vegetative and reproductive traits in monoecious and dioecious populations of Sagittaria latifolia (Alismataceae): a clonal aquatic plant
+* Phenotypic plasticity to light and nutrient availability alters functional trait ranking across eight perennial grassland species
+* A conceptual framework for the analysis of phenotypic plasticity and genetic constraints in plants
+* How does long-term drought acclimation modify structure-function relationships? A quantitative approach to leaf phenotypic plasticity of barley
+
+Publications scraped 12.09.24:
+
+* Plant stress responses and phenotypic plasticity in the epigenomics era: perspectives on the grapevine scenario, a model for perennial crop plants
+* Flood induced phenotypic plasticity in amphibious genus Elatine (Elatinaceae)
+
+
+

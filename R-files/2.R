@@ -1,3 +1,18 @@
+#this files contains the following indices/functions: 
+#generate_synthetic_data,
+#check_and_install_packages,
+#RDPI	(rdpi_calculation),
+#RDPIs (rdpi_mean_calculation),
+#ESPI (calculate_ESPI),
+#ESPIid (espiid_calculation),
+#evwpi_calculation (idea from Benedikt)
+
+
+
+
+
+
+
 
 if (!requireNamespace("roxygen2", quietly = TRUE)) {
   install.packages("roxygen2")
@@ -219,6 +234,8 @@ check_and_install_packages = function(packages) {
 #' 
 #' @export
 rdpi_calculation = function(dataframe, traits, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL) {
+  
+  #confirmation of the results with possible with the following dataset:Data has been archived in the Dryad digital repository (doi: 10. 5061/dryad.5qfttdz11).
   
   # List of required packages
   required_packages = c("ggplot2", "agricolae", "dplyr", "reshape2")
