@@ -6,7 +6,23 @@
 #Phenotypic Range (PR) (calculate_PR),
 #Norm of reaction width (calculate_NRW),
 #Environment-Specific Plasticity (ESP) (calculate_ESP),
-#
+#Calculate Plasticity Differential (PD) (calculate_PD),
+#Calculate Fitness Plasticity Index (FPI) (calculate_FPI),
+#Calculate Transplant Plasticity Score (TPS)(calculate_TPS),
+#Calculate Developmental Plasticity Index (DPI)(calculate_DPI),
+#Calculate Coefficient of Environmental Variation (CEV)(calculate_CEV),
+#Calculate Plasticity Response Index (PRI)(calculate_PRI),
+#Calculate Phenotypic Flexibility Index (PFI)(calculate_PFI),
+#Calculate Standardized Plasticity Index (SPI)(calculate_SPI),
+#Calculate Absolute Plasticity Coefficient (APC)(calculate_APC),
+#Calculate Stability Index (SI)(calculate_SI),
+#Calculate Relative Stability Index (RSI)(calculate_RSI),
+#Calculate Environmental Variance Sensitivity (EVS)(calculate_EVS),
+#Calculate Environmental Variance Sensitivity (EVS)(calculate_EVS),
+#Calculate Multivariate Plasticity Index (MVPi)(calculate_MVPi),
+#Calculate Standardized Plasticity Metric (SPM)(calculate_SPM),
+#Calculate SSpop/SStotal Plasticity Ratio(calculate_Plasticity_Ratio)
+
 
 
 #' Generate Synthetic Plant Plasticity Data with Sequential Environments
