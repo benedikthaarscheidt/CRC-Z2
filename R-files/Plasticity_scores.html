@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bene" />
 
-<meta name="date" content="2024-09-17" />
+<meta name="date" content="2024-10-01" />
 
 <title>Trait Analysis in Arabidopsis thaliana and Capsella bursa-pastoris</title>
 
@@ -1482,7 +1482,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Trait Analysis in Arabidopsis thaliana and
 Capsella bursa-pastoris</h1>
 <h4 class="author">Bene</h4>
-<h4 class="date">2024-09-17</h4>
+<h4 class="date">2024-10-01</h4>
 
 </div>
 
@@ -3445,6 +3445,52 @@ PSR = \frac{\text{Plasticity Coefficient}}{\text{Stability Index}}
 <p><strong>Reference</strong>:<br />
 - Falconer, D. S., &amp; Mackay, T. F. (1996). <em>Introduction to
 quantitative genetics</em> (4th ed.). Longman#.</p>
+<hr />
+<div id="genetic-variation-for-plasticity-score-gvps" class="section level3">
+<h3>Genetic Variation for Plasticity Score (GVPS)</h3>
+<p>The Genetic Variation for Plasticity Score (GVPS) quantifies genetic
+plasticity by calculating the variance in the reaction norm coefficients
+across genotypes. When performing a linear regression of a trait across
+<span class="math inline">\(m\)</span> environments, each genotype
+generates <span class="math inline">\(m - 1\)</span> coefficients due to
+the regression fit. The GVPS is computed by taking the variance of these
+coefficients across different genotypes, providing a measure of genetic
+variability in plastic responses.</p>
+<p><strong>Formula</strong>: For a set of <span class="math inline">\(n\)</span> genotypes, and the coefficients <span class="math inline">\(\beta_1, \beta_2, ..., \beta_{m-1}\)</span>
+obtained from regression across <span class="math inline">\(m\)</span>
+environments, the GVPS is calculated as:</p>
+<p><span class="math display">\[
+GVPS = \text{Var}(\beta_1, \beta_2, ..., \beta_{m-1})
+\]</span></p>
+<p>where <span class="math inline">\(\text{Var}\)</span> denotes the
+variance across genotypes for the coefficients estimated from their
+respective reaction norms.</p>
+<p><strong>Reference</strong>:</p>
+<ul>
+<li>Gavrilets, S., &amp; Scheiner, S. M. (1993). “The genetics of
+phenotypic plasticity.” <em>Journal of Evolutionary Biology</em>, 6,
+31-48.</li>
+</ul>
+</div>
+</div>
+<div id="genetic-variance-for-plasticity-two-environments" class="section level2">
+<h2>Genetic Variance for Plasticity (Two Environments)</h2>
+<p>Genetic variance for plasticity can be measured when reaction norms
+are linear or when only two environments are considered. This measure
+evaluates how consistently different genotypes respond to environmental
+changes by calculating the <strong>across-environment
+correlation</strong> or <strong>covariance</strong> between trait values
+across environments.</p>
+<p>The formula for calculating genetic variance in plasticity using
+covariance is:</p>
+<p><span class="math display">\[
+\text{Cov}_{gen}(TraitValue_{Env1}, TraitValue_{Env2}) = \frac{\sum
+(x_{i1} - \bar{x}_1)(x_{i2} - \bar{x}_2)}{n}
+\]</span></p>
+<p>Where <span class="math inline">\(x_{i1}\)</span> and <span class="math inline">\(x_{i2}\)</span> are trait values for individual
+<span class="math inline">\(i\)</span> in Environment 1 and Environment
+2, and <span class="math inline">\(\bar{x}_1\)</span> and <span class="math inline">\(\bar{x}_2\)</span> are the mean trait values in
+each environment.</p>
 </div>
 <div id="statistical-methods" class="section level2">
 <h2>Statistical methods</h2>

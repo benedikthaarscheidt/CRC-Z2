@@ -1288,6 +1288,39 @@ PSR = \frac{\text{Plasticity Coefficient}}{\text{Stability Index}}
 **Reference**:  
 - Falconer, D. S., & Mackay, T. F. (1996). *Introduction to quantitative genetics* (4th ed.). Longman#.
 
+---
+
+### Genetic Variation for Plasticity Score (GVPS)
+
+The Genetic Variation for Plasticity Score (GVPS) quantifies genetic plasticity by calculating the variance in the reaction norm coefficients across genotypes. When performing a linear regression of a trait across \(m\) environments, each genotype generates \(m - 1\) coefficients due to the regression fit. The GVPS is computed by taking the variance of these coefficients across different genotypes, providing a measure of genetic variability in plastic responses.
+
+**Formula**:
+For a set of \( n \) genotypes, and the coefficients \( \beta_1, \beta_2, ..., \beta_{m-1} \) obtained from regression across \( m \) environments, the GVPS is calculated as:
+
+\[
+GVPS = \text{Var}(\beta_1, \beta_2, ..., \beta_{m-1})
+\]
+
+where \(\text{Var}\) denotes the variance across genotypes for the coefficients estimated from their respective reaction norms.
+
+**Reference**:
+
+- Gavrilets, S., & Scheiner, S. M. (1993). "The genetics of phenotypic plasticity." *Journal of Evolutionary Biology*, 6, 31-48.
+
+
+
+## Genetic Variance for Plasticity (Two Environments)
+
+Genetic variance for plasticity can be measured when reaction norms are linear or when only two environments are considered. This measure evaluates how consistently different genotypes respond to environmental changes by calculating the **across-environment correlation** or **covariance** between trait values across environments.
+
+The formula for calculating genetic variance in plasticity using covariance is:
+
+\[
+\text{Cov}_{gen}(TraitValue_{Env1}, TraitValue_{Env2}) = \frac{\sum (x_{i1} - \bar{x}_1)(x_{i2} - \bar{x}_2)}{n}
+\]
+
+Where \(x_{i1}\) and \(x_{i2}\) are trait values for individual \(i\) in Environment 1 and Environment 2, and \(\bar{x}_1\) and \(\bar{x}_2\) are the mean trait values in each environment.
+
 
 ## Statistical methods
 
