@@ -1,19 +1,19 @@
 #this files contains the following indices/functions: 
 #generate_synthetic_data,
 #impute,
-#coefficient-of variation total (calculate_CVt)
-#slope of norm reaction (calculate_reaction_norm_slope),
-#slope of plastic response (D) (calculate_D_slope),
-#response coefficient (RC) (calculate_RC),
-#Standard deviation of means (CVm) (calculate_CVm),
-#Standard deviation of medians (CVmd)(calculate_CVmd),
-#Grand plasticity (calculate_GPi),
-#combine_factors,
-#Phenotypic Plasticity Index (calculate_GPi),
-#Phenotypic Plasticity Index (calculate_PPF),
-#Phenotypic Plasticity Index (calculate_Phenotypic_Plasticity_Index),
-#PImd (calculate_PImd),
-#PILSM (calculate_PILSM),
+#coefficient-of variation total (calculate_CVt) - tested,
+#slope of norm reaction (calculate_reaction_norm_slope) - tested,
+#slope of plastic response (D) (calculate_D_slope)- tested,
+#response coefficient (RC) (calculate_RC)- tested,
+#Standard deviation of means (CVm) (calculate_CVm)- tested,
+#Standard deviation of medians (CVmd)(calculate_CVmd)- tested,
+#Grand plasticity (calculate_GPi)- tested,
+#combine_factors- tested,
+#Phenotypic Plasticity Index (calculate_GPi)- tested,
+#Phenotypic Plasticity Index (calculate_PPF)- tested,
+#Phenotypic Plasticity Index (calculate_Phenotypic_Plasticity_Index)- tested,
+#PImd (calculate_PImd)- tested,
+#PILSM (calculate_PILSM)- tested,
 #RTR (calculate_RTR),
 #PIR (calculate_PIR)
 
@@ -244,6 +244,9 @@ impute = function(mt, mode = "median") {
 #' 
 #' @export
 calculate_CVt = function(data, traitwise = TRUE) {
+  if (any(is.na(data))) {
+    stop("There are missing values in your data. Consider using the function impute().")
+  }
   if (traitwise) {
     # Calculate CVt for each trait separately
     CVt_values = apply(data, 2, function(x) sd(x) / mean(x))
@@ -257,9 +260,23 @@ calculate_CVt = function(data, traitwise = TRUE) {
   }
 }
 
-CVt_per_trait = calculate_CVt(synthetic_data1[,-1], traitwise = TRUE)
 
-overall_CVt = calculate_CVt(synthetic_data1[,-1], traitwise = FALSE)
+### test - passed in by hand calculation with this dataset
+
+df_test1 = data.frame(Column1 = c(rep(4, 10), rep(2, 10)), Column2 = c(rep(10, 10), rep(1, 10)))
+
+#traitwise
+calculate_CVt(df_test1)
+print(sd(df_test1[,1])/mean(df_test1[,1]))
+print(sd(df_test1[,2])/mean(df_test1[,2]))
+
+#total
+df_test1_flattened=as.numeric(unlist(df_test1))
+calculate_CVt(df_test1,traitwise = F)
+print(sd(df_test1_flattened)/mean(df_test1_flattened))
+
+
+
 
 
 ################################
@@ -270,7 +287,7 @@ overall_CVt = calculate_CVt(synthetic_data1[,-1], traitwise = FALSE)
 #' using the first column as the environment indicator. It also provides an option to plot the reaction norm.
 #'
 #' @param data A data frame containing the environment indicators in the first column and the trait data in the remaining columns.
-#' @param trait_col The column number of the trait for which the reaction norm slope is to be calculated. Defaults to 2 if not specified (since 1 is the environment indicator).
+#' @param trait_col The column number of the trait for which the reaction norm slope is to be calculated. This can also be multiple indicator numbers in a vector which then will be used separately to calculate the slope.
 #' @param plot A logical flag indicating whether to plot the reaction norm. Defaults to FALSE.
 #' @return The slope of the reaction norm for the specified trait.
 #' @examples
@@ -281,50 +298,63 @@ overall_CVt = calculate_CVt(synthetic_data1[,-1], traitwise = FALSE)
 #' )
 #' slope = calculate_reaction_norm_slope(df, trait_col = 2, plot = TRUE)
 #' @export
-calculate_reaction_norm_slope = function(data, env_col ,trait_col = 2, plot = FALSE) {
+calculate_reaction_norm_slope = function(data, env_col, trait_cols, plot = FALSE) {
+  
   if (is.numeric(env_col) && length(env_col) == 1) {
     env_indicators = data[[env_col]]
   } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    # If env_col is a vector, keep it as is
     env_indicators = env_col
   } else {
     env_indicators = data[[env_col]]
   }
-  if (!is.numeric(data[[trait_col]])) {
-    stop("The specified column is not numeric.")
+  
+  # Initialize an empty list to store slopes for multiple traits
+  slopes_list = list()
+  
+  # Loop over each specified trait column
+  for (trait_col in trait_cols) {
+    
+    if (!is.numeric(data[[trait_col]])) {
+      stop(paste("The column", colnames(data)[trait_col], "is not numeric."))
+    }
+    
+    if (any(is.na(data[[trait_col]]))) {
+      stop(paste("There are missing values in column", colnames(data)[trait_col], ". Consider using the function impute()."))
+    }
+    
+    if (length(env_indicators) != nrow(data)) {
+      stop("Length of env_indicators must match the number of rows in the data.")
+    }
+    
+    # Fit a linear model to estimate the slope for the trait column
+    model = lm(data[[trait_col]] ~ env_indicators)
+    
+    # Extract the slope of the reaction norm
+    slope = coef(model)[["env_indicators"]]
+    
+    # Store the slope in the list with the trait name
+    slopes_list[[colnames(data)[trait_col]]] = slope
+    
+    # Plot the reaction norm if requested
+    if (plot) {
+      par(mai = c(1, 1, 0.5, 0.5))  # Adjust the margins for plotting
+      plot(data[[trait_col]] ~ env_indicators, 
+           xlab = "Environment Indicator", 
+           ylab = colnames(data)[trait_col],
+           main = paste("Reaction Norm for", colnames(data)[trait_col]),
+           pch = 19, col = "blue")
+      abline(model, col = "red", lwd = 2)
+      legend("topleft", legend = c("Observed", "Fitted Line"), col = c("blue", "red"), pch = c(19, NA), lty = c(NA, 1), lwd = c(NA, 2))
+    }
   }
   
-  if (any(is.na(data[[trait_col]]))) {
-    stop("There are missing values in your data. Consider using the function impute().")
-  }
-  
-  
-  if (length(env_indicators) != nrow(data)) {
-    stop("Length of env_indicators must match the number of rows in the data.")
-  }
-  
-  # Fit a linear model to estimate the slope
-  model = lm(data[[trait_col]] ~ env_indicators)
-  
-  # Extract the slope of the reaction norm
-  slope = coef(model)[["env_indicators"]]
-  
-  # Plot the reaction norm if requested
-  if (plot) {
-    plot(data[[trait_col]] ~ env_indicators, 
-         xlab = "Environment Indicator", 
-         ylab = colnames(data)[trait_col],
-         main = paste("Reaction Norm for", colnames(data)[trait_col]),
-         pch = 19, col = "blue")
-    abline(model, col = "red", lwd = 2)
-    legend("topleft", legend = c("Observed", "Fitted Line"), col = c("blue", "red"), pch = c(19, NA), lty = c(NA, 1), lwd = c(NA, 2))
-  }
-  
-  return(slope)
+  return(slopes_list)  # Return the list of slopes for each trait
 }
 
-slope=calculate_reaction_norm_slope(synthetic_data1,1,plot=F)
-print(slope)
+#test - passed with synthetic dataset
+
+df_test2 = data.frame(Column0 = c(rep(1, 10), rep(2, 10)),Column1 = c(rep(2, 10), rep(1, 10)), Column2 = c(rep(2, 10), rep(4, 10)))
+calculate_reaction_norm_slope(df_test2,env_col = 1,trait_cols = c(2,3),plot = T)
 
 ################################
 
@@ -395,8 +425,15 @@ calculate_D_slope = function(data, env_col, trait_col) {
   return(D_slope)
 }
 
-D=calculate_D_slope(synthetic_data1,env_col=1, trait_col = 2)
-print(D)
+#test - passed with synthetic 
+
+calculate_D_slope(df_test2,env_col = 1,trait_col = 2)
+df_test3=data.frame(Column0 = c(rep(3, 10), rep(2, 10),rep(1,10)),Column1 = c(rep(2, 10), rep(1, 15),rep(3,5)), Column2 = c(rep(2, 10), rep(4, 10),rep(3,10)))
+calculate_D_slope(df_test3,env_col = 1,trait_col = 3)
+mean(df_test3[1:15,3])-mean(df_test3[16:nrow(df_test3),3])
+
+
+
 
 ################################
 
@@ -462,8 +499,12 @@ calculate_RC = function(data, env_col = 1, trait_col) {
 }
 
 
-RC= calculate_RC(synthetic_data1,trait_col=2)
-print(RC)
+# test - passed with synthetic dataset
+
+calculate_RC(df_test3,env_col = 1,trait_col = 3)
+
+mean(df_test3[1:15,3])/mean(df_test3[16:nrow(df_test3),3])
+
 
 ################################
 
@@ -512,9 +553,11 @@ calculate_CVm = function(data, trait_col, env_col = 1) {
   return(CVm)
 }
 
+## test - passed with synthetic dataset
 
-CVm=calculate_CVm(synthetic_data1,trait_col = 3)
-print(CVm)
+calculate_CVm(df_test3,env_col = 1,trait_col = 3)
+
+sd(c(mean(df_test3[1:10,3]),mean(df_test3[11:20,3]),mean(df_test3[21:30,3])))/mean(mean(df_test3[,3]))
 
 
 ###############################
@@ -572,30 +615,39 @@ calculate_CVmd = function(data, trait_col, env_col) {
   return(CVmd)
 }
 
-CVmd=calculate_CVmd(synthetic_data1,3,1)
-print(CVmd)
+# test - passed on synthetic dataset 
 
-#' Calculate Grand Plasticity (GPi)
+calculate_CVmd(df_test3,env_col = 1,trait_col = 2)
+
+sd(c(median(df_test3[1:10,2]),median(df_test3[11:20,2]),median(df_test3[21:30,2])))/mean(median(df_test3[1:10,2]),median(df_test3[11:20,2]),median(df_test3[21:30,2]))
+
+###############################
+
+#' Calculate Plasticity (Pi) using Adjusted Means
 #'
-#' This function calculates the Grand Plasticity (GPi), defined as the standard deviation of the means 
-#' divided by the mean of the adjusted means across different environments for a specified trait.
+#' This function calculates the Plasticity (Pi), defined as the relative change
+#' in a specified trait under different environmental conditions (treatment and control).
+#' The plasticity is calculated as (Trait_treatment - Trait_control) / Trait_control,
+#' using the adjusted means from a linear model that controls for a covariate (e.g., biomass).
 #'
-#' The function assumes normality in the data and calculates GPi as an indicator of plasticity across multiple environments.
-#'
-#' @param data A data frame containing the trait data. The first column should be the environmental indicator, 
-#' and the remaining columns should be the traits. Groupings of multiple environmental factors can be made with the `groupings()`function.
+#' @param data A data frame containing the trait data, environmental conditions, and covariate.
 #' @param trait_col The column number or name of the trait to analyze.
-#' @param env_col The column number, name, or a vector representing the environmental conditions.
-#' @return The Grand Plasticity (GPi) value for the specified trait.
+#' @param env_col The column number or name representing the environmental conditions (must include control).
+#' @param covariate_col The column number or name representing the covariate (e.g., biomass).
+#' @param control_env The label or value in `env_col` that represents the control environment.
+#' @return The plasticity (Pi) value for the specified trait.
 #' @examples
 #' df = data.frame(
-#'   Environment = c("Env1", "Env1", "Env2", "Env2", "Env3", "Env3"),
-#'   Height = c(10, 12, 20, 22, 15, 18)
+#'   Environment = c("Control", "Control", "Treatment", "Treatment"),
+#'   Height = c(10, 12, 20, 22),
+#'   Biomass = c(5, 6, 7, 8)
 #' )
-#' GPi = calculate_GPi(df, trait_col = "Height")
-#' print(GPi)
+#' Pi = calculate_Pi_with_adjusted_means(df, trait_col = "Height", env_col = "Environment",
+#'   covariate_col = "Biomass", control_env = "Control")
+#' print(Pi)
 #' @export
-calculate_GPi = function(data, trait_col, env_col = 1) {
+calculate_Pi_with_adjusted_means = function(data, env_col , trait_col, covariate_col, control_env) {
+  
   # Handle env_col
   if (is.numeric(env_col) && length(env_col) == 1) {
     env_col = data[[env_col]]
@@ -604,34 +656,53 @@ calculate_GPi = function(data, trait_col, env_col = 1) {
   } else {
     env_col = data[[env_col]]
   }
+  
   trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  covariate_col = if (is.numeric(covariate_col)) data[[covariate_col]] else data[[covariate_col]]
   
-  # Calculate the mean of the trait for each environment
-  means = tapply(trait_col, env_col, mean, na.rm = TRUE)
+  # Fit a linear model to account for the covariate (adjusted means)
+  model = lm(trait_col ~ covariate_col + env_col, data = data)
   
-  # Calculate the standard deviation of these means
-  sd_of_means = sd(means, na.rm = TRUE)
+  # Use emmeans to get the adjusted means for each environment
+  library(emmeans)
+  adjusted_means = emmeans(model, ~ env_col)
   
-  # Adjust the means (mean centering: subtract overall mean)
-  overall_mean = mean(trait_col, na.rm = TRUE)
-  adjusted_means = means - overall_mean
+  # Extract the adjusted means for control and treatment
+  trait_control_mean = summary(adjusted_means)$emmean[which(summary(adjusted_means)$env_col == control_env)]
+  trait_treatment_mean = mean(summary(adjusted_means)$emmean[summary(adjusted_means)$env_col != control_env], na.rm = TRUE)
   
-  # Calculate the mean of the adjusted means
-  mean_of_adjusted_means = mean(abs(adjusted_means), na.rm = TRUE)
+  # Calculate Plasticity (Pi) using the adjusted means
+  Pi = abs((trait_treatment_mean - trait_control_mean) / trait_control_mean)
   
-  # Calculate Grand Plasticity (GPi)
-  GPi = sd_of_means / mean_of_adjusted_means
-  
-  return(GPi)
+  return(Pi)
 }
 
+## test - passed on synthetic dataset
 
-GPi = calculate_GPi(synthetic_data1, trait_col = 3)
-print(GPi)
+df_test4 <- data.frame(
+  Column0 = c(rep(3, 10), rep(2, 10), rep(1, 10)),   # Response variable
+  Column1 = c(rep(2, 10), rep(3, 10), rep(1, 10)),   # Control (2) and Treatment (3)
+  Column2 = c(rep(1, 10), rep(1, 10), rep(1, 10))    # Covariate (matches values of Column0)
+)
 
+df_test5 <- data.frame(
+  Column0 = c(rep(3, 10), rep(2, 10), rep(1, 10)),   # Response variable
+  Column1 = c(rep(3, 10), rep(2, 10), rep(1, 10)),   # Control (2) and Treatment (3)
+  Column2 = c(rep(3, 10), rep(2, 10), rep(1, 10))    # Covariate (matches values of Column0)
+)
+
+df_test_simple <- data.frame(
+  Column1 = c(2, 2, 3, 3),      # Control (2) and Treatment (3)
+  Column0 = c(10, 12, 20, 22),  # Response variable (trait)
+  Column2 = c(1, 1, 2, 2)       # Covariate (e.g., biomass)
+)
+
+calculate_Pi_with_adjusted_means(df_test4,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
+calculate_Pi_with_adjusted_means(df_test5,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
+calculate_Pi_with_adjusted_means(df_test_simple,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
 
 ##########################################
-
+  
 #' Combine Internal and External Factors into a Single Dataframe and Return Levels
 #'
 #' This function combines internal and external factors into a single dataframe by creating 
@@ -768,8 +839,24 @@ calculate_PPF = function(data, trait_col, env_col, covariates = NULL) {
 
 synthetic_data2=combine_factors(synthetic_data1,factors=NULL, factors_not_in_dataframe=list(external_water))
 
-PFF= calculate_PPF(synthetic_data2, trait_col = 3,env_col=5)
-print(PFF)
+## test - passed on synthetic dataset
+
+df_test6 <- data.frame(
+  Column0 = c(rep(3, 15), rep(2, 15)),   # Response variable
+  Column1 = c(rep(4, 15), rep(2, 15)),   # Control (2) and Treatment (3)
+  Column2 = c(rep(3, 10), rep(2, 10), rep(1, 10))    # Covariate (matches values of Column0)
+)
+df_test6$Column0 <- as.factor(df_test6$Column0)
+calculate_PPF(df_test6,env_col = 1, trait_col = 2,covariates = NULL)
+model = lm(Column1 ~ Column0 , data = df_test6)
+lsmeans_env <- emmeans(model, ~ Column0)
+summary_lsmeans <- summary(lsmeans_env)
+# Extract only the LSMeans (adjusted means)
+lsmeans_values <- summary_lsmeans$emmean
+100*abs((lsmeans_values[[1]]-lsmeans_values[[2]])/lsmeans_values[[1]])
+
+
+
 ###########################################
 
 
@@ -801,8 +888,13 @@ calculate_Phenotypic_Plasticity_Index = function(data, trait_col = NULL) {
   
   return(Pi)
 }
-PI=calculate_Phenotypic_Plasticity_Index(synthetic_data2,trait_col = 3)
-print(PI)
+
+
+##test - passed on a synthetic dataset (look at the dataset for confirmation)
+
+calculate_Phenotypic_Plasticity_Index(df_test6,trait_col = 2)
+
+
 
 
 ####################################
@@ -857,9 +949,9 @@ calculate_PImd = function(data, trait_col, env_col) {
   return(PImd)
 }
 
+##test - passed on synthetic dataset (check  dataset for confirmation)
 
-PImd=calculate_PImd(synthetic_data1,trait_col=3,env_col=1)
-print(PImd)
+calculate_PImd(df_test6,trait_col = 2,env_col = 1)
 
 ###############################################
 
@@ -952,12 +1044,18 @@ calculate_PILSM = function(data, trait_col, env_col, covariates = NULL) {
   return(list(PILSM = PILSM, plot = lsm_plot))
 }
 
-# Calculate PILSM with a covariate
+
+## test - passed on synthetic dataset 
 
 
+calculate_PILSM(df_test6,trait_col=2,env_col=1)
 
-calculate_PILSM(synthetic_data1,trait_col=3,env_col=1)
-
+model = lm(Column1 ~ Column0 , data = df_test6)
+lsmeans_env <- emmeans(model, ~ Column0)
+summary_lsmeans <- summary(lsmeans_env)
+# Extract only the LSMeans (adjusted means)
+lsmeans_values <- summary_lsmeans$emmean
+(max(lsmeans_values)-min(lsmeans_values))/max(lsmeans_values)
 
 ################################################
 
@@ -1008,9 +1106,7 @@ calculate_RTR = function(data, trait_col, env_col, env_low, env_high) {
   return(RTR)
 }
 
-calculate_RTR(synthetic_data1,trait_col=3,env_col=1,env_low=1,env_high=3)
-
-
+calculate_RTR(df_,trait_col=3,env_col=1,env_low=1,env_high=3)
 
 ######################################
 
