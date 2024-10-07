@@ -1,14 +1,14 @@
 #this files contains the following indices/functions: 
 #generate_synthetic_data,
 #Phenotypic Stability Index (calculate_PSI),
-#Relative Plasticity Index (calculate_RPI) - passed,
-#Plasticity Quotient (calculate_PQ) - passed,
-#Phenotypic Range (PR) (calculate_PR) - passed,
-#Norm of reaction width (calculate_NRW) - passed,
-#Environment-Specific Plasticity (ESP) (calculate_ESP) - passed,
-#Calculate Plasticity Differential (PD) (calculate_PD) - passed,
-#Calculate Fitness Plasticity Index (FPI) (calculate_FPI) - passed,
-#Calculate Transplant Plasticity Score (TPS)(calculate_TPS) - passed,
+#Relative Plasticity Index (calculate_RPI) - tested,
+#Plasticity Quotient (calculate_PQ) - tested,
+#Phenotypic Range (PR) (calculate_PR) - tested,
+#Norm of reaction width (calculate_NRW) - tested,
+#Environment-Specific Plasticity (ESP) (calculate_ESP) - tested,
+#Calculate Plasticity Differential (PD) (calculate_PD) - tested,
+#Calculate Fitness Plasticity Index (FPI) (calculate_FPI) - tested,
+#Calculate Transplant Plasticity Score (TPS)(calculate_TPS) - tested,
 
 ##################### datasets for testing
 
