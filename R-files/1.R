@@ -14,8 +14,8 @@
 #Phenotypic Plasticity Index (calculate_Phenotypic_Plasticity_Index)- tested,
 #PImd (calculate_PImd)- tested,
 #PILSM (calculate_PILSM)- tested,
-#RTR (calculate_RTR),
-#PIR (calculate_PIR)
+#RTR (calculate_RTR)- tested,
+#PIR (calculate_PIR) - tested
 
 
 ################################
@@ -679,19 +679,19 @@ calculate_Pi_with_adjusted_means = function(data, env_col , trait_col, covariate
 
 ## test - passed on synthetic dataset
 
-df_test4 <- data.frame(
+df_test4 = data.frame(
   Column0 = c(rep(3, 10), rep(2, 10), rep(1, 10)),   # Response variable
   Column1 = c(rep(2, 10), rep(3, 10), rep(1, 10)),   # Control (2) and Treatment (3)
   Column2 = c(rep(1, 10), rep(1, 10), rep(1, 10))    # Covariate (matches values of Column0)
 )
 
-df_test5 <- data.frame(
+df_test5 = data.frame(
   Column0 = c(rep(3, 10), rep(2, 10), rep(1, 10)),   # Response variable
   Column1 = c(rep(3, 10), rep(2, 10), rep(1, 10)),   # Control (2) and Treatment (3)
   Column2 = c(rep(3, 10), rep(2, 10), rep(1, 10))    # Covariate (matches values of Column0)
 )
 
-df_test_simple <- data.frame(
+df_test_simple = data.frame(
   Column1 = c(2, 2, 3, 3),      # Control (2) and Treatment (3)
   Column0 = c(10, 12, 20, 22),  # Response variable (trait)
   Column2 = c(1, 1, 2, 2)       # Covariate (e.g., biomass)
@@ -841,18 +841,18 @@ synthetic_data2=combine_factors(synthetic_data1,factors=NULL, factors_not_in_dat
 
 ## test - passed on synthetic dataset
 
-df_test6 <- data.frame(
+df_test6 = data.frame(
   Column0 = c(rep(3, 15), rep(2, 15)),   # Response variable
   Column1 = c(rep(4, 15), rep(2, 15)),   # Control (2) and Treatment (3)
   Column2 = c(rep(3, 10), rep(2, 10), rep(1, 10))    # Covariate (matches values of Column0)
 )
-df_test6$Column0 <- as.factor(df_test6$Column0)
+df_test6$Column0 = as.factor(df_test6$Column0)
 calculate_PPF(df_test6,env_col = 1, trait_col = 2,covariates = NULL)
 model = lm(Column1 ~ Column0 , data = df_test6)
-lsmeans_env <- emmeans(model, ~ Column0)
-summary_lsmeans <- summary(lsmeans_env)
+lsmeans_env = emmeans(model, ~ Column0)
+summary_lsmeans = summary(lsmeans_env)
 # Extract only the LSMeans (adjusted means)
-lsmeans_values <- summary_lsmeans$emmean
+lsmeans_values = summary_lsmeans$emmean
 100*abs((lsmeans_values[[1]]-lsmeans_values[[2]])/lsmeans_values[[1]])
 
 
@@ -1051,10 +1051,10 @@ calculate_PILSM = function(data, trait_col, env_col, covariates = NULL) {
 calculate_PILSM(df_test6,trait_col=2,env_col=1)
 
 model = lm(Column1 ~ Column0 , data = df_test6)
-lsmeans_env <- emmeans(model, ~ Column0)
-summary_lsmeans <- summary(lsmeans_env)
+lsmeans_env = emmeans(model, ~ Column0)
+summary_lsmeans = summary(lsmeans_env)
 # Extract only the LSMeans (adjusted means)
-lsmeans_values <- summary_lsmeans$emmean
+lsmeans_values = summary_lsmeans$emmean
 (max(lsmeans_values)-min(lsmeans_values))/max(lsmeans_values)
 
 ################################################
@@ -1099,18 +1099,54 @@ calculate_RTR = function(data, trait_col, env_col, env_low, env_high) {
   # Calculate mean trait values for each end of the gradient
   mean_low = mean(data_low[[trait_col]], na.rm = TRUE)
   mean_high = mean(data_high[[trait_col]], na.rm = TRUE)
-  
+  print(mean_high)
+  print(mean_low)
   # Calculate the RTR value
   RTR = (mean_high - mean_low) / max(abs(trait_col), na.rm = TRUE)
   
   return(RTR)
 }
 
-calculate_RTR(df_,trait_col=3,env_col=1,env_low=1,env_high=3)
+
+
+## test - passed on synthetic dataset
+calculate_RTR(df_test2,trait_col=2,env_col=1,env_low=1,env_high=2)
+
 
 ######################################
 
-
+#' @title Calculate Phenotypic Instability Ratio (PIR)
+#'
+#' @description This function calculates the Phenotypic Instability Ratio (PIR) for a given trait across different environments,
+#' following the method described by Robinson (1989). PIR is calculated as the ratio of the difference between the maximum and minimum
+#' mean trait values across environments to the mean trait value in the environment with the maximum relative growth rate (RGR).
+#' The PIR metric provides an intermediate measure of plasticity and assumes normality in the data. It also requires prior knowledge of the
+#' relative growth rates (RGRs) for each environment. Note that the method has statistical limitations.
+#'
+#' @param data A data frame containing the data for trait values and corresponding environment and RGR information.
+#' @param trait_col A column name or numeric vector indicating the trait values. Can be a numeric index of the column in the data frame or a vector.
+#' @param env_col A column name or numeric vector indicating the environment identifiers. Can be a numeric index of the column in the data frame or a vector.
+#' @param rgr_col A column name or numeric vector indicating the relative growth rate (RGR) values. Can be a numeric index of the column in the data frame or a vector.
+#'
+#' @details The function first converts the environment column into a factor and computes the mean trait values for each environment.
+#' It then identifies the environment with the maximum relative growth rate and uses the trait's mean value in that environment
+#' to compute the PIR score. The calculation follows the formula:
+#' \deqn{PIR = \frac{MaxMean - MinMean}{Mean_{MaxRGR}}}
+#' where \code{MaxMean} is the maximum mean trait value, \code{MinMean} is the minimum mean trait value,
+#' and \code{Mean_{MaxRGR}} is the mean trait value in the environment with the maximum RGR.
+#'
+#' @return A numeric value representing the Phenotypic Instability Ratio (PIR).
+#'
+#' @references
+#' Robinson, D. (1989). \emph{Plasticity in plant growth and resource use as a trait for crop breeding}. Field Crops Research, 11(2-3), 153-159.
+#'
+#' @examples
+#' \dontrun{
+#' # Sample usage with a data frame 'df' with columns 'Trait', 'Env', and 'RGR':
+#' calculate_PIR(data = df, trait_col = "Trait", env_col = "Env", rgr_col = "RGR")
+#' }
+#' 
+#' @export
 calculate_PIR = function(data, trait_col, env_col, rgr_col) {
   
   # Handle env_col
@@ -1143,12 +1179,14 @@ calculate_PIR = function(data, trait_col, env_col, rgr_col) {
   # Identify maximum and minimum means
   max_mean = max(means, na.rm = TRUE)
   min_mean = min(means, na.rm = TRUE)
+
   
   # Identify the environment with the maximum growth rate
   max_rgr_env = levels(env_col)[which.max(tapply(rgr_col, env_col, mean, na.rm = TRUE))]
   
   # Find the mean of the trait at the environment where the growth rate is maximum
-  mean_at_max_rgr = means[max_rgr_env]
+  mean_at_max_rgr = max(means[max_rgr_env])
+  
   
   # Calculate PIR
   PIR = (max_mean - min_mean) / mean_at_max_rgr
@@ -1156,9 +1194,10 @@ calculate_PIR = function(data, trait_col, env_col, rgr_col) {
   return(PIR)
 }
 
-specific_growthrate=rnorm(300,0.5,0.2)
+## test - passed on synthetic dataset
+specific_growthrate=c(rep(10,10),rep(20,10))
 
-calculate_PIR(synthetic_data1 , trait_col = 3 , env_col = 1, rgr_col = specific_growthrate)
+calculate_PIR(df_test2 , trait_col = 2 , env_col = 1, rgr_col = specific_growthrate)
 
 
 

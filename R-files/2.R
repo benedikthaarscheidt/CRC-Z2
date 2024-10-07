@@ -1,16 +1,35 @@
 #this files contains the following indices/functions: 
 #generate_synthetic_data,
 #check_and_install_packages,
-#RDPI	(rdpi_calculation),
-#RDPIs (rdpi_mean_calculation),
-#ESPI (calculate_ESPI),
-#ESPIid (espiid_calculation),
+#RDPI	(rdpi_calculation) - tested,
+#RDPIs (rdpi_mean_calculation) - tested,
+#ESPI (calculate_ESPI) - tested,
+#ESPIid (espiid_calculation) - tested,
 #evwpi_calculation (idea from Benedikt)
 
 
+##### datasets for testing
 
+df_test1 = data.frame(Column1 = c(rep(4, 10), rep(2, 10)), Column2 = c(rep(10, 10), rep(1, 10)))
+df_test2 = data.frame(Column0 = c(rep(1, 10), rep(2, 10)),Column1 = c(rep(2, 10), rep(1, 10)), Column2 = c(rep(2, 10), rep(4, 10)))
+df_test3=data.frame(Column0 = c(rep(3, 10), rep(2, 10),rep(1,10)),Column1 = c(rep(2, 10), rep(1, 15),rep(3,5)), Column2 = c(rep(2, 10), rep(4, 10),rep(3,10)))
+df_test4 = data.frame(
+  Column0 = c(rep(3, 10), rep(2, 10), rep(1, 10)),   # Response variable
+  Column1 = c(rep(2, 10), rep(3, 10), rep(1, 10)),   # Control (2) and Treatment (3)
+  Column2 = c(rep(1, 10), rep(1, 10), rep(1, 10))    # Covariate (matches values of Column0)
+)
 
+df_test5 = data.frame(
+  Column0 = c(rep(3, 10), rep(2, 10), rep(1, 10)),   # Response variable
+  Column1 = c(rep(3, 10), rep(2, 10), rep(1, 10)),   # Control (2) and Treatment (3)
+  Column2 = c(rep(3, 10), rep(2, 10), rep(1, 10))    # Covariate (matches values of Column0)
+)
 
+df_test_simple = data.frame(
+  Column1 = c(2, 2, 3, 3),      # Control (2) and Treatment (3)
+  Column0 = c(10, 12, 20, 22),  # Response variable (trait)
+  Column2 = c(1, 1, 2, 2)       # Covariate (e.g., biomass)
+)
 
 
 
@@ -233,124 +252,122 @@ check_and_install_packages = function(packages) {
 #' print(result_with_species$test_result)
 #' 
 #' @export
-rdpi_calculation = function(dataframe, traits, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL) {
-  
-  #confirmation of the results with possible with the following dataset:Data has been archived in the Dryad digital repository (doi: 10. 5061/dryad.5qfttdz11).
+rdpi_calculation <- function(dataframe, traits, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL) {
   
   # List of required packages
-  required_packages = c("ggplot2", "agricolae", "dplyr", "reshape2")
-  
-  
+  required_packages <- c("ggplot2", "agricolae", "dplyr", "reshape2")
   
   # Check and install required packages
   check_and_install_packages(required_packages)
   
   # Convert column indices to names if necessary
   if (!is.null(sp)) {
-    sp = if (is.numeric(sp)) names(dataframe)[sp] else sp
+    sp <- if (is.numeric(sp)) names(dataframe)[sp] else sp
   }
-  traits = if (is.numeric(traits)) names(dataframe)[traits] else traits
+  traits <- if (is.numeric(traits)) names(dataframe)[traits] else traits
   
   # Combine internal and external factors into a single dataframe
   if (!is.null(factors_not_in_dataframe)) {
     if (length(factors_not_in_dataframe[[1]]) != nrow(dataframe)) {
       stop("The length of external factors must match the number of rows in the dataframe.")
     }
-    external_factors_df = as.data.frame(factors_not_in_dataframe)
+    external_factors_df <- as.data.frame(factors_not_in_dataframe)
     if (!is.null(factors)) {
-      factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
-      combined_factors_df = cbind(dataframe[factors], external_factors_df)
+      factors <- if (is.numeric(factors)) names(dataframe)[factors] else factors
+      combined_factors_df <- cbind(dataframe[factors], external_factors_df)
     } else {
-      combined_factors_df = external_factors_df
+      combined_factors_df <- external_factors_df
     }
-    dataframe$Combined_Factors = interaction(combined_factors_df, drop = TRUE)
+    dataframe$Combined_Factors <- interaction(combined_factors_df, drop = TRUE)
   } else if (!is.null(factors)) {
-    factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
-    dataframe$Combined_Factors = interaction(dataframe[factors], drop = TRUE)
+    factors <- if (is.numeric(factors)) names(dataframe)[factors] else factors
+    dataframe$Combined_Factors <- interaction(dataframe[factors], drop = TRUE)
   } else {
     stop("You must provide either internal factors, external factors, or both.")
   }
   
-  dataframe$Combined_Factors = as.factor(dataframe$Combined_Factors)
+  dataframe$Combined_Factors <- as.factor(dataframe$Combined_Factors)
   
-  all_results = list()
+  all_results <- list()
   
   if (is.null(sp)) {
-    unique_species = list("Single_Group" = dataframe)
+    unique_species <- list("Single_Group" = dataframe)
   } else {
-    unique_species = split(dataframe, dataframe[[sp]])
+    unique_species <- split(dataframe, dataframe[[sp]])
   }
   
   # Initialize a dataframe to collect all trait data for statistical analysis
-  all_trait_data = data.frame()
+  all_trait_data <- data.frame()
   
   for (species_name in names(unique_species)) {
-    species_data = unique_species[[species_name]]
+    species_data <- unique_species[[species_name]]
     
-    RDPI_results = list()
+    RDPI_results <- list()
     
     for (trait in traits) {
-      RDPI = data.frame(sp = character(0), rdpi = numeric(0))
+      RDPI <- data.frame(sp = character(0), rdpi = numeric(0))
       
-      mean_values = aggregate(species_data[[trait]], list(species_data$Combined_Factors), mean)
-      colnames(mean_values) = c("Env_Combination", "Mean_Trait")
-      overall_mean_trait_value = mean(mean_values$Mean_Trait, na.rm = TRUE)
-      env_levels = levels(species_data$Combined_Factors)
-      n_env_levels = length(env_levels)
+      # Compute pairwise Canberra distance for all individuals in the dataset
+      RDPI_temp <- as.matrix(dist(x = species_data[[trait]], method = "canberra"))
       
-      rdpi_values = c()
+      # Generate a matrix where value is "TRUE" only if observation i and j belong to different levels of the factor
+      filter_frame <- matrix(NA, nrow(species_data), nrow(species_data))
       
-      for (i in 1:(n_env_levels - 1)) {
-        for (j in (i + 1):n_env_levels) {
-          mean_i = mean_values$Mean_Trait[mean_values$Env_Combination == env_levels[i]]
-          mean_j = mean_values$Mean_Trait[mean_values$Env_Combination == env_levels[j]]
-          
-          diff = abs(mean_i - mean_j)
-          
-          if (overall_mean_trait_value != 0) {
-            rdpi_values = c(rdpi_values, diff / overall_mean_trait_value)
+      for (i in 1:nrow(filter_frame)) {
+        for (j in 1:ncol(filter_frame)) {
+          if (species_data$Combined_Factors[i] == species_data$Combined_Factors[j]) {
+            filter_frame[i, j] <- FALSE
+          } else {
+            filter_frame[i, j] <- TRUE
           }
         }
       }
       
-      RDPI_sp_value = mean(rdpi_values, na.rm = TRUE)
-      RDPI_sp = data.frame(sp = species_name, rdpi = RDPI_sp_value)
-      RDPI = rbind(RDPI, RDPI_sp)
+      # Keep only the lower triangle (no need to compare twice)
+      filter_frame[upper.tri(filter_frame, diag = TRUE)] <- FALSE
+      
+      # Subset RDPI so that it only includes comparisons between individuals from different environments
+      rdpi_values <- RDPI_temp[filter_frame == TRUE]
+      
+      # Calculate the mean RDPI value for this trait
+      RDPI_sp_value <- mean(rdpi_values, na.rm = TRUE)
+      RDPI_sp <- data.frame(sp = species_name, rdpi = RDPI_sp_value)
+      RDPI <- rbind(RDPI, RDPI_sp)
       
       # Collect all trait data for statistical analysis
-      trait_data = data.frame(
+      trait_data <- data.frame(
         sp = species_name,
         trait = trait,
         Combined_Factors = species_data$Combined_Factors,
         Trait_Value = species_data[[trait]]
       )
       
-      all_trait_data = rbind(all_trait_data, trait_data)
+      all_trait_data <- rbind(all_trait_data, trait_data)
       
-      RDPI_results[[trait]] = list(
+      RDPI_results[[trait]] <- list(
         RDPI_values = RDPI,
         trait_data = trait_data
       )
     }
     
-    all_results[[species_name]] = RDPI_results
+    all_results[[species_name]] <- RDPI_results
   }
   
   # Perform ANOVA on the trait data
-  anova_results = list()
-  tukey_results = list()
+  anova_results <- list()
+  tukey_results <- list()
   
   for (trait in traits) {
-    fit = aov(Trait_Value ~ Combined_Factors, data = subset(all_trait_data, trait == trait))
-    anova_results[[trait]] = summary(fit)
+    fit <- aov(Trait_Value ~ Combined_Factors, data = subset(all_trait_data, trait == trait))
+    anova_results[[trait]] <- summary(fit)
     
     # Perform Tukey's HSD test
-    Tukey = agricolae::HSD.test(fit, trt = "Combined_Factors")
-    tukey_results[[trait]] = Tukey
+    Tukey <- agricolae::HSD.test(fit, trt = "Combined_Factors")
+    tukey_results[[trait]] <- Tukey
   }
   
   # Create boxplots for the traits across environmental combinations
-  boxplot_traits = ggplot2::ggplot(all_trait_data, ggplot2::aes(x = Combined_Factors, y = Trait_Value, fill = trait)) +
+  boxplot_traits <- ggplot2::ggplot(all_trait_data, ggplot2::aes(x = Combined_Factors, y = Trait_Value, fill = trait)) +
     ggplot2::geom_boxplot() +
     ggplot2::facet_wrap(~trait, scales = "free_y") +
     ggplot2::theme_bw() +
@@ -368,12 +385,24 @@ rdpi_calculation = function(dataframe, traits, sp = NULL, factors = NULL, factor
   ))
 }
 
+
 # Example usage with synthetic data
 external_light = rep(c(0.4, 0.6, 0.8), each = 100)
 external_water = sample(rep(c("Low", "High"), each = 150))
 
 # Calculate RDPI with factors not in the dataframe
 RDPI= rdpi_calculation(synthetic_data1, sp = NULL, traits = c(3, 4), factors = 2, factors_not_in_dataframe = list(external_light, external_water))
+
+
+### test - passed on synthetic dataset and crosschecked with data from package
+
+
+df_test20 <- data.frame(
+  Column0 = as.factor(c(rep(1, 20), rep(2, 20))),  # Two groups/species, 20 observations each
+  Column1 = as.factor(c(rep(1, 10), rep(2, 10), rep(1, 10), rep(2, 10))),  # Two environments per group
+  Column2 = c(rep(2, 10), rep(1, 10), rep(2, 10), rep(1, 10))  # Numeric trait values
+)
+rdpi_calculation(df_test20,sp=1, traits=3,factors = 2)
 
 
 #####################################################
@@ -534,9 +563,9 @@ rdpi_mean_calculation = function(dataframe, traits, sp = NULL, factors = NULL, f
 external_light = rep(c(0.4, 0.6, 0.8), each = 100)
 external_water =rep(c("Low", "High"), each = 150)
 
-# Calculate RDPI with factors not in the dataframe
-res = rdpi_mean_calculation(synthetic_data1, sp = NULL, traits = c(3, 4), factors = 2, factors_not_in_dataframe = list(external_light, external_water))
-print(res)
+## test - passed on synthetic dataset
+
+rdpi_mean_calculation(df_test20,sp=1, traits=3,factors = 2)
 
 
 #########################################
@@ -610,6 +639,11 @@ calculate_ESPI = function(data, trait_col, env_col) {
   return(ESPI)
 }
 
+## test - passed on synthetic dataset 
+
+
+df_test2.2 = data.frame(Column0 = c(rep(1, 10), rep(2, 10)),Column1 = c(rep(2, 5),rep(4,5) ,rep(1, 10)), Column2 = c(rep(2, 10), rep(4, 10)))
+calculate_ESPI(df_test2.2,trait_col = 2,env_col = 1)
 
 
 #####################################
@@ -636,10 +670,14 @@ calculate_ESPI = function(data, trait_col, env_col) {
 #'
 #' @details 
 #' The ESPIID provides a measure of phenotypic sensitivity by comparing the individual phenotypic values of the same genotype across different environments. 
-#' This metric is particularly useful for datasets with multiple environments and genotypes, where it can reveal the degree of sensitivity to environmental changes at an individual level.
+#' For each pair of environmental combinations, it calculates the absolute differences between all pairs of individuals in those environments using the `outer()` function. 
+#' The ESPIID is the mean or median of these absolute phenotypic distances, normalized by dividing by the absolute distance between the environmental values.
+#' 
+#' When to use ESPIID vs. ESPI:
+#' - **ESPIID** focuses on the phenotypic sensitivity of individual plants within the same genotype across environments, making it useful for datasets where individual variation is important.
+#' - **ESPI** provides a broader measure of phenotypic plasticity by comparing the mean trait values of genotypes or groups across environments. ESPI is more suitable when you want to assess general plasticity across groups rather than individual sensitivity.
 #'
-#' The function first combines internal and external environmental factors to create unique environmental combinations. For each trait, it then calculates the absolute differences between individual trait values across all pairs of environments for the same genotype. 
-#' These differences are normalized by dividing by the absolute distance between the environmental values. The final ESPIID value for each genotype is the average or median of these normalized differences across all environment pairs.
+#' Use ESPIID when you are interested in within-genotype variation and want to evaluate the spread of individual phenotypic responses. ESPI, on the other hand, is more suitable when you are comparing the overall average plasticity across environmental conditions.
 #'
 #' @examples
 #' # Example usage
@@ -662,8 +700,6 @@ calculate_ESPI = function(data, trait_col, env_col) {
 #' 
 #' @export
 espiid_calculation = function(dataframe, traits, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL, use_median = FALSE) {
-  #Problem:in the calculation of this, how should combined environmental factors be treated? Eg we want to calculate the score for continuous light and continous water supply. Can there be such a score even if there is no actual distance to compute?
-  
   
   # List of required packages
   required_packages = c("dplyr", "reshape2")
@@ -702,9 +738,6 @@ espiid_calculation = function(dataframe, traits, sp = NULL, factors = NULL, fact
   } else {
     stop("You must provide either internal factors, external factors, or both.")
   }
-  
- 
-  
   
   dataframe$Combined_Factors = as.factor(dataframe$Combined_Factors)
   
@@ -764,10 +797,12 @@ l=list(external_light)
 
 external_factors=list(external_light,external_water)
 
-espiid=espiid_calculation(synthetic_data1, traits=3,factors=NULL, factors_not_in_dataframe = list(external_light))
-print(espiid)
+## test - passed on synthetic dataset 
 
-##############################################
+espiid_calculation(df_test2.2, traits=2,factors=1)
+
+
+############################################## dont mind the following 
 
 #' Calculate Environmental Variance Weighted Plasticity Index (EVWPI)
 #'
@@ -897,12 +932,6 @@ evwpi_calculation = function(dataframe, traits, sp = NULL, environments, factors
   return(all_results)
 }
 
-
-
-
-
-
-
 external_ph = sample(rep(c(1, 6, 18), each = 100))
 evwpi=evwpi_calculation(synthetic_data1,traits = 3,environments=1, factors=list(external_ph))
-print(evwpi)xs
+print(evwpi)
