@@ -7,9 +7,8 @@
 #response coefficient (RC) (calculate_RC)- tested,
 #Standard deviation of means (CVm) (calculate_CVm)- tested,
 #Standard deviation of medians (CVmd)(calculate_CVmd)- tested,
-#Grand plasticity (calculate_GPi)- tested,
+#Grand plasticity (calculate_grand_plasticity)- tested,
 #combine_factors- tested,
-#Phenotypic Plasticity Index (calculate_GPi)- tested,
 #Phenotypic Plasticity Index (calculate_PPF)- tested,
 #Phenotypic Plasticity Index (calculate_Phenotypic_Plasticity_Index)- tested,
 #PImd (calculate_PImd)- tested,
@@ -25,113 +24,115 @@ if (!requireNamespace("roxygen2", quietly = TRUE)) {
   library(roxygen2)
 }
 
+source("~/CRC 1622 - Z2/R-files/2.R")
+
 ################################
 
-#' Generate Synthetic Plant Plasticity Data with Sequential Environments
-#'
-#' This function generates a synthetic dataset for plant plasticity measurements across multiple environments. 
-#' It simulates traits for a specified number of plants in different environments, with trait values normally 
-#' distributed around given baseline values. The generated dataset is structured such that the first set of rows 
-#' corresponds to all plants in the first environment, followed by all plants in the second environment, and so on. 
-#'
-#' @param n_plants An integer specifying the number of plants (rows) to generate in each environment.
-#' @param baseline_values A matrix or data frame where each row represents an environment and each column 
-#' represents a trait. The values in this matrix provide the baseline (mean) values for each trait in each environment.
-#' @param within_variance A matrix or data frame where each row represents an environment and each column 
-#' represents a trait. The values in this matrix specify the standard deviation for each trait in each environment, 
-#' determining the variability around the baseline values.
-#' 
-#' @return A data frame containing the synthetic dataset. The data frame will have `n_plants * n_environments` rows 
-#' and `n_traits` columns. The row names indicate the plant number and environment (e.g., 1.1 for plant 1 in environment 1).
-#' The column names represent the traits (e.g., `Trait_1`, `Trait_2`, etc.).
-#' 
-#' @details This function can be used for simulating data where different environments may have different 
-#' levels of variability for the same trait. The data is structured sequentially by environment, making it easy to analyze 
-#' the effects of different environmental conditions on plant traits.
-#' 
-#' @examples
-#' # Define the parameters
-#' n_plants = 100
-#' 
-#' # Define baseline values for each trait in each environment
-#' # Rows are environments, columns are traits
-#' baseline_values = matrix(
-#'   c(100, 110, 120,  # Trait 1 baseline values in Env 1, 2, 3
-#'     200, 195, 205,  # Trait 2 baseline values in Env 1, 2, 3
-#'     300, 310, 290), # Trait 3 baseline values in Env 1, 2, 3
-#'   nrow = 3, ncol = 3, byrow = TRUE
-#' )
-#' 
-#' # Define within-environment variance for each trait in each environment
-#' within_variance = matrix(
-#'   c(10, 15, 20,   # Trait 1 variance in Env 1, 2, 3
-#'     8, 12, 10,    # Trait 2 variance in Env 1, 2, 3
-#'     5, 7, 6),     # Trait 3 variance in Env 1, 2, 3
-#'   nrow = 3, ncol = 3, byrow = TRUE
-#' )
-#' 
-#' # Generate the synthetic dataset
-#' synthetic_data = generate_synthetic_data(n_plants, baseline_values, within_variance)
-#' 
-#' # View the first few rows of the generated dataset
-#' head(synthetic_data)
-#' 
-#' @export
-generate_synthetic_data = function(n_plants, baseline_values, within_variance) {
-  # Number of traits is determined by the number of columns in baseline_values
-  n_traits = ncol(baseline_values)
-  n_environments = nrow(baseline_values)
-  
-  # Initialize empty data frame to store the results
-  synthetic_data = data.frame(matrix(nrow = n_plants * n_environments, ncol = n_traits+1))
-  
-  # Generate row names where the the integer part is the plant id and the fractional part is the environment indicator 
-  # this can potentially be left out but I thought is nice to have
-  rownames(synthetic_data) = rep(1:n_plants, times = n_environments) + rep(seq(0.1, (n_environments - 1) / 10 + 0.1, by = 0.1), each = n_plants)
-  
-  # Set column names for the traits
-  colnames(synthetic_data) = c("Env_indicator",paste("Trait", 1:n_traits, sep = "_"))
-  
-  for (env in 1:n_environments) {
-    # Calculate the row indices for the current environment. Like this it is easier to batch generate the normally distributed values.
-    start_idx = (env - 1) * n_plants + 1
-    end_idx = env * n_plants
-    for (i in 1:n_traits) {
-      # Generate random data for the current trait and environment with specific variance
-      synthetic_data[start_idx:end_idx, 1] = env
-      synthetic_data[start_idx:end_idx, i+1] = rnorm(n_plants, mean = baseline_values[env, i], sd = within_variance[env, i])
-    }
-  }
-  
-  
-  return(synthetic_data)
-}
-
-
-
-n_plants = 100
-
-# Define baseline values for each trait in each environment
-baseline_values = matrix(
-  c(100, 110, 120,  
-    50, 195, 205,  
-    70, 310, 290), 
-  nrow = 3, ncol = 3, byrow = TRUE
-)
-
-# Define within-environment variance for each trait in each environment
-within_variance = matrix(
-  c(10, 15, 10,   
-    8, 12, 10,    
-    5, 7, 10),     
-  nrow = 3, ncol = 3, byrow = TRUE
-)
-
-
-set.seed(12345)
-synthetic_data1 = generate_synthetic_data(n_plants, baseline_values, within_variance)
-print(class(synthetic_data1))
-
+##' Generate Synthetic Plant Plasticity Data with Sequential Environments
+##'
+##' This function generates a synthetic dataset for plant plasticity measurements across multiple environments. 
+##' It simulates traits for a specified number of plants in different environments, with trait values normally 
+##' distributed around given baseline values. The generated dataset is structured such that the first set of rows 
+##' corresponds to all plants in the first environment, followed by all plants in the second environment, and so on. 
+##'
+##' @param n_plants An integer specifying the number of plants (rows) to generate in each environment.
+##' @param baseline_values A matrix or data frame where each row represents an environment and each column 
+##' represents a trait. The values in this matrix provide the baseline (mean) values for each trait in each environment.
+##' @param within_variance A matrix or data frame where each row represents an environment and each column 
+##' represents a trait. The values in this matrix specify the standard deviation for each trait in each environment, 
+##' determining the variability around the baseline values.
+##' 
+##' @return A data frame containing the synthetic dataset. The data frame will have `n_plants * n_environments` rows 
+##' and `n_traits` columns. The row names indicate the plant number and environment (e.g., 1.1 for plant 1 in environment 1).
+##' The column names represent the traits (e.g., `Trait_1`, `Trait_2`, etc.).
+##' 
+##' @details This function can be used for simulating data where different environments may have different 
+##' levels of variability for the same trait. The data is structured sequentially by environment, making it easy to analyze 
+##' the effects of different environmental conditions on plant traits.
+##' 
+##' @examples
+##' # Define the parameters
+##' n_plants = 100
+##' 
+##' # Define baseline values for each trait in each environment
+##' # Rows are environments, columns are traits
+##' baseline_values = matrix(
+##'   c(100, 110, 120,  # Trait 1 baseline values in Env 1, 2, 3
+##'     200, 195, 205,  # Trait 2 baseline values in Env 1, 2, 3
+##'     300, 310, 290), # Trait 3 baseline values in Env 1, 2, 3
+##'   nrow = 3, ncol = 3, byrow = TRUE
+##' )
+##' 
+##' # Define within-environment variance for each trait in each environment
+##' within_variance = matrix(
+##'   c(10, 15, 20,   # Trait 1 variance in Env 1, 2, 3
+##'     8, 12, 10,    # Trait 2 variance in Env 1, 2, 3
+##'     5, 7, 6),     # Trait 3 variance in Env 1, 2, 3
+##'   nrow = 3, ncol = 3, byrow = TRUE
+##' )
+##' 
+##' # Generate the synthetic dataset
+##' synthetic_data = generate_synthetic_data(n_plants, baseline_values, within_variance)
+##' 
+##' # View the first few rows of the generated dataset
+##' head(synthetic_data)
+##' 
+##' @export
+#generate_synthetic_data = function(n_plants, baseline_values, within_variance) {
+#  # Number of traits is determined by the number of columns in baseline_values
+#  n_traits = ncol(baseline_values)
+#  n_environments = nrow(baseline_values)
+#  
+#  # Initialize empty data frame to store the results
+#  synthetic_data = data.frame(matrix(nrow = n_plants * n_environments, ncol = n_traits+1))
+#  
+#  # Generate row names where the the integer part is the plant id and the fractional part is the environment indicator 
+#  # this can potentially be left out but I thought is nice to have
+#  rownames(synthetic_data) = rep(1:n_plants, times = n_environments) + rep(seq(0.1, (n_environments - 1) / 10 + 0.1, by = 0.1), each = n_plants)
+#  
+#  # Set column names for the traits
+#  colnames(synthetic_data) = c("Env_indicator",paste("Trait", 1:n_traits, sep = "_"))
+#  
+#  for (env in 1:n_environments) {
+#    # Calculate the row indices for the current environment. Like this it is easier to batch generate the normally distributed values.
+#    start_idx = (env - 1) * n_plants + 1
+#    end_idx = env * n_plants
+#    for (i in 1:n_traits) {
+#      # Generate random data for the current trait and environment with specific variance
+#      synthetic_data[start_idx:end_idx, 1] = env
+#      synthetic_data[start_idx:end_idx, i+1] = rnorm(n_plants, mean = baseline_values[env, i], sd = within_variance[env, i])
+#    }
+#  }
+#  
+#  
+#  return(synthetic_data)
+#}
+#
+#
+#
+#n_plants = 100
+#
+## Define baseline values for each trait in each environment
+#baseline_values = matrix(
+#  c(100, 110, 120,  
+#    50, 195, 205,  
+#    70, 310, 290), 
+#  nrow = 3, ncol = 3, byrow = TRUE
+#)
+#
+## Define within-environment variance for each trait in each environment
+#within_variance = matrix(
+#  c(10, 15, 10,   
+#    8, 12, 10,    
+#    5, 7, 10),     
+#  nrow = 3, ncol = 3, byrow = TRUE
+#)
+#
+#
+#set.seed(12345)
+#synthetic_data1 = generate_synthetic_data(n_plants, baseline_values, within_variance)
+#print(class(synthetic_data1))
+#
 ################################
 
 
@@ -243,10 +244,16 @@ impute = function(mt, mode = "median") {
 #' print(overall_CVt)
 #' 
 #' @export
-calculate_CVt = function(data, traitwise = TRUE) {
+calculate_CVt = function(data, exclude_col=NULL, traitwise = TRUE) {
   if (any(is.na(data))) {
     stop("There are missing values in your data. Consider using the function impute().")
   }
+  
+  # Exclude specified columns if needed
+  if (!is.null(exclude_col)) {
+    data = data[ , -exclude_col]
+  }
+  
   if (traitwise) {
     # Calculate CVt for each trait separately
     CVt_values = apply(data, 2, function(x) sd(x) / mean(x))
@@ -389,7 +396,8 @@ calculate_reaction_norm_slope(df_test2,env_col = 1,trait_cols = c(2,3),plot = T)
 #' D_slope = calculate_D_slope(df, trait_col = "Height", env_col = env_vector)
 #' print(D_slope)
 #' @export
-calculate_D_slope = function(data, env_col, trait_col) {
+calculate_D_slope = function(data, env_col, trait_cols) {
+  
   # Handle env_col
   if (is.numeric(env_col) && length(env_col) == 1) {
     env_col = data[[env_col]]
@@ -411,25 +419,34 @@ calculate_D_slope = function(data, env_col, trait_col) {
   # Assign "Low" to the first half and "High" to the second half
   env_vector = c(rep("Low", mid_point), rep("High", num_rows - mid_point))
   
-  # Extract the trait data aligned with "High" and "Low" conditions
-  trait_high = sorted_data[[trait_col]][env_vector == "High"]
-  trait_low = sorted_data[[trait_col]][env_vector == "Low"]
+  # Initialize a vector to store the D slope for each trait
+  D_slope_values = numeric(length(trait_cols))
+  names(D_slope_values) = trait_cols  # Name the vector by trait columns
   
-  # Calculate the mean trait value for each condition
-  mean_high = mean(trait_high, na.rm = TRUE)
-  mean_low = mean(trait_low, na.rm = TRUE)
+  # Loop over each trait column to calculate the D slope
+  for (i in seq_along(trait_cols)) {
+    trait_column = trait_cols[i]
+    
+    # Extract the trait data aligned with "High" and "Low" conditions
+    trait_high = sorted_data[env_vector == "High", trait_column]
+    trait_low = sorted_data[env_vector == "Low", trait_column]
+    
+    # Calculate the mean trait value for each condition
+    mean_high = mean(trait_high, na.rm = TRUE)
+    mean_low = mean(trait_low, na.rm = TRUE)
+    
+    # Calculate the D slope for the current trait
+    D_slope_values[i] = mean_high - mean_low
+  }
   
-  # Calculate the D slope
-  D_slope = mean_high - mean_low
-  
-  return(D_slope)
+  return(D_slope_values)
 }
 
 #test - passed with synthetic 
 
-calculate_D_slope(df_test2,env_col = 1,trait_col = 2)
+calculate_D_slope(df_test2,env_col = 1,trait_cols = 2)
 df_test3=data.frame(Column0 = c(rep(3, 10), rep(2, 10),rep(1,10)),Column1 = c(rep(2, 10), rep(1, 15),rep(3,5)), Column2 = c(rep(2, 10), rep(4, 10),rep(3,10)))
-calculate_D_slope(df_test3,env_col = 1,trait_col = 3)
+calculate_D_slope(df_test3,env_col = 1,trait_cols = 3)
 mean(df_test3[1:15,3])-mean(df_test3[16:nrow(df_test3),3])
 
 
@@ -437,33 +454,36 @@ mean(df_test3[1:15,3])-mean(df_test3[16:nrow(df_test3),3])
 
 ################################
 
-#' Calculate the Response Coefficient (RC) for a Specific Trait
+#' Calculate the Response Coefficient (RC) for One or Multiple Traits
 #'
-#' This function calculates the Response Coefficient (RC), which is the ratio of the mean value 
-#' of a specified trait between high and low resource availability conditions.
-#' 
+#' This function calculates the Response Coefficient (RC), which is the ratio of the mean value
+#' of specified traits between high and low resource availability conditions. It supports calculating
+#' the RC for one or more traits at once.
+#'
 #' The function assumes that the environmental indicator is in the `env_col` column of the data frame or passed as a vector.
-#' The function will automatically assume that the lowest values represent the low resource environment and 
+#' The function automatically assumes that the lowest values represent the low resource environment and
 #' the highest values represent the high resource environment.
 #'
 #' @param data A data frame containing the environmental indicators and trait data.
 #' @param env_col The column number, name, or a vector representing the environmental conditions. Defaults to 1 if not specified.
-#' @param trait_col The column number or name of the trait to analyze.
-#' @return The Response Coefficient (RC), representing the ratio of mean trait values between high and low resource conditions.
+#' @param trait_cols A vector of column numbers or names of the traits to analyze.
+#' @return A named numeric vector of Response Coefficients (RC), representing the ratio of mean trait values between high and low resource conditions for each trait.
 #' @examples
 #' df = data.frame(
-#'   Environment = c(1, 2, 3, 4),
-#'   Height = c(10, 12, 20, 22)
+#'   Environment = c(1, 2, 1, 2),
+#'   Height = c(10, 12, 20, 22),
+#'   Weight = c(30, 40, 50, 60)
 #' )
-#' RC = calculate_RC(df, trait_col = "Height")
-#' print(RC)
-#' 
+#' RC_values = calculate_RC(df, env_col = "Environment", trait_cols = c("Height", "Weight"))
+#' print(RC_values)
+#'
 #' # With an explicit environment vector
 #' env_vector = c("Low", "Low", "High", "High")
-#' RC = calculate_RC(df, trait_col = "Height", env_col = env_vector)
-#' print(RC)
+#' RC_values = calculate_RC(df, env_col = env_vector, trait_cols = c("Height", "Weight"))
+#' print(RC_values)
 #' @export
-calculate_RC = function(data, env_col = 1, trait_col) {
+calculate_RC = function(data, env_col = 1, trait_cols) {
+  
   # Handle env_col
   if (is.numeric(env_col) && length(env_col) == 1) {
     env_col = data[[env_col]]
@@ -484,51 +504,63 @@ calculate_RC = function(data, env_col = 1, trait_col) {
   # Assign "Low" to the first half and "High" to the second half
   env_vector = c(rep("Low", mid_point), rep("High", num_rows - mid_point))
   
-  # Extract the relevant data for the "High" and "Low" conditions
-  trait_high = sorted_data[[trait_col]][env_vector == "High"]
-  trait_low = sorted_data[[trait_col]][env_vector == "Low"]
+  # Initialize a vector to store the RC for each trait
+  RC_values = numeric(length(trait_cols))
+  names(RC_values) = trait_cols  # Name the vector by trait columns
   
-  # Calculate the mean trait value for each condition
-  mean_high = mean(trait_high, na.rm = TRUE)
-  mean_low = mean(trait_low, na.rm = TRUE)
+  # Loop over each trait column to calculate the RC
+  for (i in seq_along(trait_cols)) {
+    trait_column = trait_cols[i]
+    
+    # Extract the relevant data for the "High" and "Low" conditions
+    trait_high = sorted_data[[trait_column]][env_vector == "High"]
+    trait_low = sorted_data[[trait_column]][env_vector == "Low"]
+    
+    # Calculate the mean trait value for each condition
+    mean_high = mean(trait_high, na.rm = TRUE)
+    mean_low = mean(trait_low, na.rm = TRUE)
+    
+    # Calculate the Response Coefficient (RC) for the current trait
+    RC_values[i] = mean_high / mean_low
+  }
   
-  # Calculate the Response Coefficient (RC)
-  RC = mean_high / mean_low
-  
-  return(RC)
+  return(RC_values)
 }
 
 
 # test - passed with synthetic dataset
 
-calculate_RC(df_test3,env_col = 1,trait_col = 3)
+calculate_RC(df_test3,env_col = 1,trait_cols = 3)
 
 mean(df_test3[1:15,3])/mean(df_test3[16:nrow(df_test3),3])
 
 
 ################################
 
-#' Calculate the Coefficient of Variation of Means (CVm)
+#' Calculate the Coefficient of Variation of Means (CVm) for One or Multiple Traits
 #'
-#' This function calculates the Coefficient of Variation of Means (CVm), 
+#' This function calculates the Coefficient of Variation of Means (CVm),
 #' which is the standard deviation of the means divided by the mean of the means across different environments.
 #'
-#' The function allows for flexible grouping of the data. The grouping can be specified using `env_col`, which can be 
-#' either a column index/name from the data or an external grouping vector.
+#' The function allows for flexible grouping of the data. The grouping can be specified using `env_col`, which can be
+#' either a column index/name from the data or an external grouping vector. It supports calculating the CVm for one or
+#' multiple traits at once.
 #'
 #' @param data A data frame containing the trait data.
-#' @param trait_col The column number or name of the trait to analyze.
+#' @param trait_cols A vector of column numbers or names of the traits to analyze.
 #' @param env_col The column number, name, or a vector representing the grouping (e.g., environmental conditions).
-#' @return The CVm, representing the ratio of the standard deviation of means to the mean of means.
+#' @return A named numeric vector where each element represents the CVm for a single trait.
 #' @examples
 #' df = data.frame(
 #'   Environment = c("Env1", "Env1", "Env2", "Env2", "Env3", "Env3"),
-#'   Height = c(10, 12, 20, 22, 15, 18)
+#'   Height = c(10, 12, 20, 22, 15, 18),
+#'   Weight = c(100, 105, 110, 120, 115, 125)
 #' )
-#' CVm = calculate_CVm(df, trait_col = "Height", env_col = "Environment")
-#' print(CVm)
+#' CVm_values = calculate_CVm(df, trait_cols = c("Height", "Weight"), env_col = "Environment")
+#' print(CVm_values)
 #' @export
-calculate_CVm = function(data, trait_col, env_col = 1) {
+calculate_CVm = function(data,  env_col = 1,trait_cols) {
+  
   # Handle env_col
   if (is.numeric(env_col) && length(env_col) == 1) {
     env_col = data[[env_col]]
@@ -538,20 +570,30 @@ calculate_CVm = function(data, trait_col, env_col = 1) {
     env_col = data[[env_col]]
   }
   
-  # Calculate the means for each group
-  means = tapply(data[[trait_col]], env_col, mean, na.rm = TRUE)
+  # Initialize a vector to store the CVm for each trait
+  CVm_values = numeric(length(trait_cols))
+  names(CVm_values) = trait_cols  # Name the vector by trait columns
   
-  # Calculate the standard deviation of the means
-  sd_of_means = sd(means, na.rm = TRUE)
+  # Loop over each trait column to calculate the CVm
+  for (i in seq_along(trait_cols)) {
+    trait_column = trait_cols[i]
+    
+    # Calculate the means for each group (environment)
+    means = tapply(data[[trait_column]], env_col, mean, na.rm = TRUE)
+    
+    # Calculate the standard deviation of the means
+    sd_of_means = sd(means, na.rm = TRUE)
+    
+    # Calculate the mean of the means
+    mean_of_means = mean(means, na.rm = TRUE)
+    
+    # Calculate the CVm for the current trait
+    CVm_values[i] = sd_of_means / mean_of_means
+  }
   
-  # Calculate the mean of the means
-  mean_of_means = mean(means, na.rm = TRUE)
-  
-  # Calculate the CVm
-  CVm = sd_of_means / mean_of_means
-  
-  return(CVm)
+  return(CVm_values)
 }
+
 
 ## test - passed with synthetic dataset
 
@@ -563,34 +605,33 @@ sd(c(mean(df_test3[1:10,3]),mean(df_test3[11:20,3]),mean(df_test3[21:30,3])))/me
 ###############################
 
 
-#' Calculate the Coefficient of Variation of Medians (CVmd)
+#' Calculate the Coefficient of Variation of Medians (CVmd) for One or Multiple Traits
 #'
-#' This function calculates the Coefficient of Variation of Medians (CVmd), 
+#' This function calculates the Coefficient of Variation of Medians (CVmd),
 #' which is the standard deviation of the medians divided by the mean of the medians across different environments or groups.
 #'
-#' The function allows for flexible grouping of the data. The grouping can be specified using `env_col`, which can be 
-#' either a column index/name from the data or an external grouping vector.
+#' The function allows for flexible grouping of the data. The grouping can be specified using `env_col`, which can be
+#' either a column index/name from the data or an external grouping vector. It supports calculating the CVmd for one or
+#' multiple traits at once.
 #'
 #' @param data A data frame containing the trait data.
-#' @param trait_col The column number or name of the trait to analyze.
+#' @param trait_cols A vector of column numbers or names of the traits to analyze.
 #' @param env_col The column number, name, or a vector representing the grouping (e.g., environmental conditions).
-#' @return The CVmd, representing the ratio of the standard deviation of medians to the mean of medians.
+#' @return A named numeric vector where each element represents the CVmd for a single trait.
 #' @examples
 #' df = data.frame(
 #'   Environment = c("Env1", "Env1", "Env2", "Env2", "Env3", "Env3"),
-#'   Height = c(10, 12, 20, 22, 15, 18)
+#'   Height = c(10, 12, 20, 22, 15, 18),
+#'   Weight = c(100, 105, 110, 120, 115, 125)
 #' )
-#' 
-#' # Calculate CVmd using the environment column
-#' CVmd_default = calculate_CVmd(df, trait_col = "Height", env_col = "Environment")
-#' print(CVmd_default)
-#' 
-#' # Calculate CVmd using an external grouping vector
-#' env_vector = c("Low", "Low", "High", "High", "Medium", "Medium")
-#' CVmd_vector = calculate_CVmd(df, trait_col = "Height", env_col = env_vector)
-#' print(CVmd_vector)
+#'
+#' # Calculate CVmd for both "Height" and "Weight" using the "Environment" column
+#' CVmd_values = calculate_CVmd(df, trait_cols = c("Height", "Weight"), env_col = "Environment")
+#' print(CVmd_values)
+#'
 #' @export
-calculate_CVmd = function(data, trait_col, env_col) {
+calculate_CVmd = function(data, trait_cols, env_col) {
+  
   # Handle env_col
   if (is.numeric(env_col) && length(env_col) == 1) {
     env_col = data[[env_col]]
@@ -600,81 +641,127 @@ calculate_CVmd = function(data, trait_col, env_col) {
     env_col = data[[env_col]]
   }
   
-  # Calculate the medians for each group
-  medians = tapply(data[[trait_col]], env_col, median, na.rm = TRUE)
+  # Initialize a vector to store the CVmd for each trait
+  CVmd_values = numeric(length(trait_cols))
+  names(CVmd_values) = trait_cols  # Name the vector by trait columns
   
-  # Calculate the standard deviation of the medians
-  sd_of_medians = sd(medians, na.rm = TRUE)
+  # Loop over each trait column to calculate the CVmd
+  for (i in seq_along(trait_cols)) {
+    trait_column = trait_cols[i]
+    
+    # Calculate the medians for each group (environment)
+    medians = tapply(data[[trait_column]], env_col, median, na.rm = TRUE)
+    
+    # Calculate the standard deviation of the medians
+    sd_of_medians = sd(medians, na.rm = TRUE)
+    
+    # Calculate the mean of the medians
+    mean_of_medians = mean(medians, na.rm = TRUE)
+    
+    # Calculate the CVmd for the current trait
+    CVmd_values[i] = sd_of_medians / mean_of_medians
+  }
   
-  # Calculate the mean of the medians
-  mean_of_medians = mean(medians, na.rm = TRUE)
-  
-  # Calculate the CVmd
-  CVmd = sd_of_medians / mean_of_medians
-  
-  return(CVmd)
+  return(CVmd_values)
 }
+
 
 # test - passed on synthetic dataset 
 
 calculate_CVmd(df_test3,env_col = 1,trait_col = 2)
 
-sd(c(median(df_test3[1:10,2]),median(df_test3[11:20,2]),median(df_test3[21:30,2])))/mean(median(df_test3[1:10,2]),median(df_test3[11:20,2]),median(df_test3[21:30,2]))
+sd(c(median(df_test3[1:10,2]),median(df_test3[11:20,2]),median(df_test3[21:30,2])))/mean(c(median(df_test3[1:10,2]),median(df_test3[11:20,2]),median(df_test3[21:30,2])))
 
 ###############################
 
-#' Calculate Plasticity (Pi) using Adjusted Means
+#' Calculate Grand Plasticity (Pi) using Adjusted Means for One or Multiple Traits
 #'
-#' This function calculates the Plasticity (Pi), defined as the relative change
-#' in a specified trait under different environmental conditions (treatment and control).
-#' The plasticity is calculated as (Trait_treatment - Trait_control) / Trait_control,
-#' using the adjusted means from a linear model that controls for a covariate (e.g., biomass).
+#' This function calculates the grand plasticity (Pi) for specified traits across different treatments,
+#' correcting for a covariate (e.g., size effect like biomass) using adjusted means. The Pi is calculated
+#' as the coefficient of variation (CV) of the adjusted means (standard deviation of adjusted means
+#' divided by the grand mean of adjusted means) across the treatments.
 #'
 #' @param data A data frame containing the trait data, environmental conditions, and covariate.
-#' @param trait_col The column number or name of the trait to analyze.
+#' @param trait_cols A vector of column numbers or names of the traits to analyze.
 #' @param env_col The column number or name representing the environmental conditions (must include control).
-#' @param covariate_col The column number or name representing the covariate (e.g., biomass).
+#' @param covariate_col The column number, name, or a vector representing the covariate (e.g., biomass).
 #' @param control_env The label or value in `env_col` that represents the control environment.
-#' @return The plasticity (Pi) value for the specified trait.
+#' @return A named numeric vector where each element represents the grand plasticity (Pi) for a single trait.
 #' @examples
 #' df = data.frame(
-#'   Environment = c("Control", "Control", "Treatment", "Treatment"),
+#'   Environment = c("Control", "Control", "Treatment1", "Treatment2"),
 #'   Height = c(10, 12, 20, 22),
+#'   Weight = c(5, 6, 7, 8),
 #'   Biomass = c(5, 6, 7, 8)
 #' )
-#' Pi = calculate_Pi_with_adjusted_means(df, trait_col = "Height", env_col = "Environment",
+#' grand_plasticity = calculate_grand_plasticity(df, trait_cols = c("Height", "Weight"), env_col = "Environment",
 #'   covariate_col = "Biomass", control_env = "Control")
-#' print(Pi)
+#' print(grand_plasticity)
 #' @export
-calculate_Pi_with_adjusted_means = function(data, env_col , trait_col, covariate_col, control_env) {
+calculate_grand_plasticity = function(data, trait_cols, env_col, covariate_col, control_env) {
   
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col = env_col
-  } else {
-    env_col = data[[env_col]]
+  # Ensure required libraries are loaded
+  if (!requireNamespace("emmeans", quietly = TRUE)) {
+    stop("The 'emmeans' package is required but not installed.")
   }
   
-  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
-  covariate_col = if (is.numeric(covariate_col)) data[[covariate_col]] else data[[covariate_col]]
+  # Handle env_col (as column index, name, or vector)
+  if (is.numeric(env_col) && length(env_col) == 1) {
+    env_col_data = data[[env_col]]
+  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+    env_col_data = env_col
+  } else {
+    env_col_data = data[[env_col]]
+  }
   
-  # Fit a linear model to account for the covariate (adjusted means)
-  model = lm(trait_col ~ covariate_col + env_col, data = data)
+  env_col_data = factor(env_col_data)
   
-  # Use emmeans to get the adjusted means for each environment
-  library(emmeans)
-  adjusted_means = emmeans(model, ~ env_col)
+  # Handle covariate_col (as column index, name, or vector)
+  if (is.numeric(covariate_col) && length(covariate_col) == 1) {
+    covariate_data = data[[covariate_col]]
+  } else if (is.vector(covariate_col) && length(covariate_col) == nrow(data)) {
+    covariate_data = covariate_col
+  } else {
+    covariate_data = data[[covariate_col]]
+  }
   
-  # Extract the adjusted means for control and treatment
-  trait_control_mean = summary(adjusted_means)$emmean[which(summary(adjusted_means)$env_col == control_env)]
-  trait_treatment_mean = mean(summary(adjusted_means)$emmean[summary(adjusted_means)$env_col != control_env], na.rm = TRUE)
   
-  # Calculate Plasticity (Pi) using the adjusted means
-  Pi = abs((trait_treatment_mean - trait_control_mean) / trait_control_mean)
+  # Initialize a vector to store grand plasticity for each trait
+  grand_plasticity_values = numeric(length(trait_cols))
+  names(grand_plasticity_values) = trait_cols  # Name the vector by trait columns
   
-  return(Pi)
+  # Loop over each trait column to calculate grand plasticity
+  for (i in seq_along(trait_cols)) {
+    trait_column = trait_cols[i]
+    
+    # Handle trait_col dynamically (whether it's a column number or name)
+    trait_col_data = if (is.numeric(trait_column)) data[[trait_column]] else data[[trait_column]]
+    
+    # Fit a linear model to account for the covariate (adjusted means)
+    model = lm(trait_col_data ~ covariate_data + env_col_data, data = data)
+    
+    # Use emmeans to get the adjusted means for each environment
+    adjusted_means = emmeans::emmeans(model, ~ env_col_data)
+    
+    # Extract the adjusted means for treatments (excluding control)
+    adjusted_means_summary = summary(adjusted_means)
+    treatment_means = adjusted_means_summary[,2]
+    
+    # Check if we successfully extracted the means
+    if (length(treatment_means) == 0) {
+      stop(paste("Could not extract treatment means for trait:", trait_column))
+    }
+    
+    # Calculate the standard deviation and grand mean of the adjusted means
+    sd_means = sd(treatment_means, na.rm = TRUE)
+    
+    grand_mean = mean(treatment_means, na.rm = TRUE)
+    
+    # Calculate grand plasticity (Pi) as the Coefficient of Variation (CV)
+    grand_plasticity_values[i] = sd_means / grand_mean
+  }
+  
+  return(grand_plasticity_values)
 }
 
 ## test - passed on synthetic dataset
@@ -692,14 +779,14 @@ df_test5 = data.frame(
 )
 
 df_test_simple = data.frame(
-  Column1 = c(2, 2, 3, 3),      # Control (2) and Treatment (3)
+  Column1 = c(1, 1, 2, 2),      # Control (2) and Treatment (3)
   Column0 = c(10, 12, 20, 22),  # Response variable (trait)
-  Column2 = c(1, 1, 2, 2)       # Covariate (e.g., biomass)
+  Column2 = c(1, 1, 2, 3)       # Covariate (e.g., biomass)
 )
 
-calculate_Pi_with_adjusted_means(df_test4,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
-calculate_Pi_with_adjusted_means(df_test5,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
-calculate_Pi_with_adjusted_means(df_test_simple,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
+#calculate_grand_plasticity(df_test4,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
+#calculate_grand_plasticity(df_test5,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
+calculate_grand_plasticity(df_test_simple,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
 
 ##########################################
   
@@ -781,80 +868,138 @@ combined_factors= combine_factors(synthetic_data1, factors_not_in_dataframe = li
 #' Calculate the Phenotypic Plasticity Index (PPF) Based on Least Square Means
 #'
 #' This function calculates the Phenotypic Plasticity Index (PPF), which quantifies the phenotypic plasticity 
-#' of a trait between two environments or environmental groupings. The PPF is calculated using the least square means (LSMs) 
-#' of the trait in each environment, with optional adjustment for covariates that may influence the trait.
+#' of one or multiple traits between two environments or environmental groupings. The PPF is calculated using 
+#' the least square means (LSMs) of the traits in each environment, with optional adjustment for covariates 
+#' that may influence the traits.
 #'
-#' Covariates can be included to adjust the model for additional environmental influences or biological factors that might affect the trait.
+#' Covariates can be included to adjust the model for additional environmental influences or biological factors 
+#' that might affect the traits. If `env_pairs` is not provided, the function calculates the PPF for all possible 
+#' combinations of environments.
 #'
 #' @param data A data frame containing the environmental indicators and trait data.
-#' @param trait_col The column number or name of the trait to analyze.
+#' @param trait_cols A vector of column numbers or names of the traits to analyze.
 #' @param env_col The column number, name, or a vector representing the environmental conditions.
-#' @param covariates (Optional) A vector of column names or indices to include as covariates in the model.
-#' @return The Phenotypic Plasticity Index (PPF) value.
+#' @param covariate_col (Optional) The column number, name, or vector to include as a covariate in the model.
+#' @param env_pairs (Optional) A list of environment pairs to calculate the PPF for. Each pair should be a list of two elements (e.g., `list(2, 3)`).
+#' If `env_pairs` is NULL (default), the function calculates the PPF for all possible combinations of environments.
+#' @return A named list of PPF values for each trait, with the environment pair as the names of each entry.
 #' @examples
 #' df = data.frame(
-#'   Environment = rep(c("Env1", "Env2"), each = 10),
-#'   Height = c(10, 12, 11, 13, 14, 15, 13, 14, 12, 13, 20, 22, 21, 23, 24, 25, 23, 24, 22, 23),
-#'   SoilQuality = c(3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3)
+#'   Environment = rep(c("Env1", "Env2", "Env3"), each = 10),
+#'   Height = c(10, 12, 11, 13, 14, 15, 13, 14, 12, 13, 20, 22, 21, 23, 24, 25, 23, 24, 22, 23, 18, 19, 21, 22, 20, 23, 24, 25, 23, 22),
+#'   Biomass = c(3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3)
 #' )
 #' 
-#' # Calculate PPF with a covariate
-#' PPF = calculate_PPF(df, trait_col = "Height", env_col = "Environment", covariates = "SoilQuality")
-#' print(PPF)
+#' # Calculate PPF for all environment combinations
+#' PPF_all = calculate_PPF(df, trait_cols = "Height", env_col = "Environment", covariate_col = "Biomass")
+#' print(PPF_all)
+#' 
+#' # Calculate PPF for specific environment pairs
+#' PPF_specific = calculate_PPF(df, trait_cols = "Height", env_col = "Environment", 
+#'                              covariate_col = "Biomass", env_pairs = list(list("Env1", "Env2"), list("Env2", "Env3")))
+#' print(PPF_specific)
 #' @export
-calculate_PPF = function(data, trait_col, env_col, covariates = NULL) {
-  # Handle env_col
+calculate_PPF = function(data, trait_cols, env_col, covariate_col = NULL, env_pairs = NULL) {
+  
+  # Handle env_col (as column index, name, or vector)
   if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
+    env_col_data = data[[env_col]]
   } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col = env_col
+    env_col_data = env_col
   } else {
-    env_col = data[[env_col]]
+    env_col_data = data[[env_col]]
   }
-  env_col=as.factor(env_col)
-  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  env_col_data = as.factor(env_col_data)
   
-  # Fit the linear model
-  if (is.null(covariates)) {
-    model = lm(trait_col ~ env_col, data = data)
-  } else {
-    covariates = if (is.numeric(covariates)) names(data)[covariates] else covariates
-    formula = as.formula(paste("trait_col ~ env_col +", paste(covariates, collapse = " + ")))
-    model = lm(formula, data = data)
-  }
-  
-  # Calculate least square means (LSMs) for each environment
-  lsm = as.data.frame(emmeans::emmeans(model, ~ env_col))
-  
-  # Ensure there are exactly two environments
-  if (nrow(lsm) != 2) {
-    stop("PPF calculation requires exactly two environments.")
+  # Handle covariate_col (either as column or external vector)
+  if (!is.null(covariate_col)) {
+    if (is.numeric(covariate_col) && length(covariate_col) == 1) {
+      covariate_data = data[[covariate_col]]
+    } else if (is.vector(covariate_col) && length(covariate_col) == nrow(data)) {
+      covariate_data = covariate_col
+    } else {
+      covariate_data = data[[covariate_col]]
+    }
   }
   
-  # Calculate PPF using the formula: 100 x ((LSM in one environment - LSM in the other) / LSM in the first environment)
-  PPF = 100 * abs((lsm[1, "emmean"] - lsm[2, "emmean"]) / lsm[1, "emmean"])
+  # Default: if no env_pairs are passed, calculate for all pairs of environments
+  if (is.null(env_pairs)) {
+    env_pairs = combn(levels(env_col_data), 2, simplify = FALSE)
+  } else if (is.vector(env_pairs) && length(env_pairs) == 2) {
+    env_pairs = list(env_pairs)  # Convert a single pair into a list of one pair
+  }
   
-  return(PPF)
+  # Initialize a list to store PPF values for each environment pair
+  PPF_values_list = list()
+  # Loop over each trait
+  for (i in seq_along(trait_cols)) {
+    trait_column = trait_cols[i]
+    
+    trait_col_data = if (is.numeric(trait_column)) data[[trait_column]] else data[[trait_column]]
+    
+    # Store PPF values for this trait
+    PPF_values_for_trait = numeric(length(env_pairs))
+    names(PPF_values_for_trait) = sapply(env_pairs, function(pair) paste(pair, collapse = "-"))
+    
+    # Loop through each environment pair
+    for (j in seq_along(env_pairs)) {
+      env_pair = env_pairs[[j]]
+      
+      # Subset the data to only include the current environment pair
+      subset_idx = which(env_col_data %in% env_pair)
+      subset_data = data[subset_idx, ]
+      subset_env_col = env_col_data[subset_idx]
+      subset_trait_col_data = trait_col_data[subset_idx]
+      
+      # Fit the linear model
+      if (is.null(covariate_col)) {
+        model = lm(subset_trait_col_data ~ subset_env_col, data = subset_data)
+      } else {
+        subset_covariate_data = covariate_data[subset_idx]
+        model = lm(subset_trait_col_data ~ subset_env_col + subset_covariate_data, data = subset_data)
+      }
+      
+      # Calculate least square means (LSMs) for the current environment pair
+      lsm = as.data.frame(emmeans::emmeans(model, ~ subset_env_col))
+      
+      # Calculate PPF for the current pair using the formula: 100 x ((LSM in one environment - LSM in the other) / LSM in the first environment)
+      PPF_values_for_trait[j] = 100 * abs((lsm[1, "emmean"] - lsm[2, "emmean"]) / lsm[1, "emmean"])
+    }
+    
+    # Add PPF values for the current trait to the list
+    PPF_values_list[[i]] = PPF_values_for_trait
+  }
+  
+  return(PPF_values_list)
 }
+
 
 synthetic_data2=combine_factors(synthetic_data1,factors=NULL, factors_not_in_dataframe=list(external_water))
 
 ## test - passed on synthetic dataset
 
 df_test6 = data.frame(
-  Column0 = c(rep(3, 15), rep(2, 15)),   # Response variable
-  Column1 = c(rep(4, 15), rep(2, 15)),   # Control (2) and Treatment (3)
-  Column2 = c(rep(3, 10), rep(2, 10), rep(1, 10))    # Covariate (matches values of Column0)
+  Column1 = c(rep(3, 15), rep(2, 15)),   # Response variable
+  Column2 = c(rep(4, 15), rep(2, 15)),   # Control (2) and Treatment (3)
+  Column3 = c(rep(3, 10), rep(2, 10), rep(1, 10))    # Covariate (matches values of Column0)
 )
-df_test6$Column0 = as.factor(df_test6$Column0)
-calculate_PPF(df_test6,env_col = 1, trait_col = 2,covariates = NULL)
-model = lm(Column1 ~ Column0 , data = df_test6)
-lsmeans_env = emmeans(model, ~ Column0)
+df_test6$Column1 = as.factor(df_test6$Column1)
+calculate_PPF(df_test6,env_col = 1, trait_cols = 2, env_pairs = list(2,3))
+
+model = lm(Column2 ~ Column1 , data = df_test6)
+lsmeans_env = emmeans(model, ~ Column1)
 summary_lsmeans = summary(lsmeans_env)
 # Extract only the LSMeans (adjusted means)
 lsmeans_values = summary_lsmeans$emmean
 100*abs((lsmeans_values[[1]]-lsmeans_values[[2]])/lsmeans_values[[1]])
 
+
+model = lm(Column3 ~ Column1 , data = df_test6)
+lsmeans_env = emmeans(model, ~ Column1)
+summary_lsmeans = summary(lsmeans_env)
+# Extract only the LSMeans (adjusted means)
+lsmeans_values = summary_lsmeans$emmean
+100*abs((lsmeans_values[[1]]-lsmeans_values[[2]])/lsmeans_values[[1]])
 
 
 ###########################################
@@ -864,29 +1009,49 @@ lsmeans_values = summary_lsmeans$emmean
 #'
 #' This function calculates the Phenotypic Plasticity Index (Pi), defined as the 
 #' difference between the maximum and minimum values of a trait divided by the maximum value.
-#' For the calculation of the Pi of all traits, the function needs to be called repeatedly.
+#' The function can be applied to multiple traits at once if provided with multiple trait columns.
 #'
 #' @param data A numeric vector, data frame, or matrix containing the trait data. 
 #' If a data frame or matrix is provided, each column represents a trait.
-#' @param trait_col (Optional) The column number or name of the trait to analyze if `data` is a data frame or matrix.
-#' @return The Phenotypic Plasticity Index (Pi) value(s).
-
+#' @param trait_cols (Optional) A vector of column numbers or names of the traits to analyze 
+#' if `data` is a data frame or matrix. If not specified, it calculates Pi for the entire data vector.
+#' @return A named numeric vector of Phenotypic Plasticity Index (Pi) values for each trait.
+#' @examples
+#' df = data.frame(
+#'   Trait1 = c(10, 15, 12, 14, 18),
+#'   Trait2 = c(20, 25, 22, 23, 27),
+#'   Trait3 = c(30, 35, 32, 34, 37)
+#' )
+#' Pi_values = calculate_Phenotypic_Plasticity_Index(df, trait_cols = c("Trait1", "Trait2"))
+#' print(Pi_values)
 #' @export
-calculate_Phenotypic_Plasticity_Index = function(data, trait_col = NULL) {
-  if (is.null(trait_col)) {
+calculate_Phenotypic_Plasticity_Index = function(data, trait_cols = NULL) {
+  if (is.null(trait_cols)) {
     # If trait_col is not provided, assume data is a numeric vector
     max_value = max(data, na.rm = TRUE)
     min_value = min(data, na.rm = TRUE)
+    
+    # Calculate Pi for the single vector
+    Pi = (max_value - min_value) / max_value
+    return(Pi)
   } else {
-    # If trait_col is provided, assume data is a data frame or matrix
-    max_value = max(data[[trait_col]], na.rm = TRUE)
-    min_value = min(data[[trait_col]], na.rm = TRUE)
+    # If trait_cols are provided, assume data is a data frame or matrix
+    Pi_values = numeric(length(trait_cols))  # Initialize vector to store Pi for each trait
+    names(Pi_values) = trait_cols  # Name the vector by trait columns
+    
+    for (i in seq_along(trait_cols)) {
+      trait_column = trait_cols[i]
+      trait_data = if (is.numeric(trait_column)) data[[trait_column]] else data[[trait_column]]
+      
+      max_value = max(trait_data, na.rm = TRUE)
+      min_value = min(trait_data, na.rm = TRUE)
+      
+      # Calculate Pi as (Max - Min) / Max
+      Pi_values[i] = (max_value - min_value) / max_value
+    }
+    
+    return(Pi_values)
   }
-  
-  # Calculate Pi as (Max - Min) / Max
-  Pi = (max_value - min_value) / max_value
-  
-  return(Pi)
 }
 
 
@@ -899,29 +1064,31 @@ calculate_Phenotypic_Plasticity_Index(df_test6,trait_col = 2)
 
 ####################################
 
-#' Calculate the Proportional Inter-Median Difference (PImd)
+#' Calculate the Proportional Inter-Median Difference (PImd) for One or Multiple Traits
 #'
 #' This function calculates the Proportional Inter-Median Difference (PImd), 
 #' defined as the difference between the maximum and minimum medians of a trait 
 #' across different environmental conditions divided by the maximum median. 
 #' It provides a measure of the relative variability in the trait across the specified conditions.
+#' The function can calculate PImd for multiple traits at once.
 #'
 #' @param data A data frame containing the trait and environmental condition data.
-#' @param trait_col The column number or name of the trait to analyze. It can be a column index (integer) 
-#' or a column name (string) within the data frame.
+#' @param trait_cols A vector of column numbers or names of the traits to analyze. 
+#' It can be a column index (integer) or a column name (string) within the data frame.
 #' @param env_col The column number, name, or a vector representing the environmental conditions. 
 #' It can be a column index (integer), a column name (string), or a vector of values.
-#' @return The Proportional Inter-Median Difference (PImd) value.
+#' @return A named numeric vector where each element represents the PImd value for a single trait.
 #' @examples
 #' # Example usage with a data frame
 #' data = data.frame(
-#'   trait_col = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-#'   env_col = factor(c("A", "A", "B", "B", "C", "C", "A", "B", "C", "A"))
+#'   Trait1 = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+#'   Trait2 = c(10, 9, 8, 7, 6, 5, 4, 3, 2, 1),
+#'   Env = factor(c("A", "A", "B", "B", "C", "C", "A", "B", "C", "A"))
 #' )
-#' result = calculate_PImd(data, "trait_col", "env_col")
+#' result = calculate_PImd(data, trait_cols = c("Trait1", "Trait2"), env_col = "Env")
 #' print(result)
 #' @export
-calculate_PImd = function(data, trait_col, env_col) {
+calculate_PImd = function(data, trait_cols, env_col) {
   # Handle env_col
   if (is.numeric(env_col) && length(env_col) == 1) {
     env_col = data[[env_col]]
@@ -932,46 +1099,58 @@ calculate_PImd = function(data, trait_col, env_col) {
     env_col = data[[env_col]]
   }
   
-  # Handle trait_col
-  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
-  
   # Ensure env_col is a factor to use levels
   if (!is.factor(env_col)) {
     env_col = factor(env_col)
   }
-  # Get levels of env_col
-  levels = levels(env_col)
-  medians=c()
-  for (level in levels){
-    medians=c(medians,median(trait_col[env_col==level]))
+  
+  # Initialize a vector to store PImd values for each trait
+  PImd_values = numeric(length(trait_cols))
+  names(PImd_values) = trait_cols
+  
+  # Loop over each trait column to calculate PImd
+  for (i in seq_along(trait_cols)) {
+    trait_column = trait_cols[i]
+    trait_data = if (is.numeric(trait_column)) data[[trait_column]] else data[[trait_column]]
+    
+    # Get levels of env_col
+    levels = levels(env_col)
+    medians = c()
+    
+    # Calculate medians for each environment
+    for (level in levels) {
+      medians = c(medians, median(trait_data[env_col == level], na.rm = TRUE))
+    }
+    
+    # Calculate PImd as (Max - Min) / Max
+    PImd_values[i] = (max(medians) - min(medians)) / max(medians)
   }
-  PImd=(max(medians)-min(medians))/max(medians)
-  return(PImd)
+  
+  return(PImd_values)
 }
 
 ##test - passed on synthetic dataset (check  dataset for confirmation)
 
-calculate_PImd(df_test6,trait_col = 2,env_col = 1)
+calculate_PImd(df_test6,trait_cols = c(2,3),env_col = 1)
 
 ###############################################
 
 
 
 #' Calculate the Proportional Inter-Least Square Mean Difference (PILSM)
-#' and Plot LSMs Against the Trait Data
+#' for One or Multiple Traits and Optionally Plot LSMs Against the Trait Data
 #'
 #' This function calculates the Proportional Inter-Least Square Mean Difference (PILSM), 
 #' defined as the difference between the maximum and minimum least square means (LSMs) 
 #' of a trait across different environments, divided by the maximum LSM.
-#' Additionally, it plots the fitted LSMs against the original trait data.
-#'
-#' The function assumes normality in the data and can optionally adjust for covariates.
+#' Optionally, it can plot the LSMs against the original trait data.
 #'
 #' @param data A data frame containing the trait data and environmental indicators.
-#' @param trait_col The column number or name of the trait to analyze.
+#' @param trait_cols A vector of column numbers or names of the traits to analyze.
 #' @param env_col The column number, name, or a vector representing the environmental conditions.
 #' @param covariates (Optional) A vector of column names or indices to include as covariates in the model.
-#' @return A list with the PILSM value and the LSM plot.
+#' @param plot (Optional) Logical indicating whether to plot the LSMs against the original data (default is FALSE).
+#' @return A list with the PILSM values for each trait and the optional LSM plot.
 #' @examples
 #' df = data.frame(
 #'   Environment = rep(c("Env1", "Env2", "Env3"), each = 10),
@@ -982,76 +1161,78 @@ calculate_PImd(df_test6,trait_col = 2,env_col = 1)
 #' )
 #' 
 #' # Calculate PILSM with a covariate and plot
-#' result = calculate_PILSM(df, trait_col = "Height", env_col = "Environment", covariates = "SoilQuality")
-#' print(result$PILSM)
-#' print(result$plot)
+#' result = calculate_PILSM(df, trait_cols = c("Height"), env_col = "Environment", covariates = "SoilQuality", plot = TRUE)
+#' print(result)
 #' @export
-calculate_PILSM = function(data, trait_col, env_col, covariates = NULL) {
-  # List of required packages
-  required_packages = c("emmeans", "ggplot2","ggplot")
+calculate_PILSM = function(data, trait_cols, env_col, covariates = NULL, plot = FALSE) {
   
-  # Function to check and install missing packages
-  check_and_install_packages = function(packages) {
-    for (pkg in packages) {
-      if (!requireNamespace(pkg, quietly = TRUE)) {
-        install.packages(pkg)
-        library(pkg, character.only = TRUE)
-      } else {
-        library(pkg, character.only = TRUE)
-      }
+  # Initialize an empty list to store results
+  result = list()
+  counter = 1  # Counter for storing results without NULLs
+  
+  # Loop over each trait column
+  for (trait_col in trait_cols) {
+    
+    # Handle env_col
+    if (is.numeric(env_col) && length(env_col) == 1) {
+      env_col_data = data[[env_col]]
+    } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
+      env_col_data = env_col
+    } else {
+      env_col_data = data[[env_col]]
     }
+    
+    trait_col_data = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+    env_col_data = as.factor(env_col_data)
+    
+    # Fit the linear model
+    if (is.null(covariates)) {
+      model = lm(trait_col_data ~ env_col_data, data = data)
+    } else {
+      covariates = if (is.numeric(covariates)) names(data)[covariates] else covariates
+      formula = as.formula(paste("trait_col_data ~ env_col_data +", paste(covariates, collapse = " + ")))
+      model = lm(formula, data = data)
+    }
+    
+    # Calculate least square means (LSMs) for each environment
+    lsm = as.data.frame(emmeans::emmeans(model, ~ env_col_data))
+    
+    # Calculate PILSM
+    max_lsm = max(lsm$emmean, na.rm = TRUE)
+    min_lsm = min(lsm$emmean, na.rm = TRUE)
+    PILSM = (max_lsm - min_lsm) / max_lsm
+    
+    # Store result using trait column number or name
+    result[[as.character(trait_col)]] = list(PILSM = PILSM)
+    
+    # Optionally plot
+    if (plot) {
+      plot_data = data.frame(Environment = env_col_data, Trait = trait_col_data)
+      lsm_plot = ggplot2::ggplot(plot_data, ggplot2::aes(x = Environment, y = Trait)) +
+        ggplot2::geom_point(color = "blue", alpha = 0.5) +
+        ggplot2::geom_point(data = lsm, ggplot2::aes(x = env_col_data, y = emmean), color = "red", size = 3) +
+        ggplot2::geom_line(data = lsm, ggplot2::aes(x = env_col_data, y = emmean), color = "red", linetype = "dashed") +
+        ggplot2::labs(title = paste("LSMs for", trait_col), x = "Environment", y = trait_col) +
+        ggplot2::theme_minimal()
+      
+      result[[as.character(trait_col)]][["plot"]] = lsm_plot
+    }
+    
+    counter = counter + 1
   }
   
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col = env_col
-  } else {
-    env_col = data[[env_col]]
-  }
-  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
-  env_col=as.factor(env_col)
-  # Fit the linear model
-  if (is.null(covariates)) {
-    model = lm(trait_col ~ env_col, data = data)
-  } else {
-    covariates = if (is.numeric(covariates)) names(data)[covariates] else covariates
-    formula = as.formula(paste("trait_col ~ env_col +", paste(covariates, collapse = " + ")))
-    model = lm(formula, data = data)
-  }
-  
-  # Calculate least square means (LSMs) for each environment using emmeans
-  lsm = as.data.frame(emmeans::emmeans(model, ~ env_col))
-  print(lsm)
-  # Calculate PILSM
-  max_lsm = max(lsm$emmean, na.rm = TRUE)
-  min_lsm = min(lsm$emmean, na.rm = TRUE)
-  print(max_lsm)
-  print(min_lsm)
-  PILSM = (max_lsm - min_lsm) / max_lsm
-  
-  # Plot the LSMs against the original data
-  plot_data = data.frame(Environment = env_col, Trait = trait_col)
-  lsm_plot = ggplot2::ggplot(plot_data, ggplot2::aes(x = Environment, y = Trait)) +
-    ggplot2::geom_point(color = "blue", alpha = 0.5) +
-    ggplot2::geom_point(data = lsm, ggplot2::aes(x = env_col, y = emmean), color = "red", size = 3) +
-    ggplot2::geom_line(data = lsm, ggplot2::aes(x = env_col, y = emmean), color = "red", linetype = "dashed") +
-    ggplot2::labs(title = "Least Square Means (LSMs) by Environment", x = "Environment", y = "Trait") +
-    ggplot2::theme_minimal()
-  
-  
-  return(list(PILSM = PILSM, plot = lsm_plot))
+  return(result)
 }
+
 
 
 ## test - passed on synthetic dataset 
 
 
-calculate_PILSM(df_test6,trait_col=2,env_col=1)
+calculate_PILSM(df_test6,trait_col=c(2,3),env_col=1,plot = F)
 
-model = lm(Column1 ~ Column0 , data = df_test6)
-lsmeans_env = emmeans(model, ~ Column0)
+model = lm(Column2 ~ Column1 , data = df_test6)
+lsmeans_env = emmeans(model, ~ Column1)
 summary_lsmeans = summary(lsmeans_env)
 # Extract only the LSMeans (adjusted means)
 lsmeans_values = summary_lsmeans$emmean
@@ -1060,29 +1241,35 @@ lsmeans_values = summary_lsmeans$emmean
 ################################################
 
 
-#' Calculate the Relative Trait Response (RTR)
+#' Calculate the Relative Trait Response (RTR) for One or Multiple Traits
 #'
 #' This function calculates the Relative Trait Response (RTR) score, defined as the 
 #' difference between the mean trait value at one end of an environmental gradient 
 #' and the mean trait value at the opposite end, divided by the absolute maximum value of the trait.
 #'
 #' @param data A data frame containing the trait data and environmental conditions.
-#' @param trait_col The column name or number for the trait to analyze.
+#' @param trait_cols A vector of column names or numbers for the traits to analyze.
 #' @param env_col The column name or number for the environmental conditions.
 #' @param env_low The value of the environmental condition representing one end of the gradient.
 #' @param env_high The value of the environmental condition representing the opposite end of the gradient.
-#' @return The RTR value.
+#' @return A named numeric vector where each element represents the RTR value for a single trait.
 #' @examples
 #' df = data.frame(
 #'   Environment = rep(c("Low", "High"), each = 10),
 #'   Height = c(10, 12, 11, 13, 14, 15, 13, 14, 12, 13, 
-#'             20, 22, 21, 23, 24, 25, 23, 24, 22, 23)
+#'             20, 22, 21, 23, 24, 25, 23, 24, 22, 23),
+#'   Weight = c(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 
+#'             15, 16, 17, 18, 19, 20, 21, 22, 23, 24)
 #' )
 #' 
-#' RTR = calculate_RTR(df, trait_col = "Height", env_col = "Environment", env_low = "Low", env_high = "High")
-#' print(RTR)
+#' RTR_values = calculate_RTR(df, trait_cols = c("Height", "Weight"), env_col = "Environment", env_low = "Low", env_high = "High")
+#' print(RTR_values)
 #' @export
-calculate_RTR = function(data, trait_col, env_col, env_low, env_high) {
+calculate_RTR = function(data, trait_cols, env_col, env_low, env_high) {
+  
+  # Initialize a vector to store RTR values for each trait
+  RTR_values = numeric(length(trait_cols))
+  names(RTR_values) = trait_cols  # Name the vector by trait columns
   
   # Handle env_col
   if (is.numeric(env_col) && length(env_col) == 1) {
@@ -1093,18 +1280,26 @@ calculate_RTR = function(data, trait_col, env_col, env_low, env_high) {
     env_col = data[[env_col]]
   }
   
-  # Subset data for the specified environmental conditions
-  data_low = data[env_col == env_low, ]
-  data_high = data[env_col == env_high, ]
-  # Calculate mean trait values for each end of the gradient
-  mean_low = mean(data_low[[trait_col]], na.rm = TRUE)
-  mean_high = mean(data_high[[trait_col]], na.rm = TRUE)
-  print(mean_high)
-  print(mean_low)
-  # Calculate the RTR value
-  RTR = (mean_high - mean_low) / max(abs(trait_col), na.rm = TRUE)
+  # Loop over each trait column to calculate RTR
+  for (i in seq_along(trait_cols)) {
+    trait_column = trait_cols[i]
+    
+    # Handle trait_col dynamically (whether it's a column number or name)
+    trait_col_data = if (is.numeric(trait_column)) data[[trait_column]] else data[[trait_column]]
+    
+    # Subset data for the specified environmental conditions
+    data_low = data[env_col == env_low, ]
+    data_high = data[env_col == env_high, ]
+    
+    # Calculate mean trait values for each end of the gradient
+    mean_low = mean(data_low[[trait_column]], na.rm = TRUE)
+    mean_high = mean(data_high[[trait_column]], na.rm = TRUE)
+    
+    # Calculate the RTR value
+    RTR_values[i] = (mean_high - mean_low) / max(abs(trait_col_data), na.rm = TRUE)
+  }
   
-  return(RTR)
+  return(RTR_values)
 }
 
 
@@ -1115,7 +1310,7 @@ calculate_RTR(df_test2,trait_col=2,env_col=1,env_low=1,env_high=2)
 
 ######################################
 
-#' @title Calculate Phenotypic Instability Ratio (PIR)
+#' @title Calculate Phenotypic Instability Ratio (PIR) for One or Multiple Traits
 #'
 #' @description This function calculates the Phenotypic Instability Ratio (PIR) for a given trait across different environments,
 #' following the method described by Robinson (1989). PIR is calculated as the ratio of the difference between the maximum and minimum
@@ -1124,9 +1319,9 @@ calculate_RTR(df_test2,trait_col=2,env_col=1,env_low=1,env_high=2)
 #' relative growth rates (RGRs) for each environment. Note that the method has statistical limitations.
 #'
 #' @param data A data frame containing the data for trait values and corresponding environment and RGR information.
-#' @param trait_col A column name or numeric vector indicating the trait values. Can be a numeric index of the column in the data frame or a vector.
-#' @param env_col A column name or numeric vector indicating the environment identifiers. Can be a numeric index of the column in the data frame or a vector.
-#' @param rgr_col A column name or numeric vector indicating the relative growth rate (RGR) values. Can be a numeric index of the column in the data frame or a vector.
+#' @param trait_cols A vector of column names or numeric indices indicating the trait values. 
+#' @param env_col A column name or numeric index indicating the environment identifiers. Can be a numeric index of the column in the data frame or a vector.
+#' @param rgr_col A column name or numeric index indicating the relative growth rate (RGR) values. Can be a numeric index of the column in the data frame or a vector.
 #'
 #' @details The function first converts the environment column into a factor and computes the mean trait values for each environment.
 #' It then identifies the environment with the maximum relative growth rate and uses the trait's mean value in that environment
@@ -1135,19 +1330,28 @@ calculate_RTR(df_test2,trait_col=2,env_col=1,env_low=1,env_high=2)
 #' where \code{MaxMean} is the maximum mean trait value, \code{MinMean} is the minimum mean trait value,
 #' and \code{Mean_{MaxRGR}} is the mean trait value in the environment with the maximum RGR.
 #'
-#' @return A numeric value representing the Phenotypic Instability Ratio (PIR).
+#' @return A named numeric vector where each element represents the PIR for a specific trait.
 #'
 #' @references
 #' Robinson, D. (1989). \emph{Plasticity in plant growth and resource use as a trait for crop breeding}. Field Crops Research, 11(2-3), 153-159.
 #'
 #' @examples
-#' \dontrun{
-#' # Sample usage with a data frame 'df' with columns 'Trait', 'Env', and 'RGR':
-#' calculate_PIR(data = df, trait_col = "Trait", env_col = "Env", rgr_col = "RGR")
-#' }
+#' df = data.frame(
+#'   Environment = rep(c("Env1", "Env2", "Env3"), each = 10),
+#'   Height = c(10, 12, 11, 13, 14, 15, 13, 14, 12, 13, 
+#'             20, 22, 21, 23, 24, 25, 23, 24, 22, 23,
+#'             30, 32, 31, 33, 34, 35, 33, 34, 32, 33),
+#'   Weight = c(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 
+#'             15, 16, 17, 18, 19, 20, 21, 22, 23, 24),
+#'   RGR = c(1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 
+#'           1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 
+#'           1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0)
+#' )
 #' 
+#' PIR_values = calculate_PIR(df, trait_cols = c("Height", "Weight"), env_col = "Environment", rgr_col = "RGR")
+#' print(PIR_values)
 #' @export
-calculate_PIR = function(data, trait_col, env_col, rgr_col) {
+calculate_PIR = function(data, trait_cols, env_col, rgr_col) {
   
   # Handle env_col
   if (is.numeric(env_col) && length(env_col) == 1) {
@@ -1170,28 +1374,35 @@ calculate_PIR = function(data, trait_col, env_col, rgr_col) {
   # Convert env_col to a factor
   env_col = as.factor(env_col)
   
-  # Handle trait_col
-  trait_col = if (is.numeric(trait_col) && length(trait_col) == 1) data[[trait_col]] else trait_col
+  # Initialize a vector to store PIR values for each trait
+  PIR_values = numeric(length(trait_cols))
+  names(PIR_values) = trait_cols  # Name the vector by trait columns
   
-  # Calculate mean trait values for each environment
-  means = tapply(trait_col, env_col, mean, na.rm = TRUE)
-
-  # Identify maximum and minimum means
-  max_mean = max(means, na.rm = TRUE)
-  min_mean = min(means, na.rm = TRUE)
-
+  # Loop over each trait column to calculate PIR
+  for (i in seq_along(trait_cols)) {
+    trait_column = trait_cols[i]
+    
+    # Handle trait_col dynamically (whether it's a column number or name)
+    trait_col_data = if (is.numeric(trait_column)) data[[trait_column]] else data[[trait_column]]
+    
+    # Calculate mean trait values for each environment
+    means = tapply(trait_col_data, env_col, mean, na.rm = TRUE)
+    
+    # Identify maximum and minimum means
+    max_mean = max(means, na.rm = TRUE)
+    min_mean = min(means, na.rm = TRUE)
+    
+    # Identify the environment with the maximum growth rate
+    max_rgr_env = levels(env_col)[which.max(tapply(rgr_col, env_col, mean, na.rm = TRUE))]
+    
+    # Find the mean of the trait at the environment where the growth rate is maximum
+    mean_at_max_rgr = means[max_rgr_env]
+    
+    # Calculate PIR
+    PIR_values[i] = (max_mean - min_mean) / mean_at_max_rgr
+  }
   
-  # Identify the environment with the maximum growth rate
-  max_rgr_env = levels(env_col)[which.max(tapply(rgr_col, env_col, mean, na.rm = TRUE))]
-  
-  # Find the mean of the trait at the environment where the growth rate is maximum
-  mean_at_max_rgr = max(means[max_rgr_env])
-  
-  
-  # Calculate PIR
-  PIR = (max_mean - min_mean) / mean_at_max_rgr
-  
-  return(PIR)
+  return(PIR_values)
 }
 
 ## test - passed on synthetic dataset

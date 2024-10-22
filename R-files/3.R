@@ -10,6 +10,10 @@
 #Calculate Fitness Plasticity Index (FPI) (calculate_FPI) - tested,
 #Calculate Transplant Plasticity Score (TPS)(calculate_TPS) - tested,
 
+source("~/CRC 1622 - Z2/R-files/2.R")
+
+
+
 ##################### datasets for testing
 
 df_test1 = data.frame(Column1 = c(rep(4, 10), rep(2, 10)), Column2 = c(rep(10, 10), rep(1, 10)))
@@ -41,113 +45,6 @@ df_test6=data.frame(
 )
 
 
-
-#########################################
-
-#' Generate Synthetic Plant Plasticity Data with Sequential Environments
-#'
-#' This function generates a synthetic dataset for plant plasticity measurements across multiple environments. 
-#' It simulates traits for a specified number of plants in different environments, with trait values normally 
-#' distributed around given baseline values. The generated dataset is structured such that the first set of rows 
-#' corresponds to all plants in the first environment, followed by all plants in the second environment, and so on. 
-#'
-#' @param n_plants An integer specifying the number of plants (rows) to generate in each environment.
-#' @param baseline_values A matrix or data frame where each row represents an environment and each column 
-#' represents a trait. The values in this matrix provide the baseline (mean) values for each trait in each environment.
-#' @param within_variance A matrix or data frame where each row represents an environment and each column 
-#' represents a trait. The values in this matrix specify the standard deviation for each trait in each environment, 
-#' determining the variability around the baseline values.
-#' 
-#' @return A data frame containing the synthetic dataset. The data frame will have `n_plants * n_environments` rows 
-#' and `n_traits` columns. The row names indicate the plant number and environment (e.g., 1.1 for plant 1 in environment 1).
-#' The column names represent the traits (e.g., `Trait_1`, `Trait_2`, etc.).
-#' 
-#' @details This function can be used for simulating data where different environments may have different 
-#' levels of variability for the same trait. The data is structured sequentially by environment, making it easy to analyze 
-#' the effects of different environmental conditions on plant traits.
-#' 
-#' @examples
-#' # Define the parameters
-#' n_plants = 100
-#' 
-#' # Define baseline values for each trait in each environment
-#' # Rows are environments, columns are traits
-#' baseline_values = matrix(
-#'   c(100, 110, 120,  # Trait 1 baseline values in Env 1, 2, 3
-#'     200, 195, 205,  # Trait 2 baseline values in Env 1, 2, 3
-#'     300, 310, 290), # Trait 3 baseline values in Env 1, 2, 3
-#'   nrow = 3, ncol = 3, byrow = TRUE
-#' )
-#' 
-#' # Define within-environment variance for each trait in each environment
-#' within_variance = matrix(
-#'   c(10, 15, 20,   # Trait 1 variance in Env 1, 2, 3
-#'     8, 12, 10,    # Trait 2 variance in Env 1, 2, 3
-#'     5, 7, 6),     # Trait 3 variance in Env 1, 2, 3
-#'   nrow = 3, ncol = 3, byrow = TRUE
-#' )
-#' 
-#' # Generate the synthetic dataset
-#' synthetic_data = generate_synthetic_data(n_plants, baseline_values, within_variance)
-#' 
-#' # View the first few rows of the generated dataset
-#' head(synthetic_data)
-#' 
-#' @export
-generate_synthetic_data = function(n_plants, baseline_values, within_variance, environmental_factor) {
-  n_traits = ncol(baseline_values)
-  n_environments = nrow(baseline_values)
-  
-  # Initialize empty data frame to store the results, with an additional column for environmental factor
-  synthetic_data = data.frame(matrix(nrow = n_plants * n_environments, ncol = n_traits + 2))
-  
-  # Generate row names where the integer part is the plant id and the fractional part is the environment indicator 
-  rownames(synthetic_data) = rep(1:n_plants, times = n_environments) + 
-    rep(seq(0.1, (n_environments - 1) / 10 + 0.1, by = 0.1), each = n_plants)
-  
-  # Set column names for the traits
-  colnames(synthetic_data) = c("Species identificator", "Environmental Factor", paste("Trait", 1:n_traits, sep = "_"))
-  
-  for (env in 1:n_environments) {
-    # Calculate the row indices for the current environment
-    start_idx = (env - 1) * n_plants + 1
-    end_idx = env * n_plants
-    
-    # Assign environmental factor and environment indicator
-    synthetic_data[start_idx:end_idx, 1] = env
-    synthetic_data[start_idx:end_idx, 2] = environmental_factor[env]
-    
-    for (i in 1:n_traits) {
-      # Generate random data for the current trait and environment with specific variance
-      synthetic_data[start_idx:end_idx, i + 2] = rnorm(n_plants, mean = baseline_values[env, i], sd = within_variance[env, i])
-    }
-  }
-  
-  return(synthetic_data)
-}
-
-n_plants = 100
-
-# Define baseline values for each trait in each environment
-baseline_values = matrix(
-  c(100, 11, 1,  
-    100, 52, 500,  
-    100, 101, 1020), 
-  nrow = 3, ncol = 3, byrow = TRUE
-)
-
-# Define within-environment variance for each trait in each environment
-within_variance = matrix(
-  c(10, 5, 5,   
-    10, 12, 10,    
-    10, 7, 6),     
-  nrow = 3, ncol = 3, byrow = TRUE
-)
-environmental_factor=c(0.2,0.5,0.9)
-
-set.seed(12345)
-synthetic_data1 = generate_synthetic_data(n_plants, baseline_values, within_variance,environmental_factor)
-print(class(synthetic_data1))
 
 ########################################
 
@@ -363,7 +260,7 @@ calculate_PQ = function(data, env_col, trait_col, factor_col){
 
 ## test - passed on synthetic dataframe
 
-calculate_PQ(df_test_6,1,3,2)
+calculate_PQ(df_test6,1,3,2)
 
 ###########################################
 

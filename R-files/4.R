@@ -1,122 +1,19 @@
-#Calculate Developmental Plasticity Index (DPI)(calculate_DPI),
-#Calculate Coefficient of Environmental Variation (CEV)(calculate_CEV),
-#Calculate Plasticity Response Index (PRI)(calculate_PRI),
-#Calculate Phenotypic Flexibility Index (PFI)(calculate_PFI),
-#Calculate Standardized Plasticity Index (SPI)(calculate_SPI),
-#Calculate Absolute Plasticity Coefficient (APC)(calculate_APC),
-#Calculate Stability Index (SI)(calculate_SI),
+#Calculate Developmental Plasticity Index (DPI)(calculate_DPI) - tested,
+#Calculate Coefficient of Environmental Variation (CEV)(calculate_CEV) - tested,
+#Calculate Plasticity Response Index (PRI)(calculate_PRI) - tested,
+#Calculate Phenotypic Flexibility Index (PFI)(calculate_PFI) - tested,
+#Calculate Standardized Plasticity Index (SPI)(calculate_SPI) - tested,
+#Calculate Absolute Plasticity Coefficient (APC)(calculate_APC) - tested,
+#Calculate Stability Index (SI)(calculate_SI) - tested,
 #Calculate Relative Stability Index (RSI)(calculate_RSI),
-#Calculate Environmental Variance Sensitivity (EVS)(calculate_EVS),
-#Calculate Environmental Variance Sensitivity (EVS)(calculate_EVS),
-#Calculate Multivariate Plasticity Index (MVPi)(calculate_MVPi),
-#Calculate Standardized Plasticity Metric (SPM)(calculate_SPM),
-#Calculate SSpop/SStotal Plasticity Ratio(calculate_Plasticity_Ratio)
+#Calculate Environmental Variance Sensitivity (EVS)(calculate_EVS) - tested,
+#Calculate Environmental Variance Sensitivity (EVS)(calculate_EVS) - tested,
+#Calculate Multivariate Plasticity Index (MVPi)(calculate_MVPi) NEEDS TO BE TESTED WITH THE REQUESTED DATASET FROM PROF. BARBOSA,
+#Calculate Standardized Plasticity Metric (SPM)(calculate_SPM) - tested,
+#Calculate SSpop/SStotal Plasticity Ratio(calculate_Plasticity_Ratio) - tested
 
 
-#' Generate Synthetic Plant Plasticity Data with Sequential Environments
-#'
-#' This function generates a synthetic dataset for plant plasticity measurements across multiple environments. 
-#' It simulates traits for a specified number of plants in different environments, with trait values normally 
-#' distributed around given baseline values. The generated dataset is structured such that the first set of rows 
-#' corresponds to all plants in the first environment, followed by all plants in the second environment, and so on. 
-#'
-#' @param n_plants An integer specifying the number of plants (rows) to generate in each environment.
-#' @param baseline_values A matrix or data frame where each row represents an environment and each column 
-#' represents a trait. The values in this matrix provide the baseline (mean) values for each trait in each environment.
-#' @param within_variance A matrix or data frame where each row represents an environment and each column 
-#' represents a trait. The values in this matrix specify the standard deviation for each trait in each environment, 
-#' determining the variability around the baseline values.
-#' 
-#' @return A data frame containing the synthetic dataset. The data frame will have `n_plants * n_environments` rows 
-#' and `n_traits` columns. The row names indicate the plant number and environment (e.g., 1.1 for plant 1 in environment 1).
-#' The column names represent the traits (e.g., `Trait_1`, `Trait_2`, etc.).
-#' 
-#' @details This function can be used for simulating data where different environments may have different 
-#' levels of variability for the same trait. The data is structured sequentially by environment, making it easy to analyze 
-#' the effects of different environmental conditions on plant traits.
-#' 
-#' @examples
-#' # Define the parameters
-#' n_plants = 100
-#' 
-#' # Define baseline values for each trait in each environment
-#' # Rows are environments, columns are traits
-#' baseline_values = matrix(
-#'   c(100, 110, 120,  # Trait 1 baseline values in Env 1, 2, 3
-#'     200, 195, 205,  # Trait 2 baseline values in Env 1, 2, 3
-#'     300, 310, 290), # Trait 3 baseline values in Env 1, 2, 3
-#'   nrow = 3, ncol = 3, byrow = TRUE
-#' )
-#' 
-#' # Define within-environment variance for each trait in each environment
-#' within_variance = matrix(
-#'   c(10, 15, 20,   # Trait 1 variance in Env 1, 2, 3
-#'     8, 12, 10,    # Trait 2 variance in Env 1, 2, 3
-#'     5, 7, 6),     # Trait 3 variance in Env 1, 2, 3
-#'   nrow = 3, ncol = 3, byrow = TRUE
-#' )
-#' 
-#' # Generate the synthetic dataset
-#' synthetic_data = generate_synthetic_data(n_plants, baseline_values, within_variance)
-#' 
-#' # View the first few rows of the generated dataset
-#' head(synthetic_data)
-#' 
-#' @export
-generate_synthetic_data = function(n_plants, baseline_values, within_variance, environmental_factor) {
-  n_traits = ncol(baseline_values)
-  n_environments = nrow(baseline_values)
-  
-  # Initialize empty data frame to store the results, with an additional column for environmental factor
-  synthetic_data = data.frame(matrix(nrow = n_plants * n_environments, ncol = n_traits + 2))
-  
-  # Generate row names where the integer part is the plant id and the fractional part is the environment indicator 
-  rownames(synthetic_data) = rep(1:n_plants, times = n_environments) + 
-    rep(seq(0.1, (n_environments - 1) / 10 + 0.1, by = 0.1), each = n_plants)
-  
-  # Set column names for the traits
-  colnames(synthetic_data) = c("Species identificator", "Environmental Factor", paste("Trait", 1:n_traits, sep = "_"))
-  
-  for (env in 1:n_environments) {
-    # Calculate the row indices for the current environment
-    start_idx = (env - 1) * n_plants + 1
-    end_idx = env * n_plants
-    
-    # Assign environmental factor and environment indicator
-    synthetic_data[start_idx:end_idx, 1] = env
-    synthetic_data[start_idx:end_idx, 2] = environmental_factor[env]
-    
-    for (i in 1:n_traits) {
-      # Generate random data for the current trait and environment with specific variance
-      synthetic_data[start_idx:end_idx, i + 2] = rnorm(n_plants, mean = baseline_values[env, i], sd = within_variance[env, i])
-    }
-  }
-  
-  return(synthetic_data)
-}
-
-n_plants = 100
-
-# Define baseline values for each trait in each environment
-baseline_values = matrix(
-  c(100, 11, 1,  
-    100, 52, 500,  
-    100, 101, 1020), 
-  nrow = 3, ncol = 3, byrow = TRUE
-)
-
-# Define within-environment variance for each trait in each environment
-within_variance = matrix(
-  c(10, 5, 5,   
-    10, 12, 10,    
-    10, 7, 6),     
-  nrow = 3, ncol = 3, byrow = TRUE
-)
-environmental_factor=c(0.2,0.5,0.9)
-
-set.seed(12345)
-synthetic_data1 = generate_synthetic_data(n_plants, baseline_values, within_variance,environmental_factor)
-print(class(synthetic_data1))
+source("~/CRC 1622 - Z2/R-files/2.R")
 
 ########################################
 
@@ -134,9 +31,23 @@ check_and_install_packages = function(packages) {
 
 ##################### datasets for testing
 
-df_test1 = data.frame(Column1 = c(rep(4, 10), rep(2, 10)), Column2 = c(rep(10, 10), rep(1, 10)))
-df_test2 = data.frame(Column0 = c(rep(1, 10), rep(2, 10)),Column1 = c(rep(2, 10), rep(1, 10)), Column2 = c(rep(2, 10), rep(4, 10)))
-df_test3=data.frame(Column0 = c(rep(3, 10), rep(2, 10),rep(1,10)),Column1 = c(rep(2, 10), rep(1, 15),rep(3,5)), Column2 = c(rep(2, 10), rep(4, 10),rep(3,10)))
+df_test1 = data.frame(Column1 = c(rep(4, 10), rep(2, 10)), 
+                      Column2 = c(rep(10, 10), rep(1, 10)))
+
+df_test2 = data.frame(Column0 = c(rep(1, 10), rep(2, 10)),
+                      Column1 = c(rep(2, 10), rep(1, 10)), 
+                      Column2 = c(rep(2, 10), rep(4, 10)))
+
+df_test2.2 = data.frame(Column0 = c(rep(1, 10), rep(2, 10)),
+                      Column1 = c(rep(2, 10), rep(1, 5),rep(2,5)), 
+                      Column2 = c(rep(2, 10), rep(4, 10)))
+
+
+
+df_test3=data.frame(Column0 = c(rep(3, 10), rep(2, 10),rep(1,10)),
+                    Column1 = c(rep(2, 10), rep(1, 15),rep(3,5)), 
+                    Column2 = c(rep(2, 10), rep(4, 10),rep(3,10)))
+
 df_test4 = data.frame(
   Column0 = c(rep(3, 10), rep(2, 10), rep(1, 10)),   # Response variable
   Column1 = c(rep(2, 10), rep(3, 10), rep(1, 10)),   # Control (2) and Treatment (3)
@@ -197,6 +108,13 @@ calculate_DPI = function(data, trait_col_time1, trait_col_time2, time_interval) 
   return(dpi)
 }
 
+## test - passed on synthetic dataset - however it is not clear how one would structure a dataset with time resolved data (will the measurements at time x for one sample be in different columns all with equally separated time intervals or in rows?)
+# mathematically the function does the wanted if one knows how to structure the data
+
+calculate_DPI(df_test2,2,3,3)
+
+
+
 ###############################
 
 
@@ -239,6 +157,12 @@ calculate_CEV = function(data, trait_col) {
   return(cev)
 }
 
+
+## tested - passed on synthetic dataset 
+
+calculate_CEV(df_test2,2)
+sd(df_test2[,2])/mean(df_test2[,2])*100
+
 ################################
 
 
@@ -268,7 +192,7 @@ calculate_CEV = function(data, trait_col) {
 #' print(pri_value)
 #'
 #' @export
-calculate_PRI = function(data, env_col, trait_col, trait_extreme, trait_control) {
+calculate_PRI = function(data, env_col, trait_col, env_extreme, env_control) {
   
   # Handle env_col
   if (is.numeric(env_col) && length(env_col) == 1) {
@@ -286,8 +210,8 @@ calculate_PRI = function(data, env_col, trait_col, trait_extreme, trait_control)
   mean_trait_value = mean(trait_col, na.rm = TRUE)
   
   # Calculate trait values for extreme and control environments
-  trait_ex = mean(trait_col[env_col == trait_extreme], na.rm = TRUE)
-  trait_con = mean(trait_col[env_col == trait_control], na.rm = TRUE)
+  trait_ex = mean(trait_col[env_col == env_extreme], na.rm = TRUE)
+  trait_con = mean(trait_col[env_col == env_control], na.rm = TRUE)
   
   # Calculate the Plasticity Response Index (PRI)
   pri = (trait_ex - trait_con) / mean_trait_value
@@ -295,6 +219,9 @@ calculate_PRI = function(data, env_col, trait_col, trait_extreme, trait_control)
   return(pri)
 }
 
+## test - passed on synthetic dataset
+
+calculate_PRI(df_test2,1,2,1,2)
 
 ############################
 
@@ -321,10 +248,11 @@ calculate_PRI = function(data, env_col, trait_col, trait_extreme, trait_control)
 #' print(pfi_value)
 #'
 #' @export
-calculate_PFI = function(data, baseline_col, trait_values_col) {
+calculate_PFI = function(data, baseline_col, trait_col) {
   
   # Handle input columns
-  trait_values = if (is.numeric(trait_values_col)) data[[trait_values_col]] else data[[trait_values_col]]
+  trait_values = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  baseline = if (is.numeric(baseline_col)) data[[baseline_col]] else data[[baseline_col]]
   
   # Calculate the maximum deviation from the baseline
   max_deviation = max(abs(trait_values - baseline), na.rm = TRUE)
@@ -334,6 +262,10 @@ calculate_PFI = function(data, baseline_col, trait_values_col) {
   
   return(pfi)
 }
+
+## test - passed on synthetic dataset - however I am unsure wether this is supposed to be one score or a separate score for each timepoint/sample
+
+calculate_PFI(df_test2,1,2)
 
 
 ##########################
@@ -365,7 +297,7 @@ calculate_PFI = function(data, baseline_col, trait_values_col) {
 #' print(spi_values)
 #'
 #' @export
-calculate_SPI = function(data, env_col, trait_cols, trait_env1, trait_env2, reference_env) {
+calculate_SPI = function(data, env_col, trait_cols, env1, env2, reference_env) {
   
   # Handle env_col
   if (is.numeric(env_col) && length(env_col) == 1) {
@@ -388,8 +320,8 @@ calculate_SPI = function(data, env_col, trait_cols, trait_env1, trait_env2, refe
     trait_values = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
     
     # Calculate mean trait values for env1 and env2
-    trait_env1_value = mean(trait_values[env_col == trait_env1], na.rm = TRUE)
-    trait_env2_value = mean(trait_values[env_col == trait_env2], na.rm = TRUE)
+    trait_env1_value = mean(trait_values[env_col == env1], na.rm = TRUE)
+    trait_env2_value = mean(trait_values[env_col == env2], na.rm = TRUE)
     
     # Calculate the standard deviation of the reference environment's trait values
     sd_reference = sd(trait_values[env_col == reference_env], na.rm = TRUE)
@@ -404,7 +336,13 @@ calculate_SPI = function(data, env_col, trait_cols, trait_env1, trait_env2, refe
   return(spi_results)
 }
 
-calculate_SPI(synthetic_data1,1,c(3,4),1,2,3)
+## test - passed on synthetic dataset 
+
+calculate_SPI(df_test2.2,1,2,1,2,2)
+-0.5/sd(c(rep(1, 5),rep(2,5)))
+
+
+
 
 ########################
 
@@ -412,12 +350,12 @@ calculate_SPI(synthetic_data1,1,c(3,4),1,2,3)
 #'
 #' This function calculates the Absolute Plasticity Coefficient (APC), 
 #' which quantifies absolute plasticity by calculating the average absolute difference 
-#' in trait values between environments. If the environments are not sequential, 
+#' in the mean trait values between environments. If the environments are not sequential, 
 #' the function will use the order provided in the dataset.
-#' 
+#'
 #' The formula used is:
-#' \deqn{APC = \frac{1}{n-1} \sum_{i=1}^{n-1} |Trait Value_{Envi+1} - Trait Value_{Envi}|}
-#' 
+#' \deqn{APC = \frac{1}{n-1} \sum_{i=1}^{n-1} |Mean(Trait Value)_{Envi+1} - Mean(Trait Value)_{Envi}|}
+#'
 #' @param data A data frame containing the input data.
 #' @param env_col A string or numeric value indicating the column in `data` that contains the environment labels.
 #' @param trait_cols A character vector or numeric vector indicating the columns in the dataset containing the trait values.
@@ -433,7 +371,7 @@ calculate_SPI(synthetic_data1,1,c(3,4),1,2,3)
 #' )
 #' apc_values = calculate_APC(synthetic_data, env_col = "Environment", trait_cols = c("Trait1", "Trait2"))
 #' print(apc_values)
-#' 
+#'
 #' @export
 calculate_APC = function(data, env_col, trait_cols, sequential_env = TRUE) {
   
@@ -445,7 +383,6 @@ calculate_APC = function(data, env_col, trait_cols, sequential_env = TRUE) {
   } else {
     env_col = data[[env_col]]
   }
-  
   
   # Initialize a vector to store APC values
   apc_results = c()
@@ -459,15 +396,15 @@ calculate_APC = function(data, env_col, trait_cols, sequential_env = TRUE) {
     data = data[ordered_indices, ]
   }
   
-  # Loop through each trait column and calculate the APC
+  # Calculate the APC for each trait column
   for (trait_col in trait_cols) {
     
-    # Extract the trait data
-    trait_values = data[[trait_col]]
+    # Group data by environment and calculate the mean trait value for each environment
+    env_means = aggregate(data[[trait_col]], by = list(env_col), FUN = mean)
     
     # Calculate the absolute differences between consecutive environments
-    abs_diff = abs(diff(trait_values))
-    
+    abs_diff = abs(diff(env_means$x))
+    print(abs_diff)
     # Calculate the APC
     apc = mean(abs_diff, na.rm = TRUE)
     
@@ -479,9 +416,8 @@ calculate_APC = function(data, env_col, trait_cols, sequential_env = TRUE) {
   names(apc_results) = trait_cols
   return(apc_results)
 }
-
-
-calculate_APC(synthetic_data1,1,c(3,4))
+## test - passed on synthetic dataset 
+calculate_APC(df_test2,1,2)
 
 #############################
 
@@ -547,21 +483,27 @@ calculate_SI = function(data, env_col, trait_cols) {
   return(si_results)
 }
 
-
+## test - passed on synthetic dataset 
+var(df_test2[,2])/mean(df_test2[,2])
+calculate_SI(df_test2,1,2)
 #######################
 
 
 #' Calculate Relative Stability Index (RSI)
 #'
 #' This function calculates the Relative Stability Index (RSI), which measures the relative 
-#' stability of a trait across environments, focusing on stability despite environmental fluctuations.
+#' stability of a trait across environments, focusing on stability despite environmental fluctuations. 
+#' Users can optionally specify one or more environments for which to calculate the RSI. 
+#' If no specific environments are provided, the RSI will be calculated over all available environments.
 #'
 #' The formula used is:
 #' \deqn{RSI = 1 - \frac{Standard Deviation of Trait Values Across Environments}{Mean Trait Value Across Environments}}
 #'
 #' @param data A data frame containing the input data.
-#' @param env_col A string, numeric, or vector indicating the column in `data` that contains the environment labels, or an external vector specifying environment belonging.
+#' @param env_col A string, numeric, or vector indicating the column in `data` that contains the environment labels.
 #' @param trait_cols A character vector or numeric vector indicating the columns in the dataset containing the trait values.
+#' @param specific_envs An optional vector of specific environments to include in the RSI calculation. 
+#' If `NULL`, the function calculates RSI across all environments (default is `NULL`).
 #' @return A numeric vector of Relative Stability Index (RSI) values, one for each trait column specified.
 #'
 #' @examples
@@ -571,17 +513,21 @@ calculate_SI = function(data, env_col, trait_cols) {
 #'   Trait2 = c(8, 11, 13, 17),
 #'   Environment = c(1, 2, 3, 4)  # Different environments
 #' )
+#'
+#' # Calculate RSI for all environments
 #' rsi_values = calculate_RSI(synthetic_data, env_col = "Environment", trait_cols = c("Trait1", "Trait2"))
 #' print(rsi_values)
 #'
+#' # Calculate RSI for specific environments (1 and 2)
+#' rsi_values_specific = calculate_RSI(synthetic_data, env_col = "Environment", trait_cols = c("Trait1", "Trait2"), specific_envs = c(1, 2))
+#' print(rsi_values_specific)
+#'
 #' @export
-calculate_RSI = function(data, env_col, trait_cols) {
+calculate_RSI = function(data, env_col, trait_cols, specific_envs = NULL) {
   
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else {
-    env_col = env_col
+  # If specific environments are provided, subset the data accordingly
+  if (!is.null(specific_envs)) {
+    data = data[data[[env_col]] %in% specific_envs, ]
   }
   
   # Initialize a vector to store RSI values
@@ -590,10 +536,10 @@ calculate_RSI = function(data, env_col, trait_cols) {
   # Loop through each trait column and calculate the RSI
   for (trait_col in trait_cols) {
     
-    # Extract the trait data
+    # Extract the trait data for the specified environments (or all environments if none are specified)
     trait_values = data[[trait_col]]
     
-    # Calculate the standard deviation and mean trait value across environments
+    # Calculate the standard deviation and mean trait value across the selected environments
     sd_trait = sd(trait_values, na.rm = TRUE)
     mean_trait_value = mean(trait_values, na.rm = TRUE)
     
@@ -608,6 +554,20 @@ calculate_RSI = function(data, env_col, trait_cols) {
   names(rsi_results) = trait_cols
   return(rsi_results)
 }
+
+## test - passed on synthetic dataset
+1-sd(df_test2[,2])/mean(df_test2[,2])
+calculate_RSI(df_test2,1,2)
+
+##test2
+1-sd(synthetic_data1[,3])/mean(synthetic_data1[,3])
+calculate_RSI(synthetic_data1,1,3)
+
+##test3
+1-sd(df_test5[1:20,2])/mean(df_test5[1:20,2])
+calculate_RSI(df_test5,1,2,specific_envs=c(3,2))
+
+
 
 ##########################
 
@@ -636,17 +596,15 @@ calculate_RSI = function(data, env_col, trait_cols) {
 #' print(evs_values)
 #'
 #' @export
-calculate_EVS = function(data, env_col, trait_cols, env_variance_col) {
+calculate_EVS = function(data, env_variance, trait_cols ) {
+ 
   
   # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
+  if (is.numeric(env_variance) && length(env_variance) == 1) {
+    env_variance = data[[env_variance]]
   } else {
-    env_col = env_col
+    env_variance = env_variance
   }
-  
-  # Extract environmental variance data
-  env_variance = data[[env_variance_col]]
   
   # Initialize a vector to store EVS values
   evs_results = c()
@@ -674,68 +632,15 @@ calculate_EVS = function(data, env_col, trait_cols, env_variance_col) {
   names(evs_results) = trait_cols
   return(evs_results)
 }
-#################
 
-#' Calculate Environmental Variance Sensitivity (EVS)
-#'
-#' This function calculates the Environmental Variance Sensitivity (EVS), 
-#' which quantifies how sensitive a trait is to changes in environmental variance.
-#'
-#' The formula used is:
-#' \deqn{EVS = \frac{\Delta Trait Variance}{\Delta Environmental Variance}}
-#'
-#' @param data A data frame containing the input data.
-#' @param env_col A string, numeric, or vector indicating the column in `data` that contains the environment labels, or an external vector specifying environment belonging.
-#' @param trait_cols A character or numeric vector indicating the columns in the dataset containing the trait values.
-#' @return A numeric vector of Environmental Variance Sensitivity (EVS) values, one for each trait column specified.
-#'
-#' @examples
-#' # Example usage with synthetic data
-#' synthetic_data = data.frame(
-#'   Trait1 = c(10, 12, 15, 18),
-#'   Trait2 = c(8, 11, 13, 17),
-#'   Environment = c(1, 2, 3, 4)  # Different environments
-#' )
-#' evs_values = calculate_EVS(synthetic_data, env_col = "Environment", trait_cols = c("Trait1", "Trait2"))
-#' print(evs_values)
-#'
-#' @export
-calculate_EVS = function(data, env_col, trait_cols) {
-  
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else {
-    env_col = env_col
-  }
-  
-  # Initialize a vector to store EVS values
-  evs_results = c()
-  
-  # Loop through each trait column and calculate the EVS
-  for (trait_col in trait_cols) {
-    
-    # Extract the trait data
-    trait_values = data[[trait_col]]
-    
-    # Calculate the variance of trait values across environments
-    trait_variance = var(trait_values, na.rm = TRUE)
-    
-    # Calculate the variance of environments
-    env_variance = var(env_col, na.rm = TRUE)
-    
-    # Calculate the Environmental Variance Sensitivity (EVS)
-    evs = trait_variance / env_variance
-    
-    # Store the result
-    evs_results = c(evs_results, evs)
-  }
-  
-  # Return the EVS values for each trait
-  names(evs_results) = trait_cols
-  return(evs_results)
-}
+## test - passed on synthetic dataset
 
+var(df_test2[,2])/var(df_test2[,1])
+calculate_EVS(df_test2,1,2)
+
+##test2 - passed 
+var(synthetic_data1[,3])/var(synthetic_data1[,2])
+calculate_EVS(synthetic_data1,2,3)
 
 #####################
 
@@ -810,6 +715,10 @@ calculate_MVPi = function(data, env_col, trait_cols, n_axes) {
   return(mvpi)
 }
 
+
+## test - to be tested with dataset from DOI: 10.1093/jxb/eraa545
+
+
 calculate_MVPi(synthetic_data1,1,c(3,4,5),3)
 
 
@@ -865,7 +774,15 @@ calculate_SPM = function(data, env_col, trait_col, resident_env, nonresident_env
 }
 
 
-calculate_SPM(synthetic_data1,1,3,1,2)
+## test - passed on synthetic dataset 
+(mean(df_test2[df_test2[, 1] == 1, 2])-mean(df_test2[df_test2[, 1] == 2, 2]))/mean(df_test2[df_test2[, 1] == 1, 2])
+calculate_SPM(df_test2,1,2,1,2)
+
+##test2
+(mean(synthetic_data1[synthetic_data1[, 1] == 1, 3])-mean(synthetic_data1[synthetic_data1[, 1] == 3, 3]))/mean(synthetic_data1[synthetic_data1[, 1] == 1, 3])
+calculate_SPM(synthetic_data1,1,3,1,3)
+
+
 
 
 ############################
@@ -937,3 +854,25 @@ calculate_Plasticity_Ratio = function(data, env_col, trait_col, pop_col) {
 
 pop=c(rep(1,150),rep(2,150))
 calculate_Plasticity_Ratio(synthetic_data1,1,3,pop)
+
+## test - passed on synthetic dataset 
+
+overall_mean = mean(synthetic_data1[, 3])
+
+mean_pop1 = mean(synthetic_data1[1:150, 3])   # Mean for Population 1 (first 150 rows)
+mean_pop2 = mean(synthetic_data1[151:300, 3])  # Mean for Population 2 (next 150 rows)
+
+n_pop1 = 150  # Number of observations in Population 1
+n_pop2 = 150  # Number of observations in Population 2
+
+ss_pop1 = n_pop1 * (mean_pop1 - overall_mean)^2
+ss_pop2 = n_pop2 * (mean_pop2 - overall_mean)^2
+SS_pop = ss_pop1 + ss_pop2  # Total SS_pop
+
+SS_total = sum((synthetic_data1[, 3] - overall_mean)^2)
+
+plasticity_ratio = SS_pop / SS_total
+print(paste("Plasticity Ratio:", plasticity_ratio))
+
+
+

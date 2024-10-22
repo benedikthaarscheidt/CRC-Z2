@@ -101,7 +101,7 @@ generate_synthetic_data = function(n_plants, baseline_values, within_variance, e
     rep(seq(0.1, (n_environments - 1) / 10 + 0.1, by = 0.1), each = n_plants)
   
   # Set column names for the traits
-  colnames(synthetic_data) = c("Species identificator", "Environmental Factor", paste("Trait", 1:n_traits, sep = "_"))
+  colnames(synthetic_data) = c("Identificator", "Environmental Factor", paste("Trait", 1:n_traits, sep = "_"))
   
   for (env in 1:n_environments) {
     # Calculate the row indices for the current environment
