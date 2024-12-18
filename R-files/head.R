@@ -180,8 +180,40 @@ for (i in 1:n_datasets) {
   
 }
 
+skewness_type_vector = c(
+  # Dataset 1 (Non-skewed for all traits)
+  "non", "non", "non",
+  # Dataset 2 (Log skewed first trait)
+  "lognormal", "non", "non",
+  # Dataset 3 (Log skewed first two traits)
+  "lognormal", "lognormal", "non",
+  # Dataset 4 (Log first, Gamma second)
+  "lognormal", "gamma", "non",
+  # Dataset 5 (Log first, Weibull second)
+  "lognormal", "weibull", "non",
+  # Dataset 6 (Gamma skewed first trait)
+  "gamma", "non", "non",
+  # Dataset 7 (Gamma first two traits)
+  "gamma", "gamma", "non",
+  # Dataset 8 (Gamma first, Weibull second)
+  "gamma", "weibull", "non",
+  # Dataset 9 (Weibull first trait)
+  "weibull", "non", "non",
+  # Dataset 10 (Weibull first two traits)
+  "weibull", "weibull", "non"
+)
 
-#####################################
+
+
+
+
+
+
+
+
+################################################################################################################################### 1.R
+###################################################################################################################################
+
 
 
 
@@ -596,80 +628,732 @@ for(i in 1:n_datasets){
 }
 
 
-############################ correlation
-# Initialize list to store correlation matrices for each trait separately across all dataset types
-correlation_matrices_all_datasets = list()
 
-dataset_types=list(datasets,
-                   datasets_log_skewed,
-                   datasets_log_log,
-                   datasets_gamma_skewed,
-                   datasets_gamma_gamma,
-                   datasets_weibull_skewed,
-                   datasets_weibull_weibull,
-                   datasets_log_gamma,
-                   datasets_log_weibull,
-                   datasets_gamma_weibull)
+################################################################################################################################### 2.R
+###################################################################################################################################
+#dataframe, trait_cols, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL, stat_analysis = NULL
+#this is a comparative score comparing species or environments
+RDPI=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
 
 
-# Loop through the 10 different dataset types
-for (dataset_type_index in 1:length(dataset_types)) {
-  
-  # Initialize list to store correlation matrices per trait for the current dataset type
-  correlation_matrices_per_trait = list()
-  
-  # Loop through each trait (3 traits)
-  for (trait_index in 1:3) {
-    
-    
-    # Initialize a data frame to store scores for all datasets for the current trait
-    scores_df = data.frame(
-      CV_t = numeric(n_datasets),
-      RNS = numeric(n_datasets),
-      D_slope = numeric(n_datasets),
-      RC = numeric(n_datasets),
-      CVm = numeric(n_datasets),
-      CVmd = numeric(n_datasets),
-      Pi_adj_mean = numeric(n_datasets),
-      #PPF = numeric(n_datasets),
-      Pi = numeric(n_datasets),
-      PImd = numeric(n_datasets),
-      PILSM = numeric(n_datasets),
-      RTR = numeric(n_datasets),
-      PIR = numeric(n_datasets)
-    )
-    
-    # Loop over the 20 datasets for the current dataset type
-    for (i in 1:n_datasets) {
-      
-      # For each dataset, extract the scores for the current trait and store them in the scores_df
-      scores_df$CV_t[i] = as.numeric(CV_t[[dataset_type_index]][[i]][trait_index])
-      scores_df$RNS[i] = as.numeric(RNS[[dataset_type_index]][[i]][trait_index])
-      scores_df$D_slope[i] = as.numeric(D_slope[[dataset_type_index]][[i]][trait_index])
-      scores_df$RC[i] = as.numeric(RC[[dataset_type_index]][[i]][trait_index])
-      scores_df$CVm[i] = as.numeric(CVm[[dataset_type_index]][[i]][trait_index])
-      scores_df$CVmd[i] = as.numeric(CVmd[[dataset_type_index]][[i]][trait_index])
-      scores_df$Pi_adj_mean[i] = as.numeric(Pi_adj_mean[[dataset_type_index]][[i]][trait_index])
-      #scores_df$PPF[i] = as.numeric(PPF[[dataset_type_index]][[i]][trait_index])
-      scores_df$Pi[i] = as.numeric(Pi[[dataset_type_index]][[i]][trait_index])
-      scores_df$PImd[i] = as.numeric(PImd[[dataset_type_index]][[i]][trait_index])
-      scores_df$PILSM[i] = as.numeric(PILSM[[dataset_type_index]][[i]][trait_index][[1]])
-      scores_df$RTR[i] = as.numeric(RTR[[dataset_type_index]][[i]][trait_index])
-      scores_df$PIR[i] = as.numeric(PIR[[dataset_type_index]][[i]][trait_index])
-    }
-    
-    # Calculate the correlation matrix for the current trait across the 20 datasets
-    correlation_matrix = cor(scores_df, use = "pairwise.complete.obs")
-    
-    # Store the correlation matrix for the current trait in the list
-    correlation_matrices_per_trait[[trait_index]] = correlation_matrix
-  }
-  
-  # Store the correlation matrices for all 3 traits for the current dataset type
-  correlation_matrices_all_datasets[[dataset_type_index]] = correlation_matrices_per_trait
+for(i in 1:n_datasets){
+  RDPI[[1]][[i]]=rdpi_calculation(datasets[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI[[2]][[i]]=rdpi_calculation(datasets_log_skewed[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI[[3]][[i]]=rdpi_calculation(datasets_log_log[[i]],factors = 1,trait_cols = c(3,4,5)) 
+  RDPI[[4]][[i]]=rdpi_calculation(datasets_log_gamma[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI[[5]][[i]]=rdpi_calculation(datasets_log_weibull[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI[[6]][[i]]=rdpi_calculation(datasets_gamma_skewed[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI[[7]][[i]]=rdpi_calculation(datasets_gamma_gamma[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI[[8]][[i]]=rdpi_calculation(datasets_gamma_weibull[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI[[9]][[i]]=rdpi_calculation(datasets_weibull_skewed[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI[[10]][[i]]=rdpi_calculation(datasets_weibull_weibull[[i]],factors = 1,trait_cols = c(3,4,5))
+  print(i)
 }
 
-# Output: correlation_matrices_all_traits will be a list of correlation matrices
-# - Outer list: dataset types (10 types)
-# - Inner list: traits (3 traits)
-# - Each element: a correlation matrix for the scores for that trait and dataset type
+
+
+################################
+
+
+#this is a comparative score comparing species or environments
+RDPI_mean=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  RDPI_mean[[1]][[i]]=rdpi_mean_calculation(datasets[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI_mean[[2]][[i]]=rdpi_mean_calculation(datasets_log_skewed[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI_mean[[3]][[i]]=rdpi_mean_calculation(datasets_log_log[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI_mean[[4]][[i]]=rdpi_mean_calculation(datasets_log_gamma[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI_mean[[5]][[i]]=rdpi_mean_calculation(datasets_log_weibull[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI_mean[[6]][[i]]=rdpi_mean_calculation(datasets_gamma_skewed[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI_mean[[7]][[i]]=rdpi_mean_calculation(datasets_gamma_gamma[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI_mean[[8]][[i]]=rdpi_mean_calculation(datasets_gamma_weibull[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI_mean[[9]][[i]]=rdpi_mean_calculation(datasets_weibull_skewed[[i]],factors = 1,trait_cols = c(3,4,5))
+  RDPI_mean[[10]][[i]]=rdpi_mean_calculation(datasets_weibull_weibull[[i]],factors = 1,trait_cols = c(3,4,5))
+  print(i)
+}
+
+
+##############################
+
+
+
+#this is a comparative score comparing species or environments
+ESPI=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  ESPI[[1]][[i]]=calculate_ESPI(datasets[[i]],env_col = 1,trait_cols = c(3,4,5))
+  ESPI[[2]][[i]]=calculate_ESPI(datasets_log_skewed[[i]],env_col = 1,trait_cols = c(3,4,5))
+  ESPI[[3]][[i]]=calculate_ESPI(datasets_log_log[[i]],env_col = 1,trait_cols = c(3,4,5))
+  ESPI[[4]][[i]]=calculate_ESPI(datasets_log_gamma[[i]],env_col = 1,trait_cols = c(3,4,5))
+  ESPI[[5]][[i]]=calculate_ESPI(datasets_log_weibull[[i]],env_col = 1,trait_cols = c(3,4,5))
+  ESPI[[6]][[i]]=calculate_ESPI(datasets_gamma_skewed[[i]],env_col = 1,trait_cols = c(3,4,5))
+  ESPI[[7]][[i]]=calculate_ESPI(datasets_gamma_gamma[[i]],env_col = 1,trait_cols = c(3,4,5))
+  ESPI[[8]][[i]]=calculate_ESPI(datasets_gamma_weibull[[i]],env_col = 1,trait_cols = c(3,4,5))
+  ESPI[[9]][[i]]=calculate_ESPI(datasets_weibull_skewed[[i]],env_col = 1,trait_cols = c(3,4,5))
+  ESPI[[10]][[i]]=calculate_ESPI(datasets_weibull_weibull[[i]],env_col = 1,trait_cols = c(3,4,5))
+  print(i)
+}
+
+##################################
+
+# this score might not be suitable for comparison since it compares envs by trait combinations and therefor for the same dataset yields more scores 
+ESPIID=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  ESPIID[[1]][[i]]=espiid_calculation(datasets[[i]],factors = 1,trait_cols = c(3,4,5))
+  ESPIID[[2]][[i]]=espiid_calculation(datasets_log_skewed[[i]],factors = 1,trait_cols = c(3,4,5))
+  ESPIID[[3]][[i]]=espiid_calculation(datasets_log_log[[i]],factors = 1,trait_cols = c(3,4,5))
+  ESPIID[[4]][[i]]=espiid_calculation(datasets_log_gamma[[i]],factors = 1,trait_cols = c(3,4,5))
+  ESPIID[[5]][[i]]=espiid_calculation(datasets_log_weibull[[i]],factors = 1,trait_cols = c(3,4,5))
+  ESPIID[[6]][[i]]=espiid_calculation(datasets_gamma_skewed[[i]],factors = 1,trait_cols = c(3,4,5))
+  ESPIID[[7]][[i]]=espiid_calculation(datasets_gamma_gamma[[i]],factors = 1,trait_cols = c(3,4,5))
+  ESPIID[[8]][[i]]=espiid_calculation(datasets_gamma_weibull[[i]],factors = 1,trait_cols = c(3,4,5))
+  ESPIID[[9]][[i]]=espiid_calculation(datasets_weibull_skewed[[i]],factors = 1,trait_cols = c(3,4,5))
+  ESPIID[[10]][[i]]=espiid_calculation(datasets_weibull_weibull[[i]],factors = 1,trait_cols = c(3,4,5))
+  print(i)
+}
+
+################################################################################################################################### 3.R
+###################################################################################################################################
+
+
+PSI=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  PSI[[1]][[i]]=calculate_PSI(datasets[[i]],env_col = 1,trait_cols = c(3,4,5))
+  PSI[[2]][[i]]=calculate_PSI(datasets_log_skewed[[i]],env_col = 1,trait_cols = c(3,4,5))
+  PSI[[3]][[i]]=calculate_PSI(datasets_log_log[[i]],env_col = 1,trait_cols = c(3,4,5))
+  PSI[[4]][[i]]=calculate_PSI(datasets_log_gamma[[i]],env_col = 1,trait_cols = c(3,4,5))
+  PSI[[5]][[i]]=calculate_PSI(datasets_log_weibull[[i]],env_col = 1,trait_cols = c(3,4,5))
+  PSI[[6]][[i]]=calculate_PSI(datasets_gamma_skewed[[i]],env_col = 1,trait_cols = c(3,4,5))
+  PSI[[7]][[i]]=calculate_PSI(datasets_gamma_gamma[[i]],env_col = 1,trait_cols = c(3,4,5))
+  PSI[[8]][[i]]=calculate_PSI(datasets_gamma_weibull[[i]],env_col = 1,trait_cols = c(3,4,5))
+  PSI[[9]][[i]]=calculate_PSI(datasets_weibull_skewed[[i]],env_col = 1,trait_cols = c(3,4,5))
+  PSI[[10]][[i]]=calculate_PSI(datasets_weibull_weibull[[i]],env_col = 1,trait_cols = c(3,4,5))
+  print(i)
+}
+
+
+
+###############################
+
+
+
+
+
+
+
+# this is to be compared to ESPIID and some other score which I still have to determine
+RPI=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  RPI[[1]][[i]]=calculate_RPI(datasets[[i]],env_col = 1,trait_cols = c(3,4,5))
+  RPI[[2]][[i]]=calculate_RPI(datasets_log_skewed[[i]],env_col = 1,trait_cols = c(3,4,5))
+  RPI[[3]][[i]]=calculate_RPI(datasets_log_log[[i]],env_col = 1,trait_cols = c(3,4,5))
+  RPI[[4]][[i]]=calculate_RPI(datasets_log_gamma[[i]],env_col = 1,trait_cols = c(3,4,5))
+  RPI[[5]][[i]]=calculate_RPI(datasets_log_weibull[[i]],env_col = 1,trait_cols = c(3,4,5))
+  RPI[[6]][[i]]=calculate_RPI(datasets_gamma_skewed[[i]],env_col = 1,trait_cols = c(3,4,5))
+  RPI[[7]][[i]]=calculate_RPI(datasets_gamma_gamma[[i]],env_col = 1,trait_cols = c(3,4,5))
+  RPI[[8]][[i]]=calculate_RPI(datasets_gamma_weibull[[i]],env_col = 1,trait_cols = c(3,4,5))
+  RPI[[9]][[i]]=calculate_RPI(datasets_weibull_skewed[[i]],env_col = 1,trait_cols = c(3,4,5))
+  RPI[[10]][[i]]=calculate_RPI(datasets_weibull_weibull[[i]],env_col = 1,trait_cols = c(3,4,5))
+  print(i)
+}
+
+########################################
+
+
+
+
+PQ=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  PQ[[1]][[i]]=calculate_PQ(datasets[[i]],env_col = 1,trait_cols = c(3,4,5),factor_col=1)
+  PQ[[2]][[i]]=calculate_PQ(datasets_log_skewed[[i]],env_col = 1,trait_cols = c(3,4,5),factor_col=1)
+  PQ[[3]][[i]]=calculate_PQ(datasets_log_log[[i]],env_col = 1,trait_cols = c(3,4,5),factor_col=1)
+  PQ[[4]][[i]]=calculate_PQ(datasets_log_gamma[[i]],env_col = 1,trait_cols = c(3,4,5),factor_col=1)
+  PQ[[5]][[i]]=calculate_PQ(datasets_log_weibull[[i]],env_col = 1,trait_cols = c(3,4,5),factor_col=1)
+  PQ[[6]][[i]]=calculate_PQ(datasets_gamma_skewed[[i]],env_col = 1,trait_cols = c(3,4,5),factor_col=1)
+  PQ[[7]][[i]]=calculate_PQ(datasets_gamma_gamma[[i]],env_col = 1,trait_cols = c(3,4,5),factor_col=1)
+  PQ[[8]][[i]]=calculate_PQ(datasets_gamma_weibull[[i]],env_col = 1,trait_cols = c(3,4,5),factor_col=1)
+  PQ[[9]][[i]]=calculate_PQ(datasets_weibull_skewed[[i]],env_col = 1,trait_cols = c(3,4,5),factor_col=1)
+  PQ[[10]][[i]]=calculate_PQ(datasets_weibull_weibull[[i]],env_col = 1,trait_cols = c(3,4,5),factor_col=1)
+  print(i)
+}
+
+
+
+
+
+
+
+
+
+###############################################
+
+#this is supposed to be compared with the ESPIID 
+  
+PR=list(
+    non=list(),
+    log=list(),
+    log_log=list(),
+    log_gamma=list(),
+    log_weibull=list(),
+    gamma=list(),
+    gamma_gamma=list(),
+    gamma_weibull=list(),
+    weibull=list(),
+    weibull_weibull=list()
+  )
+
+
+for(i in 1:n_datasets){
+  PR[[1]][[i]]=calculate_PR(datasets[[i]],env_col = 1,trait_cols = c(3,4,5),across=T)
+  PR[[2]][[i]]=calculate_PR(datasets_log_skewed[[i]],env_col = 1,trait_cols = c(3,4,5),across=T)
+  PR[[3]][[i]]=calculate_PR(datasets_log_log[[i]],env_col = 1,trait_cols = c(3,4,5),across=T)
+  PR[[4]][[i]]=calculate_PR(datasets_log_gamma[[i]],env_col = 1,trait_cols = c(3,4,5),across=T)
+  PR[[5]][[i]]=calculate_PR(datasets_log_weibull[[i]],env_col = 1,trait_cols = c(3,4,5),across=T)
+  PR[[6]][[i]]=calculate_PR(datasets_gamma_skewed[[i]],env_col = 1,trait_cols = c(3,4,5),across=T)
+  PR[[7]][[i]]=calculate_PR(datasets_gamma_gamma[[i]],env_col = 1,trait_cols = c(3,4,5),across=T)
+  PR[[8]][[i]]=calculate_PR(datasets_gamma_weibull[[i]],env_col = 1,trait_cols = c(3,4,5),across=T)
+  PR[[9]][[i]]=calculate_PR(datasets_weibull_skewed[[i]],env_col = 1,trait_cols = c(3,4,5),across=T)
+  PR[[10]][[i]]=calculate_PR(datasets_weibull_weibull[[i]],env_col = 1,trait_cols = c(3,4,5),across=T)
+  print(i)
+}
+
+###############################################
+
+
+
+NRW=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  NRW[[1]][[i]]=calculate_NRW(datasets[[i]],trait_cols = c(3,4,5))
+  NRW[[2]][[i]]=calculate_NRW(datasets_log_skewed[[i]],trait_cols = c(3,4,5))
+  NRW[[3]][[i]]=calculate_NRW(datasets_log_log[[i]],trait_cols = c(3,4,5))
+  NRW[[4]][[i]]=calculate_NRW(datasets_log_gamma[[i]],trait_cols = c(3,4,5))
+  NRW[[5]][[i]]=calculate_NRW(datasets_log_weibull[[i]],trait_cols = c(3,4,5))
+  NRW[[6]][[i]]=calculate_NRW(datasets_gamma_skewed[[i]],trait_cols = c(3,4,5))
+  NRW[[7]][[i]]=calculate_NRW(datasets_gamma_gamma[[i]],trait_cols = c(3,4,5))
+  NRW[[8]][[i]]=calculate_NRW(datasets_gamma_weibull[[i]],trait_cols = c(3,4,5))
+  NRW[[9]][[i]]=calculate_NRW(datasets_weibull_skewed[[i]],trait_cols = c(3,4,5))
+  NRW[[10]][[i]]=calculate_NRW(datasets_weibull_weibull[[i]],trait_cols = c(3,4,5))
+  print(i)
+}
+
+
+###############################################
+
+
+
+##this will go with the ESPIID and PR and some other scores 
+
+ESP=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  ESP[[1]][[i]]=calculate_ESP(datasets[[i]],env_col=1,trait_cols = c(3,4,5))
+  ESP[[2]][[i]]=calculate_ESP(datasets_log_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  ESP[[3]][[i]]=calculate_ESP(datasets_log_log[[i]],env_col=1,trait_cols = c(3,4,5))
+  ESP[[4]][[i]]=calculate_ESP(datasets_log_gamma[[i]],env_col=1,trait_cols = c(3,4,5))
+  ESP[[5]][[i]]=calculate_ESP(datasets_log_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  ESP[[6]][[i]]=calculate_ESP(datasets_gamma_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  ESP[[7]][[i]]=calculate_ESP(datasets_gamma_gamma[[i]],env_col=1,trait_cols = c(3,4,5))
+  ESP[[8]][[i]]=calculate_ESP(datasets_gamma_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  ESP[[9]][[i]]=calculate_ESP(datasets_weibull_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  ESP[[10]][[i]]=calculate_ESP(datasets_weibull_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  print(i)
+}
+
+
+###############################################
+
+
+
+##this is not to be calculated for comparison since it needs definition of control and stress environment
+
+PD=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  PD[[1]][[i]]=calculate_PD(datasets[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  PD[[2]][[i]]=calculate_PD(datasets_log_skewed[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  PD[[3]][[i]]=calculate_PD(datasets_log_log[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  PD[[4]][[i]]=calculate_PD(datasets_log_gamma[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  PD[[5]][[i]]=calculate_PD(datasets_log_weibull[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  PD[[6]][[i]]=calculate_PD(datasets_gamma_skewed[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  PD[[7]][[i]]=calculate_PD(datasets_gamma_gamma[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  PD[[8]][[i]]=calculate_PD(datasets_gamma_weibull[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  PD[[9]][[i]]=calculate_PD(datasets_weibull_skewed[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  PD[[10]][[i]]=calculate_PD(datasets_weibull_weibull[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  print(i)
+}
+
+###########################################
+
+
+##this is not to be calculated for comparison since it needs definition of control and stress environment
+
+FPI=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  FPI[[1]][[i]]=calculate_FPI(datasets[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  FPI[[2]][[i]]=calculate_FPI(datasets_log_skewed[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  FPI[[3]][[i]]=calculate_FPI(datasets_log_log[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  FPI[[4]][[i]]=calculate_FPI(datasets_log_gamma[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  FPI[[5]][[i]]=calculate_FPI(datasets_log_weibull[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  FPI[[6]][[i]]=calculate_FPI(datasets_gamma_skewed[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  FPI[[7]][[i]]=calculate_FPI(datasets_gamma_gamma[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  FPI[[8]][[i]]=calculate_FPI(datasets_gamma_weibull[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  FPI[[9]][[i]]=calculate_FPI(datasets_weibull_skewed[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  FPI[[10]][[i]]=calculate_FPI(datasets_weibull_weibull[[i]],env_col=1,trait_cols = c(3,4,5),control_env = 1, stress_env = 2)
+  print(i)
+}
+
+
+
+###################################
+
+##this is not to be calculated for comparison since it needs definition of control and stress environment
+
+TSP=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  TSP[[1]][[i]]=calculate_TPS(datasets[[i]],env_col=1,trait_cols = c(3,4,5),native_env = 1, transplanted_env = 2)
+  TSP[[2]][[i]]=calculate_TPS(datasets_log_skewed[[i]],env_col=1,trait_cols = c(3,4,5),native_env = 1, transplanted_env = 2)
+  TSP[[3]][[i]]=calculate_TPS(datasets_log_log[[i]],env_col=1,trait_cols = c(3,4,5),native_env = 1, transplanted_env = 2)
+  TSP[[4]][[i]]=calculate_TPS(datasets_log_gamma[[i]],env_col=1,trait_cols = c(3,4,5),native_env = 1, transplanted_env = 2)
+  TSP[[5]][[i]]=calculate_TPS(datasets_log_weibull[[i]],env_col=1,trait_cols = c(3,4,5),native_env = 1, transplanted_env = 2)
+  TSP[[6]][[i]]=calculate_TPS(datasets_gamma_skewed[[i]],env_col=1,trait_cols = c(3,4,5),native_env = 1, transplanted_env = 2)
+  TSP[[7]][[i]]=calculate_TPS(datasets_gamma_gamma[[i]],env_col=1,trait_cols = c(3,4,5),native_env = 1, transplanted_env = 2)
+  TSP[[8]][[i]]=calculate_TPS(datasets_gamma_weibull[[i]],env_col=1,trait_cols = c(3,4,5),native_env = 1, transplanted_env = 2)
+  TSP[[9]][[i]]=calculate_TPS(datasets_weibull_skewed[[i]],env_col=1,trait_cols = c(3,4,5),native_env = 1, transplanted_env = 2)
+  TSP[[10]][[i]]=calculate_TPS(datasets_weibull_weibull[[i]],env_col=1,trait_cols = c(3,4,5),native_env = 1, transplanted_env = 2)
+  print(i)
+}
+
+
+
+################################################################################################################################### 4.R
+###################################################################################################################################
+
+#calculate_DPI cannot be used since it is used for time resolved data 
+
+
+
+CEV=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  CEV[[1]][[i]]=calculate_CEV(datasets[[i]],trait_cols = c(3,4,5))
+  CEV[[2]][[i]]=calculate_CEV(datasets_log_skewed[[i]],trait_cols = c(3,4,5))
+  CEV[[3]][[i]]=calculate_CEV(datasets_log_log[[i]],trait_cols = c(3,4,5))
+  CEV[[4]][[i]]=calculate_CEV(datasets_log_gamma[[i]],trait_cols = c(3,4,5))
+  CEV[[5]][[i]]=calculate_CEV(datasets_log_weibull[[i]],trait_cols = c(3,4,5))
+  CEV[[6]][[i]]=calculate_CEV(datasets_gamma_skewed[[i]],trait_cols = c(3,4,5))
+  CEV[[7]][[i]]=calculate_CEV(datasets_gamma_gamma[[i]],trait_cols = c(3,4,5))
+  CEV[[8]][[i]]=calculate_CEV(datasets_gamma_weibull[[i]],trait_cols = c(3,4,5))
+  CEV[[9]][[i]]=calculate_CEV(datasets_weibull_skewed[[i]],trait_cols = c(3,4,5))
+  CEV[[10]][[i]]=calculate_CEV(datasets_weibull_weibull[[i]],trait_cols = c(3,4,5))
+  print(i)
+}
+
+
+#################################
+
+#calculate_PRI cannot be used since it is used for the comparison of environments 
+
+#################################
+
+
+
+
+PFI=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  PFI[[1]][[i]]=calculate_PFI(datasets[[i]],baseline_cols=c(1,1,1),trait_cols = c(3,4,5))
+  PFI[[2]][[i]]=calculate_PFI(datasets_log_skewed[[i]],baseline_cols=c(1,1,1),trait_cols = c(3,4,5))
+  PFI[[3]][[i]]=calculate_PFI(datasets_log_log[[i]],baseline_cols=c(1,1,1),trait_cols = c(3,4,5))
+  PFI[[4]][[i]]=calculate_PFI(datasets_log_gamma[[i]],baseline_cols=c(1,1,1),trait_cols = c(3,4,5))
+  PFI[[5]][[i]]=calculate_PFI(datasets_log_weibull[[i]],baseline_cols=c(1,1,1),trait_cols = c(3,4,5))
+  PFI[[6]][[i]]=calculate_PFI(datasets_gamma_skewed[[i]],baseline_cols=c(1,1,1),trait_cols = c(3,4,5))
+  PFI[[7]][[i]]=calculate_PFI(datasets_gamma_gamma[[i]],baseline_cols=c(1,1,1),trait_cols = c(3,4,5))
+  PFI[[8]][[i]]=calculate_PFI(datasets_gamma_weibull[[i]],baseline_cols=c(1,1,1),trait_cols = c(3,4,5))
+  PFI[[9]][[i]]=calculate_PFI(datasets_weibull_skewed[[i]],baseline_cols=c(1,1,1),trait_cols = c(3,4,5))
+  PFI[[10]][[i]]=calculate_PFI(datasets_weibull_weibull[[i]],baseline_cols=c(1,1,1),trait_cols = c(3,4,5))
+  print(i)
+}
+
+
+#################################
+
+#calculate_SPI cannot be used for cluster analysis since it is used for the comparison of environments
+
+#################################
+
+
+
+APC=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  APC[[1]][[i]]=calculate_APC(datasets[[i]],env_col=1,trait_cols = c(3,4,5))
+  APC[[2]][[i]]=calculate_APC(datasets_log_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  APC[[3]][[i]]=calculate_APC(datasets_log_log[[i]],env_col=1,trait_cols = c(3,4,5))
+  APC[[4]][[i]]=calculate_APC(datasets_log_gamma[[i]],env_col=1,trait_cols = c(3,4,5))
+  APC[[5]][[i]]=calculate_APC(datasets_log_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  APC[[6]][[i]]=calculate_APC(datasets_gamma_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  APC[[7]][[i]]=calculate_APC(datasets_gamma_gamma[[i]],env_col=1,trait_cols = c(3,4,5))
+  APC[[8]][[i]]=calculate_APC(datasets_gamma_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  APC[[9]][[i]]=calculate_APC(datasets_weibull_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  APC[[10]][[i]]=calculate_APC(datasets_weibull_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  print(i)
+}
+
+
+##################################
+
+
+
+
+SI=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  SI[[1]][[i]]=calculate_SI(datasets[[i]],env_col=1,trait_cols = c(3,4,5))
+  SI[[2]][[i]]=calculate_SI(datasets_log_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  SI[[3]][[i]]=calculate_SI(datasets_log_log[[i]],env_col=1,trait_cols = c(3,4,5))
+  SI[[4]][[i]]=calculate_SI(datasets_log_gamma[[i]],env_col=1,trait_cols = c(3,4,5))
+  SI[[5]][[i]]=calculate_SI(datasets_log_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  SI[[6]][[i]]=calculate_SI(datasets_gamma_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  SI[[7]][[i]]=calculate_SI(datasets_gamma_gamma[[i]],env_col=1,trait_cols = c(3,4,5))
+  SI[[8]][[i]]=calculate_SI(datasets_gamma_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  SI[[9]][[i]]=calculate_SI(datasets_weibull_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  SI[[10]][[i]]=calculate_SI(datasets_weibull_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  print(i)
+}
+
+##################################
+
+
+
+
+RSI=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  RSI[[1]][[i]]=calculate_RSI(datasets[[i]],env_col=1,trait_cols = c(3,4,5))
+  RSI[[2]][[i]]=calculate_RSI(datasets_log_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  RSI[[3]][[i]]=calculate_RSI(datasets_log_log[[i]],env_col=1,trait_cols = c(3,4,5))
+  RSI[[4]][[i]]=calculate_RSI(datasets_log_gamma[[i]],env_col=1,trait_cols = c(3,4,5))
+  RSI[[5]][[i]]=calculate_RSI(datasets_log_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  RSI[[6]][[i]]=calculate_RSI(datasets_gamma_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  RSI[[7]][[i]]=calculate_RSI(datasets_gamma_gamma[[i]],env_col=1,trait_cols = c(3,4,5))
+  RSI[[8]][[i]]=calculate_RSI(datasets_gamma_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  RSI[[9]][[i]]=calculate_RSI(datasets_weibull_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  RSI[[10]][[i]]=calculate_RSI(datasets_weibull_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  print(i)
+}
+
+##################################
+
+
+
+
+
+EVS=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  EVS[[1]][[i]]=calculate_EVS(datasets[[i]],env_col=1,trait_cols = c(3,4,5))
+  EVS[[2]][[i]]=calculate_EVS(datasets_log_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  EVS[[3]][[i]]=calculate_EVS(datasets_log_log[[i]],env_col=1,trait_cols = c(3,4,5))
+  EVS[[4]][[i]]=calculate_EVS(datasets_log_gamma[[i]],env_col=1,trait_cols = c(3,4,5))
+  EVS[[5]][[i]]=calculate_EVS(datasets_log_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  EVS[[6]][[i]]=calculate_EVS(datasets_gamma_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  EVS[[7]][[i]]=calculate_EVS(datasets_gamma_gamma[[i]],env_col=1,trait_cols = c(3,4,5))
+  EVS[[8]][[i]]=calculate_EVS(datasets_gamma_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  EVS[[9]][[i]]=calculate_EVS(datasets_weibull_skewed[[i]],env_col=1,trait_cols = c(3,4,5))
+  EVS[[10]][[i]]=calculate_EVS(datasets_weibull_weibull[[i]],env_col=1,trait_cols = c(3,4,5))
+  print(i)
+}
+
+
+###############################
+
+
+
+
+MVPi=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  MVPi[[1]][[i]]=calculate_MVPi(datasets[[i]],env_col=1,trait_cols = c(3,4,5),n_axes = 2)
+  MVPi[[2]][[i]]=calculate_MVPi(datasets_log_skewed[[i]],env_col=1,trait_cols = c(3,4,5),n_axes = 2)
+  MVPi[[3]][[i]]=calculate_MVPi(datasets_log_log[[i]],env_col=1,trait_cols = c(3,4,5),n_axes = 2)
+  MVPi[[4]][[i]]=calculate_MVPi(datasets_log_gamma[[i]],env_col=1,trait_cols = c(3,4,5),n_axes = 2)
+  MVPi[[5]][[i]]=calculate_MVPi(datasets_log_weibull[[i]],env_col=1,trait_cols = c(3,4,5),n_axes = 2)
+  MVPi[[6]][[i]]=calculate_MVPi(datasets_gamma_skewed[[i]],env_col=1,trait_cols = c(3,4,5),n_axes = 2)
+  MVPi[[7]][[i]]=calculate_MVPi(datasets_gamma_gamma[[i]],env_col=1,trait_cols = c(3,4,5),n_axes = 2)
+  MVPi[[8]][[i]]=calculate_MVPi(datasets_gamma_weibull[[i]],env_col=1,trait_cols = c(3,4,5),n_axes = 2)
+  MVPi[[9]][[i]]=calculate_MVPi(datasets_weibull_skewed[[i]],env_col=1,trait_cols = c(3,4,5),n_axes = 2)
+  MVPi[[10]][[i]]=calculate_MVPi(datasets_weibull_weibull[[i]],env_col=1,trait_cols = c(3,4,5),n_axes = 2)
+  print(i)
+}
+
+
+###############################
+
+#calculate_SPM cannot be used for clustering analysis because it makes assumptioons about native and non native environments
+
+###############################
+
+
+Plasticity_Ratio=list(
+  non=list(),
+  log=list(),
+  log_log=list(),
+  log_gamma=list(),
+  log_weibull=list(),
+  gamma=list(),
+  gamma_gamma=list(),
+  gamma_weibull=list(),
+  weibull=list(),
+  weibull_weibull=list()
+)
+
+
+for(i in 1:n_datasets){
+  Plasticity_Ratio[[1]][[i]]=calculate_Plasticity_Ratio(datasets[[i]],env_col=1,trait_cols = c(3,4,5),pop_col=1)
+  Plasticity_Ratio[[2]][[i]]=calculate_Plasticity_Ratio(datasets_log_skewed[[i]],env_col=1,trait_cols = c(3,4,5),pop_col=1)
+  Plasticity_Ratio[[3]][[i]]=calculate_Plasticity_Ratio(datasets_log_log[[i]],env_col=1,trait_cols = c(3,4,5),pop_col=1)
+  Plasticity_Ratio[[4]][[i]]=calculate_Plasticity_Ratio(datasets_log_gamma[[i]],env_col=1,trait_cols = c(3,4,5),pop_col=1)
+  Plasticity_Ratio[[5]][[i]]=calculate_Plasticity_Ratio(datasets_log_weibull[[i]],env_col=1,trait_cols = c(3,4,5),pop_col=1)
+  Plasticity_Ratio[[6]][[i]]=calculate_Plasticity_Ratio(datasets_gamma_skewed[[i]],env_col=1,trait_cols = c(3,4,5),pop_col=1)
+  Plasticity_Ratio[[7]][[i]]=calculate_Plasticity_Ratio(datasets_gamma_gamma[[i]],env_col=1,trait_cols = c(3,4,5),pop_col=1)
+  Plasticity_Ratio[[8]][[i]]=calculate_Plasticity_Ratio(datasets_gamma_weibull[[i]],env_col=1,trait_cols = c(3,4,5),pop_col=1)
+  Plasticity_Ratio[[9]][[i]]=calculate_Plasticity_Ratio(datasets_weibull_skewed[[i]],env_col=1,trait_cols = c(3,4,5),pop_col=1)
+  Plasticity_Ratio[[10]][[i]]=calculate_Plasticity_Ratio(datasets_weibull_weibull[[i]],env_col=1,trait_cols = c(3,4,5),pop_col=1)
+  print(i)
+}
+
+

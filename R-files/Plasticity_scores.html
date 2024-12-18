@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bene" />
 
-<meta name="date" content="2024-10-16" />
+<meta name="date" content="2024-11-05" />
 
 <title>Trait Analysis in Arabidopsis thaliana and Capsella bursa-pastoris</title>
 
@@ -1482,7 +1482,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Trait Analysis in Arabidopsis thaliana and
 Capsella bursa-pastoris</h1>
 <h4 class="author">Bene</h4>
-<h4 class="date">2024-10-16</h4>
+<h4 class="date">2024-11-05</h4>
 
 </div>
 
@@ -3675,6 +3675,277 @@ plants</li>
 <li>Flood induced phenotypic plasticity in amphibious genus Elatine
 (Elatinaceae)</li>
 </ul>
+<div id="section" class="section level57">
+<p class="heading"></p>
+</div>
+</div>
+</div>
+</div>
+<div id="new-beginnings" class="section level1">
+<h1>New Beginnings</h1>
+<div id="dataset-structure-and-sample-details" class="section level2">
+<h2>1. Dataset Structure and Sample Details</h2>
+<ul>
+<li><strong>Objective</strong>: Create synthetic datasets representing
+trait variability across controlled environmental gradients, enabling
+robust analysis of reaction norms and plasticity scores.</li>
+</ul>
+<div id="dataset-composition" class="section level3">
+<h3>Dataset Composition</h3>
+<ul>
+<li><p><strong>Genotypes</strong>: Two genotypes to analyze
+genotype-by-environment (GxE) interactions.</p></li>
+<li><p><strong>Traits</strong>: Three traits per genotype, representing
+different biological functions (e.g., growth rate, defense response,
+physiological adaptation).</p></li>
+<li><p><strong>Environmental Conditions</strong>: Five distinct
+environmental levels per genotype, arranged along a gradient (e.g., low
+to high light, temperature, or moisture) to capture optimal to
+stress-inducing responses.</p></li>
+<li><p><strong>Replicates</strong>: Six samples per genotype-environment
+combination, reflecting realistic biological variability.</p></li>
+<li><p><strong>Sample Calculation</strong>:</p>
+<ul>
+<li>Total samples per genotype: <span class="math inline">\(3 \text{
+traits} \times 5 \text{ environmental conditions} \times 6 \text{
+replicates} = 90 \text{ samples per genotype}\)</span></li>
+<li>Total samples for the study: <span class="math inline">\(2 \text{
+genotypes} \times 90 = 180 \text{ samples}\)</span></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="reaction-norm-types-and-experimental-setup" class="section level2">
+<h2>2. Reaction Norm Types and Experimental Setup</h2>
+<ul>
+<li><strong>Purpose</strong>: Establish structured reaction norms for
+each trait-environment combination to enable controlled comparison of
+plasticity scores.</li>
+</ul>
+<div id="reaction-norm-categories" class="section level3">
+<h3>Reaction Norm Categories</h3>
+<ul>
+<li><strong>Linear Norms</strong>: Consistent positive, negative, or
+zero slopes (environmentally insensitive).</li>
+<li><strong>Nonlinear Norms</strong>: Quadratic (curved) norms, with
+peaks or troughs at intermediate environments.</li>
+<li><strong>Sigmoidal Norms</strong>: S-shaped responses, with gradual
+adaptation to extremes and steeper middle responses.</li>
+<li><strong>Threshold-based Norms</strong>: Traits change abruptly after
+an environmental threshold, simulating a rapid stress response.</li>
+</ul>
+</div>
+<div id="reaction-norm-combinations" class="section level3">
+<h3>Reaction Norm Combinations</h3>
+<ul>
+<li><strong>Linear vs. Linear (non-crossing)</strong>: Genotypes show
+similar responses without interaction.</li>
+<li><strong>Linear vs. Linear (crossing)</strong>: Interaction points
+where genotypes differ across the gradient.</li>
+<li><strong>Linear vs. Nonlinear</strong>: Mixed norms (e.g., linear
+vs. quadratic) with or without crossing points, for complex GxE
+interactions.</li>
+</ul>
+</div>
+</div>
+<div id="plasticity-score-calculation" class="section level2">
+<h2>3. Plasticity Score Calculation</h2>
+<ul>
+<li><strong>Objective</strong>: Quantify trait variability across
+environments using a set of plasticity scores.</li>
+</ul>
+<div id="scores-to-be-calculated" class="section level3">
+<h3>Scores to be Calculated</h3>
+<ul>
+<li><strong>Included Scores</strong>: <code>CV_t</code>,
+<code>RNS</code>, <code>D_slope</code>, <code>RC</code>,
+<code>CVm</code>, <code>Pi</code>, <code>RTR</code>, <code>PSI</code>,
+<code>APC</code>, <code>RSI</code>, among others.</li>
+<li><strong>Calculation Process</strong>: Each score is computed across
+traits, genotypes, and environments, yielding a comprehensive data
+matrix for clustering analysis.</li>
+</ul>
+</div>
+</div>
+<div id="clustering-and-analytical-methods" class="section level2">
+<h2>4. Clustering and Analytical Methods</h2>
+<div id="clustering-analysis" class="section level3">
+<h3>Clustering Analysis</h3>
+<ul>
+<li><strong>Methods</strong>: Hierarchical clustering, Partitioning
+Around Medoids (PAM), and DBSCAN for score pattern analysis.</li>
+<li><strong>Conditions</strong>: Conduct clustering across the full
+environmental gradient and separately for environmental extremes.</li>
+</ul>
+</div>
+<div id="trait-grouping-and-functional-analysis" class="section level3">
+<h3>Trait Grouping and Functional Analysis</h3>
+<ul>
+<li><strong>Grouping</strong>: Organize traits by functional type (e.g.,
+growth, defense, physiology) to examine if scores capture plasticity
+within these categories.</li>
+<li><strong>Gene Types</strong>: If available, associate scores with
+gene-related traits to observe clustering across gene functions.</li>
+</ul>
+</div>
+</div>
+<div id="regression-and-correlation-analysis-for-fitness-prediction" class="section level2">
+<h2>5. Regression and Correlation Analysis for Fitness Prediction</h2>
+<ul>
+<li><strong>Purpose</strong>: Identify correlations between scores and
+fitness indicators under stress conditions.</li>
+</ul>
+<div id="approach" class="section level3">
+<h3>Approach</h3>
+<ul>
+<li><strong>Regression Models</strong>: Use linear regression to
+correlate plasticity scores (individually and by cluster) with fitness
+measures.</li>
+<li><strong>Fitness Measures</strong>: Define fitness based on relevant
+traits under stress, such as yield under drought, to assess if score
+patterns predict adaptability.</li>
+</ul>
+</div>
+</div>
+<div id="validation-in-a-natural-setting" class="section level2">
+<h2>6. Validation in a Natural Setting</h2>
+<ul>
+<li><strong>Application</strong>: Evaluate if specific plasticity
+scores, clustering patterns, or high values indicate stress or
+developmental stages in natural settings.</li>
+<li><strong>Example</strong>: Apply scores to assess forest health by
+determining if score patterns correlate with stress or developmental
+stages, aiding forest management and conservation.</li>
+</ul>
+</div>
+<div id="main-objective" class="section level2">
+<h2>Main Objective</h2>
+<p>To develop a deeper understanding of phenotypic plasticity by
+identifying which plasticity scores capture underlying adaptive
+mechanisms, predict fitness, and reveal environmental responses in
+plants. This study will assess if certain scores can signal stress,
+developmental stages, or specific genotype-environment (GxE)
+interactions, thereby refining how plasticity is measured and
+applied.</p>
+<hr />
+<div id="guiding-questions-and-approach" class="section level3">
+<h3>Guiding Questions and Approach</h3>
+<div id="can-certain-plasticity-scores-reveal-underlying-adaptive-mechanisms-in-traits" class="section level4">
+<h4>1. Can certain plasticity scores reveal underlying adaptive
+mechanisms in traits?</h4>
+<ul>
+<li><strong>Goal</strong>: Determine if specific scores capture inherent
+biological processes, such as adaptability or resilience, beyond simple
+trait quantification.</li>
+<li><strong>Approach</strong>: Use structured reaction norms across two
+genotypes under controlled environmental gradients. By analyzing
+clustering patterns of scores across different reaction norm types
+(e.g., linear, non-linear, threshold-based), identify which scores
+consistently signal adaptive traits in response to changing
+conditions.</li>
+</ul>
+</div>
+<div id="how-can-score-clustering-inform-the-selection-of-functionally-relevant-traits" class="section level4">
+<h4>2. How can score clustering inform the selection of functionally
+relevant traits?</h4>
+<ul>
+<li><strong>Goal</strong>: Examine if plasticity scores cluster in ways
+that correspond to biological function groups (e.g., growth,
+defense).</li>
+<li><strong>Approach</strong>: Cluster plasticity scores for traits
+related to known biological functions and assess consistency in
+clustering patterns. Determine if specific scores align with particular
+trait groups, suggesting that certain scores may inherently capture key
+aspects of those functions, offering a means to choose function-specific
+scores.</li>
+</ul>
+</div>
+<div id="do-high-values-of-specific-scores-or-clustering-patterns-indicate-stress-or-developmental-stages" class="section level4">
+<h4>3. Do high values of specific scores or clustering patterns indicate
+stress or developmental stages?</h4>
+<ul>
+<li><strong>Goal</strong>: Investigate whether plasticity scores can act
+as indicators of plant health, signaling stress responses or particular
+stages of development.</li>
+<li><strong>Approach</strong>: Identify plasticity scores that show
+distinct clustering or high values in response to environmental stress
+or developmental cues. Test if these scores could be used to monitor
+plant health in natural settings, such as assessing tree health in a
+forest, by correlating score patterns with stress conditions or
+age-related traits.</li>
+</ul>
+</div>
+<div id="is-it-necessary-to-measure-plasticity-across-the-full-environmental-spectrum-or-can-extremes-provide-similar-insights" class="section level4">
+<h4>4. Is it necessary to measure plasticity across the full
+environmental spectrum, or can extremes provide similar insights?</h4>
+<ul>
+<li><strong>Goal</strong>: Determine whether sampling at environmental
+extremes suffices to capture the essence of phenotypic plasticity.</li>
+<li><strong>Approach</strong>: Compare clustering results from datasets
+that cover full environmental gradients with those focused on extreme
+conditions. Assess if extreme-based measurements yield clustering
+patterns comparable to full-spectrum data, suggesting a more streamlined
+approach for future studies on environmental adaptation.</li>
+</ul>
+</div>
+<div id="are-specific-plasticity-scores-predictive-of-fitness-under-stressful-conditions" class="section level4">
+<h4>5. Are specific plasticity scores predictive of fitness under
+stressful conditions?</h4>
+<ul>
+<li><strong>Goal</strong>: Identify if certain scores correlate with
+higher fitness levels, particularly under stressful environmental
+conditions, implying a practical value for predicting adaptability.</li>
+<li><strong>Approach</strong>: Calculate fitness measures (e.g., yield,
+growth rate) alongside plasticity scores under controlled stress
+conditions (e.g., drought, nutrient limitation). Use regression or
+correlation analysis to determine if score clusters or high values are
+associated with fitness, highlighting scores as indicators of adaptive
+potential.</li>
+</ul>
+</div>
+<div id="do-certain-scores-or-patterns-indicate-adaptive-trade-offs-between-traits" class="section level4">
+<h4>6. Do certain scores or patterns indicate adaptive trade-offs
+between traits?</h4>
+<ul>
+<li><strong>Goal</strong>: Explore if score clustering reveals inherent
+trade-offs in resource allocation among traits, with high plasticity in
+one trait potentially linked to lower plasticity in another.</li>
+<li><strong>Approach</strong>: Analyze correlations among plasticity
+scores across multiple traits within each genotype. Look for patterns
+where higher plasticity in one trait coincides with lower plasticity in
+others, suggesting trade-offs and balanced adaptation strategies under
+limited resources.</li>
+</ul>
+</div>
+<div id="do-polygenic-traits-display-more-complex-non-linear-reaction-norms-and-clustering-patterns-compared-to-simpler-traits" class="section level4">
+<h4>7. Do polygenic traits display more complex, non-linear reaction
+norms and clustering patterns compared to simpler traits?</h4>
+<ul>
+<li><strong>Goal</strong>: Assess if the complexity of a trait’s genetic
+basis (polygenic vs. monogenic) influences its plasticity score
+clustering, with polygenic traits potentially displaying intricate
+adaptation patterns.</li>
+<li><strong>Approach</strong>: Compare clustering patterns of plasticity
+scores for polygenic versus monogenic traits. Examine if polygenic
+traits exhibit more complex, non-linear clustering, indicating that
+genetic complexity drives richer patterns of trait plasticity and
+adaptability.</li>
+</ul>
+</div>
+<div id="can-plasticity-scores-identify-adaptive-windows-for-key-traits-in-specific-environments" class="section level4">
+<h4>8. Can plasticity scores identify adaptive windows for key traits in
+specific environments?</h4>
+<ul>
+<li><strong>Goal</strong>: Discover if plasticity scores cluster around
+specific environmental extremes, suggesting adaptive windows where
+traits express peak plasticity crucial for survival.</li>
+<li><strong>Approach</strong>: Identify score patterns that consistently
+cluster at certain environmental thresholds, such as high or low light,
+temperature, or moisture. Analyze if these windows correlate with
+heightened plasticity, revealing adaptive flexibility points for traits
+in critical conditions.</li>
+</ul>
+</div>
 </div>
 </div>
 </div>

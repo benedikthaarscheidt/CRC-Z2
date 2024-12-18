@@ -270,17 +270,17 @@ calculate_CVt = function(data, exclude_col=NULL, traitwise = TRUE) {
 
 ### test - passed in by hand calculation with this dataset
 
-df_test1 = data.frame(Column1 = c(rep(4, 10), rep(2, 10)), Column2 = c(rep(10, 10), rep(1, 10)))
-
-#traitwise
-calculate_CVt(df_test1)
-print(sd(df_test1[,1])/mean(df_test1[,1]))
-print(sd(df_test1[,2])/mean(df_test1[,2]))
-
-#total
-df_test1_flattened=as.numeric(unlist(df_test1))
-calculate_CVt(df_test1,traitwise = F)
-print(sd(df_test1_flattened)/mean(df_test1_flattened))
+#df_test1 = data.frame(Column1 = c(rep(4, 10), rep(2, 10)), Column2 = c(rep(10, 10), rep(1, 10)))
+#
+##traitwise
+#calculate_CVt(df_test1)
+#print(sd(df_test1[,1])/mean(df_test1[,1]))
+#print(sd(df_test1[,2])/mean(df_test1[,2]))
+#
+##total
+#df_test1_flattened=as.numeric(unlist(df_test1))
+#calculate_CVt(df_test1,traitwise = F)
+#print(sd(df_test1_flattened)/mean(df_test1_flattened))
 
 
 
@@ -360,8 +360,8 @@ calculate_reaction_norm_slope = function(data, env_col, trait_cols, plot = FALSE
 
 #test - passed with synthetic dataset
 
-df_test2 = data.frame(Column0 = c(rep(1, 10), rep(2, 10)),Column1 = c(rep(2, 10), rep(1, 10)), Column2 = c(rep(2, 10), rep(4, 10)))
-calculate_reaction_norm_slope(df_test2,env_col = 1,trait_cols = c(2,3),plot = T)
+#df_test2 = data.frame(Column0 = c(rep(1, 10), rep(2, 10)),Column1 = c(rep(2, 10), rep(1, 10)), Column2 = c(rep(2, 10), rep(4, 10)))
+#calculate_reaction_norm_slope(df_test2,env_col = 1,trait_cols = c(2,3),plot = T)
 
 ################################
 
@@ -444,10 +444,10 @@ calculate_D_slope = function(data, env_col, trait_cols) {
 
 #test - passed with synthetic 
 
-calculate_D_slope(df_test2,env_col = 1,trait_cols = 2)
-df_test3=data.frame(Column0 = c(rep(3, 10), rep(2, 10),rep(1,10)),Column1 = c(rep(2, 10), rep(1, 15),rep(3,5)), Column2 = c(rep(2, 10), rep(4, 10),rep(3,10)))
-calculate_D_slope(df_test3,env_col = 1,trait_cols = 3)
-mean(df_test3[1:15,3])-mean(df_test3[16:nrow(df_test3),3])
+#calculate_D_slope(df_test2,env_col = 1,trait_cols = 2)
+#df_test3=data.frame(Column0 = c(rep(3, 10), rep(2, 10),rep(1,10)),Column1 = c(rep(2, 10), rep(1, 15),rep(3,5)), Column2 = c(rep(2, 10), rep(4, 10),rep(3,10)))
+#calculate_D_slope(df_test3,env_col = 1,trait_cols = 3)
+#mean(df_test3[1:15,3])-mean(df_test3[16:nrow(df_test3),3])
 
 
 
@@ -530,9 +530,9 @@ calculate_RC = function(data, env_col = 1, trait_cols) {
 
 # test - passed with synthetic dataset
 
-calculate_RC(df_test3,env_col = 1,trait_cols = 3)
-
-mean(df_test3[1:15,3])/mean(df_test3[16:nrow(df_test3),3])
+#calculate_RC(df_test3,env_col = 1,trait_cols = 3)
+#
+#mean(df_test3[1:15,3])/mean(df_test3[16:nrow(df_test3),3])
 
 
 ################################
@@ -597,9 +597,9 @@ calculate_CVm = function(data,  env_col = 1,trait_cols) {
 
 ## test - passed with synthetic dataset
 
-calculate_CVm(df_test3,env_col = 1,trait_col = 3)
-
-sd(c(mean(df_test3[1:10,3]),mean(df_test3[11:20,3]),mean(df_test3[21:30,3])))/mean(mean(df_test3[,3]))
+#calculate_CVm(df_test3,env_col = 1,trait_col = 3)
+#
+#sd(c(mean(df_test3[1:10,3]),mean(df_test3[11:20,3]),mean(df_test3[21:30,3])))/mean(mean(df_test3[,3]))
 
 
 ###############################
@@ -668,9 +668,9 @@ calculate_CVmd = function(data, trait_cols, env_col) {
 
 # test - passed on synthetic dataset 
 
-calculate_CVmd(df_test3,env_col = 1,trait_col = 2)
-
-sd(c(median(df_test3[1:10,2]),median(df_test3[11:20,2]),median(df_test3[21:30,2])))/mean(c(median(df_test3[1:10,2]),median(df_test3[11:20,2]),median(df_test3[21:30,2])))
+#calculate_CVmd(df_test3,env_col = 1,trait_col = 2)
+#
+#sd(c(median(df_test3[1:10,2]),median(df_test3[11:20,2]),median(df_test3[21:30,2])))/mean(c(median(df_test3[1:10,2]),median(df_test3[11:20,2]),median(df_test3[21:30,2])))
 
 ###############################
 
@@ -786,7 +786,7 @@ df_test_simple = data.frame(
 
 #calculate_grand_plasticity(df_test4,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
 #calculate_grand_plasticity(df_test5,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
-calculate_grand_plasticity(df_test_simple,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
+#calculate_grand_plasticity(df_test_simple,env_col = 1,trait_col = 2,covariate_col = 3,control_env = 2)
 
 ##########################################
   
@@ -857,11 +857,11 @@ combine_factors = function(dataframe, factors = NULL, factors_not_in_dataframe =
 
 
 
-# Example usage with synthetic data
-external_light = rep(c(0.4, 0.6, 0.8), each = 100)
-external_water = sample(rep(c("Low", "High"), each = 150))
-
-combined_factors= combine_factors(synthetic_data1, factors_not_in_dataframe = list(external_light,external_water), factors=1)
+## Example usage with synthetic data
+#external_light = rep(c(0.4, 0.6, 0.8), each = 100)
+#external_water = sample(rep(c("Low", "High"), each = 150))
+#
+#combined_factors= combine_factors(synthetic_data1, factors_not_in_dataframe = list(external_light,external_water), factors=1)
 
 ##########################################
 
@@ -973,33 +973,33 @@ calculate_PPF = function(data, trait_cols, env_col, covariate_col = NULL, env_pa
   return(PPF_values_list)
 }
 
-
-synthetic_data2=combine_factors(synthetic_data1,factors=NULL, factors_not_in_dataframe=list(external_water))
-
-## test - passed on synthetic dataset
-
-df_test6 = data.frame(
-  Column1 = c(rep(3, 15), rep(2, 15)),   # Response variable
-  Column2 = c(rep(4, 15), rep(2, 15)),   # Control (2) and Treatment (3)
-  Column3 = c(rep(3, 10), rep(2, 10), rep(1, 10))    # Covariate (matches values of Column0)
-)
-df_test6$Column1 = as.factor(df_test6$Column1)
-calculate_PPF(df_test6,env_col = 1, trait_cols = 2, env_pairs = list(2,3))
-
-model = lm(Column2 ~ Column1 , data = df_test6)
-lsmeans_env = emmeans(model, ~ Column1)
-summary_lsmeans = summary(lsmeans_env)
-# Extract only the LSMeans (adjusted means)
-lsmeans_values = summary_lsmeans$emmean
-100*abs((lsmeans_values[[1]]-lsmeans_values[[2]])/lsmeans_values[[1]])
-
-
-model = lm(Column3 ~ Column1 , data = df_test6)
-lsmeans_env = emmeans(model, ~ Column1)
-summary_lsmeans = summary(lsmeans_env)
-# Extract only the LSMeans (adjusted means)
-lsmeans_values = summary_lsmeans$emmean
-100*abs((lsmeans_values[[1]]-lsmeans_values[[2]])/lsmeans_values[[1]])
+#
+#synthetic_data2=combine_factors(synthetic_data1,factors=NULL, factors_not_in_dataframe=list(external_water))
+#
+### test - passed on synthetic dataset
+#
+#df_test6 = data.frame(
+#  Column1 = c(rep(3, 15), rep(2, 15)),   # Response variable
+#  Column2 = c(rep(4, 15), rep(2, 15)),   # Control (2) and Treatment (3)
+#  Column3 = c(rep(3, 10), rep(2, 10), rep(1, 10))    # Covariate (matches values of Column0)
+#)
+#df_test6$Column1 = as.factor(df_test6$Column1)
+#calculate_PPF(df_test6,env_col = 1, trait_cols = 2, env_pairs = list(2,3))
+#
+#model = lm(Column2 ~ Column1 , data = df_test6)
+#lsmeans_env = emmeans(model, ~ Column1)
+#summary_lsmeans = summary(lsmeans_env)
+## Extract only the LSMeans (adjusted means)
+#lsmeans_values = summary_lsmeans$emmean
+#100*abs((lsmeans_values[[1]]-lsmeans_values[[2]])/lsmeans_values[[1]])
+#
+#
+#model = lm(Column3 ~ Column1 , data = df_test6)
+#lsmeans_env = emmeans(model, ~ Column1)
+#summary_lsmeans = summary(lsmeans_env)
+## Extract only the LSMeans (adjusted means)
+#lsmeans_values = summary_lsmeans$emmean
+#100*abs((lsmeans_values[[1]]-lsmeans_values[[2]])/lsmeans_values[[1]])
 
 
 ###########################################
@@ -1057,7 +1057,7 @@ calculate_Phenotypic_Plasticity_Index = function(data, trait_cols = NULL) {
 
 ##test - passed on a synthetic dataset (look at the dataset for confirmation)
 
-calculate_Phenotypic_Plasticity_Index(df_test6,trait_col = 2)
+#calculate_Phenotypic_Plasticity_Index(df_test6,trait_col = 2)
 
 
 
@@ -1131,7 +1131,7 @@ calculate_PImd = function(data, trait_cols, env_col) {
 
 ##test - passed on synthetic dataset (check  dataset for confirmation)
 
-calculate_PImd(df_test6,trait_cols = c(2,3),env_col = 1)
+#calculate_PImd(df_test6,trait_cols = c(2,3),env_col = 1)
 
 ###############################################
 
@@ -1166,12 +1166,13 @@ calculate_PImd(df_test6,trait_cols = c(2,3),env_col = 1)
 #' @export
 calculate_PILSM = function(data, trait_cols, env_col, covariates = NULL, plot = FALSE) {
   
-  # Initialize an empty list to store results
-  result = list()
-  counter = 1  # Counter for storing results without NULLs
+  # Initialize a vector to store PILSM values for each trait
+  PILSM_values = numeric(length(trait_cols))
+  names(PILSM_values) = trait_cols  # Name the vector by trait columns
   
   # Loop over each trait column
-  for (trait_col in trait_cols) {
+  for (i in seq_along(trait_cols)) {
+    trait_col = trait_cols[i]
     
     # Handle env_col
     if (is.numeric(env_col) && length(env_col) == 1) {
@@ -1200,12 +1201,9 @@ calculate_PILSM = function(data, trait_cols, env_col, covariates = NULL, plot = 
     # Calculate PILSM
     max_lsm = max(lsm$emmean, na.rm = TRUE)
     min_lsm = min(lsm$emmean, na.rm = TRUE)
-    PILSM = (max_lsm - min_lsm) / max_lsm
+    PILSM_values[i] = (max_lsm - min_lsm) / max_lsm
     
-    # Store result using trait column number or name
-    result[[as.character(trait_col)]] = list(PILSM = PILSM)
-    
-    # Optionally plot
+    # Optionally plot (stored in list if plot is requested)
     if (plot) {
       plot_data = data.frame(Environment = env_col_data, Trait = trait_col_data)
       lsm_plot = ggplot2::ggplot(plot_data, ggplot2::aes(x = Environment, y = Trait)) +
@@ -1215,13 +1213,12 @@ calculate_PILSM = function(data, trait_cols, env_col, covariates = NULL, plot = 
         ggplot2::labs(title = paste("LSMs for", trait_col), x = "Environment", y = trait_col) +
         ggplot2::theme_minimal()
       
-      result[[as.character(trait_col)]][["plot"]] = lsm_plot
+      # Print the plot for each trait
+      print(lsm_plot)
     }
-    
-    counter = counter + 1
   }
   
-  return(result)
+  return(PILSM_values)
 }
 
 
@@ -1229,14 +1226,14 @@ calculate_PILSM = function(data, trait_cols, env_col, covariates = NULL, plot = 
 ## test - passed on synthetic dataset 
 
 
-calculate_PILSM(df_test6,trait_col=c(2,3),env_col=1,plot = F)
-
-model = lm(Column2 ~ Column1 , data = df_test6)
-lsmeans_env = emmeans(model, ~ Column1)
-summary_lsmeans = summary(lsmeans_env)
-# Extract only the LSMeans (adjusted means)
-lsmeans_values = summary_lsmeans$emmean
-(max(lsmeans_values)-min(lsmeans_values))/max(lsmeans_values)
+#calculate_PILSM(df_test6,trait_col=c(2,3),env_col=1,plot = F)
+#
+#model = lm(Column2 ~ Column1 , data = df_test6)
+#lsmeans_env = emmeans(model, ~ Column1)
+#summary_lsmeans = summary(lsmeans_env)
+## Extract only the LSMeans (adjusted means)
+#lsmeans_values = summary_lsmeans$emmean
+#(max(lsmeans_values)-min(lsmeans_values))/max(lsmeans_values)
 
 ################################################
 
@@ -1305,7 +1302,7 @@ calculate_RTR = function(data, trait_cols, env_col, env_low, env_high) {
 
 
 ## test - passed on synthetic dataset
-calculate_RTR(df_test2,trait_col=2,env_col=1,env_low=1,env_high=2)
+#calculate_RTR(df_test2,trait_col=2,env_col=1,env_low=1,env_high=2)
 
 
 ######################################
@@ -1406,9 +1403,9 @@ calculate_PIR = function(data, trait_cols, env_col, rgr_col) {
 }
 
 ## test - passed on synthetic dataset
-specific_growthrate=c(rep(10,10),rep(20,10))
-
-calculate_PIR(df_test2 , trait_col = 2 , env_col = 1, rgr_col = specific_growthrate)
+#specific_growthrate=c(rep(10,10),rep(20,10))
+#
+#calculate_PIR(df_test2 , trait_col = 2 , env_col = 1, rgr_col = specific_growthrate)
 
 
 

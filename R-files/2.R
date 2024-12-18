@@ -181,7 +181,7 @@ check_and_install_packages = function(packages) {
 #' The species identifier column is optional and only necessary if multiple species/groups are being analyzed.
 #' @param sp (Optional) An integer or string specifying the column that identifies the species or group for which RDPI will be calculated. 
 #' This can be the name or index of the column in the `dataframe`. If omitted, the function assumes the data pertains to a single species.
-#' @param traits A vector of integers or strings specifying the columns that contain the trait values to be analyzed. 
+#' @param trait_cols A vector of integers or strings specifying the columns that contain the trait values to be analyzed. 
 #' These can be the names or indices of the columns in the `dataframe`.
 #' @param factors (Optional) A vector of integers or strings specifying the columns that contain the environmental factors. 
 #' RDPI is calculated by comparing trait values across these environmental factors. This can be the names or indices of the columns in the `dataframe`.
@@ -252,157 +252,105 @@ check_and_install_packages = function(packages) {
 #' print(result_with_species$test_result)
 #' 
 #' @export
-rdpi_calculation <- function(dataframe, traits, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL) {
+rdpi_calculation = function(dataframe, trait_cols, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL, stat_analysis = NULL, plot = FALSE) {
   
-  # List of required packages
-  required_packages <- c("ggplot2", "agricolae", "dplyr", "reshape2")
-  
-  # Check and install required packages
+  # Ensure necessary packages are loaded
+  required_packages = c("ggplot2", "agricolae", "dplyr", "reshape2")
   check_and_install_packages(required_packages)
   
-  # Convert column indices to names if necessary
-  if (!is.null(sp)) {
-    sp <- if (is.numeric(sp)) names(dataframe)[sp] else sp
-  }
-  traits <- if (is.numeric(traits)) names(dataframe)[traits] else traits
+  # Convert column indices to names if needed
+  sp = if (!is.null(sp) && is.numeric(sp)) names(dataframe)[sp] else sp
+  traits = if (is.numeric(trait_cols)) names(dataframe)[trait_cols] else trait_cols
   
-  # Combine internal and external factors into a single dataframe
+  # Combine internal and external factors into one
   if (!is.null(factors_not_in_dataframe)) {
-    if (length(factors_not_in_dataframe[[1]]) != nrow(dataframe)) {
-      stop("The length of external factors must match the number of rows in the dataframe.")
-    }
-    external_factors_df <- as.data.frame(factors_not_in_dataframe)
-    if (!is.null(factors)) {
-      factors <- if (is.numeric(factors)) names(dataframe)[factors] else factors
-      combined_factors_df <- cbind(dataframe[factors], external_factors_df)
-    } else {
-      combined_factors_df <- external_factors_df
-    }
-    dataframe$Combined_Factors <- interaction(combined_factors_df, drop = TRUE)
+    if (length(factors_not_in_dataframe[[1]]) != nrow(dataframe)) stop("Mismatch in length of external factors.")
+    external_factors_df = as.data.frame(factors_not_in_dataframe)
+    if (!is.null(factors)) factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
+    combined_factors_df = if (!is.null(factors)) cbind(dataframe[factors], external_factors_df) else external_factors_df
+    dataframe$Combined_Factors = interaction(combined_factors_df, drop = TRUE)
   } else if (!is.null(factors)) {
-    factors <- if (is.numeric(factors)) names(dataframe)[factors] else factors
-    dataframe$Combined_Factors <- interaction(dataframe[factors], drop = TRUE)
+    factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
+    dataframe$Combined_Factors = interaction(dataframe[factors], drop = TRUE)
   } else {
-    stop("You must provide either internal factors, external factors, or both.")
+    stop("Provide either internal or external factors.")
   }
   
-  dataframe$Combined_Factors <- as.factor(dataframe$Combined_Factors)
+  dataframe$Combined_Factors = as.factor(dataframe$Combined_Factors)
   
-  all_results <- list()
+  # Split data by species if needed
+  species_data = if (is.null(sp)) list("Single_Group" = dataframe) else split(dataframe, dataframe[[sp]])
   
-  if (is.null(sp)) {
-    unique_species <- list("Single_Group" = dataframe)
-  } else {
-    unique_species <- split(dataframe, dataframe[[sp]])
-  }
+  # Initialize RDPI results vector
+  RDPI_values = numeric(length(traits))
+  names(RDPI_values) = traits
   
-  # Initialize a dataframe to collect all trait data for statistical analysis
-  all_trait_data <- data.frame()
-  
-  for (species_name in names(unique_species)) {
-    species_data <- unique_species[[species_name]]
+  # Main calculation loop for each trait
+  for (trait in traits) {
+    rdpi_trait_values = numeric()
     
-    RDPI_results <- list()
-    
-    for (trait in traits) {
-      RDPI <- data.frame(sp = character(0), rdpi = numeric(0))
+    for (species_name in names(species_data)) {
+      # Subset data for each species and trait
+      species_subset = species_data[[species_name]]
+      RDPI_temp = as.matrix(dist(species_subset[[trait]], method = "canberra"))
+      filter_frame = outer(species_subset$Combined_Factors, species_subset$Combined_Factors, `!=`)
+      filter_frame[upper.tri(filter_frame, diag = TRUE)] = FALSE
+      rdpi_values = RDPI_temp[filter_frame]
       
-      # Compute pairwise Canberra distance for all individuals in the dataset
-      RDPI_temp <- as.matrix(dist(x = species_data[[trait]], method = "canberra"))
-      
-      # Generate a matrix where value is "TRUE" only if observation i and j belong to different levels of the factor
-      filter_frame <- matrix(NA, nrow(species_data), nrow(species_data))
-      
-      for (i in 1:nrow(filter_frame)) {
-        for (j in 1:ncol(filter_frame)) {
-          if (species_data$Combined_Factors[i] == species_data$Combined_Factors[j]) {
-            filter_frame[i, j] <- FALSE
-          } else {
-            filter_frame[i, j] <- TRUE
-          }
-        }
-      }
-      
-      # Keep only the lower triangle (no need to compare twice)
-      filter_frame[upper.tri(filter_frame, diag = TRUE)] <- FALSE
-      
-      # Subset RDPI so that it only includes comparisons between individuals from different environments
-      rdpi_values <- RDPI_temp[filter_frame == TRUE]
-      
-      # Calculate the mean RDPI value for this trait
-      RDPI_sp_value <- mean(rdpi_values, na.rm = TRUE)
-      RDPI_sp <- data.frame(sp = species_name, rdpi = RDPI_sp_value)
-      RDPI <- rbind(RDPI, RDPI_sp)
-      
-      # Collect all trait data for statistical analysis
-      trait_data <- data.frame(
-        sp = species_name,
-        trait = trait,
-        Combined_Factors = species_data$Combined_Factors,
-        Trait_Value = species_data[[trait]]
-      )
-      
-      all_trait_data <- rbind(all_trait_data, trait_data)
-      
-      RDPI_results[[trait]] <- list(
-        RDPI_values = RDPI,
-        trait_data = trait_data
-      )
+      # Store mean RDPI value for this species and trait
+      rdpi_trait_values = c(rdpi_trait_values, mean(rdpi_values, na.rm = TRUE))
     }
     
-    all_results[[species_name]] <- RDPI_results
+    # Average across species
+    RDPI_values[trait] = mean(rdpi_trait_values, na.rm = TRUE)
+    
+    # Optionally generate boxplot for the trait
+    if (plot) {
+      ggplot(dataframe, aes(x = Combined_Factors, y = .data[[trait]], fill = Combined_Factors)) +
+        geom_boxplot() +
+        ggtitle(paste("Boxplot of", trait, "Across Environmental Combinations")) +
+        xlab("Environmental Combinations") +
+        ylab(trait) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        print()
+    }
   }
   
-  # Perform ANOVA on the trait data
-  anova_results <- list()
-  tukey_results <- list()
+  # Return RDPI values if no statistical analysis is requested
+  if (is.null(stat_analysis)) return(RDPI_values)
+  
+  # Perform ANOVA and Tukey's HSD if requested
+  anova_results = list()
+  tukey_results = list()
   
   for (trait in traits) {
-    fit <- aov(Trait_Value ~ Combined_Factors, data = subset(all_trait_data, trait == trait))
-    anova_results[[trait]] <- summary(fit)
-    
-    # Perform Tukey's HSD test
-    Tukey <- agricolae::HSD.test(fit, trt = "Combined_Factors")
-    tukey_results[[trait]] <- Tukey
+    fit = aov(.data[[trait]] ~ Combined_Factors, data = dataframe)
+    anova_results[[trait]] = summary(fit)
+    tukey_results[[trait]] = agricolae::HSD.test(fit, trt = "Combined_Factors")
   }
   
-  # Create boxplots for the traits across environmental combinations
-  boxplot_traits <- ggplot2::ggplot(all_trait_data, ggplot2::aes(x = Combined_Factors, y = Trait_Value, fill = trait)) +
-    ggplot2::geom_boxplot() +
-    ggplot2::facet_wrap(~trait, scales = "free_y") +
-    ggplot2::theme_bw() +
-    ggplot2::xlab("Environmental Combinations") +
-    ggplot2::ylab("Trait Values") +
-    ggplot2::ggtitle("Boxplots of Trait Values Across Environmental Combinations") +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  
-  # Return the RDPI results, trait boxplots, ANOVA, and Tukey's HSD test results
-  return(list(
-    all_results = all_results,
-    trait_boxplots = boxplot_traits,
-    anova_results = anova_results,
-    tukey_results = tukey_results
-  ))
+  return(list(rdpi_results = RDPI_values, anova_results = anova_results, tukey_results = tukey_results))
 }
 
 
-# Example usage with synthetic data
-external_light = rep(c(0.4, 0.6, 0.8), each = 100)
-external_water = sample(rep(c("Low", "High"), each = 150))
 
-# Calculate RDPI with factors not in the dataframe
-RDPI= rdpi_calculation(synthetic_data1, sp = NULL, traits = c(3, 4), factors = 2, factors_not_in_dataframe = list(external_light, external_water))
-
-
-### test - passed on synthetic dataset and crosschecked with data from package
-
-
-df_test20 <- data.frame(
-  Column0 = as.factor(c(rep(1, 20), rep(2, 20))),  # Two groups/species, 20 observations each
-  Column1 = as.factor(c(rep(1, 10), rep(2, 10), rep(1, 10), rep(2, 10))),  # Two environments per group
-  Column2 = c(rep(2, 10), rep(1, 10), rep(2, 10), rep(1, 10))  # Numeric trait values
-)
-rdpi_calculation(df_test20,sp=1, traits=3,factors = 2)
+## Example usage with synthetic data
+#external_light = rep(c(0.4, 0.6, 0.8), each = 100)
+#external_water = sample(rep(c("Low", "High"), each = 150))
+#
+## Calculate RDPI with factors not in the dataframe
+#RDPI= rdpi_calculation(synthetic_data1, sp = NULL, trait_cols = c(3, 4), factors = 2, factors_not_in_dataframe = list(external_light, external_water))
+#
+#
+#### test - passed on synthetic dataset and crosschecked with data from package
+#
+#
+#df_test20 = data.frame(
+#  Column0 = as.factor(c(rep(1, 20), rep(2, 20))),  # Two groups/species, 20 observations each
+#  Column1 = as.factor(c(rep(1, 10), rep(2, 10), rep(1, 10), rep(2, 10))),  # Two environments per group
+#  Column2 = c(rep(2, 10), rep(1, 10), rep(2, 10), rep(1, 10))  # Numeric trait values
+#)
+##rdpi_calculation(df_test20,sp=1, trait_cols=3,factors = 2)
 
 
 #####################################################
@@ -415,14 +363,14 @@ rdpi_calculation(df_test20,sp=1, traits=3,factors = 2)
 #'
 #' This function calculates the Relative Distance Plasticity Index (RDPI) for mean phenotypic values. 
 #' RDPI is defined as the absolute phenotypic distance between the means of the same genotype 
-#' in different environments, divided by one of the two mean phenotypic values (typically the smaller one).
+#' in different environments, divided by the smaller of the two mean phenotypic values.
 #' 
 #' The function is designed to handle multiple traits, genotypes, and environmental combinations, 
 #' providing a comprehensive analysis of phenotypic plasticity across environmental gradients.
 #'
 #' @param dataframe A data frame containing the phenotypic data, including traits, genotype identifiers, 
 #' and environmental factors.
-#' @param traits A vector specifying the column indices or names of the traits to be analyzed.
+#' @param trait_cols A vector specifying the column indices or names of the traits to be analyzed.
 #' @param sp (Optional) A column index or name indicating the species or genotype identifier. If not provided, 
 #' the data is treated as a single group.
 #' @param factors (Optional) A vector of column indices or names specifying the internal environmental factors 
@@ -464,7 +412,7 @@ rdpi_calculation(df_test20,sp=1, traits=3,factors = 2)
 #' # Calculate RDPIs for the 'Height' trait across genotypes and environments
 #' results = rdpi_mean_calculation(
 #'   dataframe = df, 
-#'   traits = "Height", 
+#'   trait_cols = "Height", 
 #'   sp = "Genotype", 
 #'   factors = "Environment"
 #' )
@@ -474,117 +422,163 @@ rdpi_calculation(df_test20,sp=1, traits=3,factors = 2)
 #' print(results$trait_boxplots)
 #' 
 #' @export
-rdpi_mean_calculation = function(dataframe, traits, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL) {
-#NOTE: would it make sense to calculate this score not only pairwise for 2 different env and 1 trait, but as a sum over all traits those 2 envs share?
-    
-    # List of required packages
-    required_packages = c("ggplot2", "agricolae", "dplyr", "reshape2")
-    
-    # Check and install required packages
-    check_and_install_packages(required_packages)
-    
-    # Convert column indices to names if necessary
-    if (!is.null(sp)) {
-      sp = if (is.numeric(sp)) names(dataframe)[sp] else sp
+rdpi_mean_calculation = function(dataframe, trait_cols, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL, stat_analysis = NULL) {
+  
+  # List of required packages
+  required_packages = c("ggplot2", "agricolae", "dplyr", "reshape2")
+  
+  # Check and install required packages
+  check_and_install_packages(required_packages)
+  
+  # Convert column indices to names if necessary
+  if (!is.null(sp)) {
+    sp = if (is.numeric(sp)) names(dataframe)[sp] else sp
+  }
+  traits = if (is.numeric(trait_cols)) names(dataframe)[trait_cols] else trait_cols
+  
+  # Combine internal and external factors into a single dataframe
+  if (!is.null(factors_not_in_dataframe)) {
+    if (length(factors_not_in_dataframe[[1]]) != nrow(dataframe)) {
+      stop("The length of external factors must match the number of rows in the dataframe.")
     }
-    traits = if (is.numeric(traits)) names(dataframe)[traits] else traits
-    
-    # Combine internal and external factors into a single dataframe
-    if (!is.null(factors_not_in_dataframe)) {
-      if (length(factors_not_in_dataframe[[1]]) != nrow(dataframe)) {
-        stop("The length of external factors must match the number of rows in the dataframe.")
-      }
-      external_factors_df = as.data.frame(factors_not_in_dataframe)
-      if (!is.null(factors)) {
-        factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
-        combined_factors_df = cbind(dataframe[factors], external_factors_df)
-      } else {
-        combined_factors_df = external_factors_df
-      }
-      dataframe$Combined_Factors = interaction(combined_factors_df, drop = TRUE)
-    } else if (!is.null(factors)) {
+    external_factors_df = as.data.frame(factors_not_in_dataframe)
+    if (!is.null(factors)) {
       factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
-      dataframe$Combined_Factors = interaction(dataframe[factors], drop = TRUE)
+      combined_factors_df = cbind(dataframe[factors], external_factors_df)
     } else {
-      stop("You must provide either internal factors, external factors, or both.")
+      combined_factors_df = external_factors_df
     }
+    dataframe$Combined_Factors = interaction(combined_factors_df, drop = TRUE)
+  } else if (!is.null(factors)) {
+    factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
+    dataframe$Combined_Factors = interaction(dataframe[factors], drop = TRUE)
+  } else {
+    stop("You must provide either internal factors, external factors, or both.")
+  }
+  
+  dataframe$Combined_Factors = as.factor(dataframe$Combined_Factors)
+  
+  all_rdpi_results = data.frame()  # Initialize a dataframe to store all RDPI values
+  
+  if (is.null(sp)) {
+    unique_species = list("Single_Group" = dataframe)
+  } else {
+    unique_species = split(dataframe, dataframe[[sp]])
+  }
+  
+  for (species_name in names(unique_species)) {
+    species_data = unique_species[[species_name]]
     
-    dataframe$Combined_Factors = as.factor(dataframe$Combined_Factors)
-    
-    all_results = list()
-    
-    if (is.null(sp)) {
-      unique_species = list("Single_Group" = dataframe)
-    } else {
-      unique_species = split(dataframe, dataframe[[sp]])
-    }
-    
-    # Loop over each species or group
-    for (species_name in names(unique_species)) {
-      species_data = unique_species[[species_name]]
-      
-      RDPI_results = list()
-      
-      # Initialize a data frame to store RDPI values for each pair of environments
+    for (trait in traits) {
       RDPI_values = data.frame(sp = character(), env1 = character(), env2 = character(), rdpi = numeric())
       
       # Get unique environment combinations
       env_levels = levels(species_data$Combined_Factors)
       n_env_levels = length(env_levels)
       
-      # Loop over each trait
-      for (trait in traits) {
-        mean_values = aggregate(species_data[[trait]], list(species_data$Combined_Factors), mean)
-        colnames(mean_values) = c("Env_Combination", "Mean_Trait")
-        
-        for (i in 1:(n_env_levels - 1)) {
-          for (j in (i + 1):n_env_levels) {
-            mean_i = mean_values$Mean_Trait[mean_values$Env_Combination == env_levels[i]]
-            mean_j = mean_values$Mean_Trait[mean_values$Env_Combination == env_levels[j]]
-            
-            # Calculate RDPI for this trait between the two environments
-            rdpi_value = abs(mean_i - mean_j) / min(mean_i, mean_j)
-            
-            # Sum the RDPI values across all traits
-            RDPI_values = rbind(RDPI_values, data.frame(sp = species_name, env1 = env_levels[i], env2 = env_levels[j], rdpi = rdpi_value))
-          }
+      mean_values = aggregate(species_data[[trait]], list(species_data$Combined_Factors), mean)
+      colnames(mean_values) = c("Env_Combination", "Mean_Trait")
+      
+      for (i in 1:(n_env_levels - 1)) {
+        for (j in (i + 1):n_env_levels) {
+          mean_i = mean_values$Mean_Trait[mean_values$Env_Combination == env_levels[i]]
+          mean_j = mean_values$Mean_Trait[mean_values$Env_Combination == env_levels[j]]
+          
+          # Calculate RDPI for this trait between the two environments
+          rdpi_value = abs(mean_i - mean_j) / min(mean_i, mean_j)
+          
+          # Append the RDPI value for this species, trait, and environment pair
+          RDPI_values = rbind(RDPI_values, data.frame(sp = species_name, env1 = env_levels[i], env2 = env_levels[j], rdpi = rdpi_value))
         }
       }
       
-      all_results[[species_name]] = RDPI_values
+      all_rdpi_results = rbind(all_rdpi_results, RDPI_values)
+    }
+  }
+  
+  # If statistical analysis is requested, perform ANOVA and Tukey's HSD
+  if (!is.null(stat_analysis)) {
+    all_trait_data = data.frame()
+    
+    for (species_name in names(unique_species)) {
+      species_data = unique_species[[species_name]]
+      
+      for (trait in traits) {
+        trait_data = data.frame(
+          sp = species_name,
+          trait = trait,
+          Combined_Factors = species_data$Combined_Factors,
+          Trait_Value = species_data[[trait]]
+        )
+        
+        all_trait_data = rbind(all_trait_data, trait_data)
+      }
     }
     
-    return(all_results)
+    # Perform ANOVA and Tukey's HSD test
+    anova_results = list()
+    tukey_results = list()
+    
+    for (trait in traits) {
+      fit = aov(Trait_Value ~ Combined_Factors, data = subset(all_trait_data, trait == trait))
+      anova_results[[trait]] = summary(fit)
+      
+      # Perform Tukey's HSD test
+      Tukey = agricolae::HSD.test(fit, trt = "Combined_Factors")
+      tukey_results[[trait]] = Tukey
+    }
+    
+    # Create boxplots for the traits across environmental combinations
+    boxplot_traits = ggplot2::ggplot(all_trait_data, ggplot2::aes(x = Combined_Factors, y = Trait_Value, fill = trait)) +
+      ggplot2::geom_boxplot() +
+      ggplot2::facet_wrap(~trait, scales = "free_y") +
+      ggplot2::theme_bw() +
+      ggplot2::xlab("Environmental Combinations") +
+      ggplot2::ylab("Trait Values") +
+      ggplot2::ggtitle("Boxplots of Trait Values Across Environmental Combinations") +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+    
+    return(list(
+      rdpi_results = all_rdpi_results,
+      trait_boxplots = boxplot_traits,
+      anova_results = anova_results,
+      tukey_results = tukey_results
+    ))
   }
+  
+  # If stat_analysis is NULL, return only the RDPI values
+  return(all_rdpi_results)
+}
+
   
 
 
-# Example usage with synthetic data
-external_light = rep(c(0.4, 0.6, 0.8), each = 100)
-external_water =rep(c("Low", "High"), each = 150)
-
-## test - passed on synthetic dataset
-
-rdpi_mean_calculation(df_test20,sp=1, traits=3,factors = 2)
+## Example usage with synthetic data
+#external_light = rep(c(0.4, 0.6, 0.8), each = 100)
+#external_water =rep(c("Low", "High"), each = 150)
+#
+### test - passed on synthetic dataset
+#
+#rdpi_mean_calculation(df_test20,sp=1, trait_cols=3,factors = 2)
 
 
 #########################################
 
 
-#' Calculate Environmental Sensitivity Performance Index (ESPI)
+#' Calculate Environmental Sensitivity Performance Index (ESPI) 
 #'
 #' This function calculates the Environmental Sensitivity Performance Index (ESPI) 
-#' for a given trait across different environmental conditions. ESPI is calculated 
+#' for multiple traits across different environmental conditions. ESPI is calculated 
 #' using the formula: 
 #' \deqn{ESPI = \frac{(\text{Maximum mean} - \text{Minimum mean})}{\text{Absolute distance between environmental values}}}
 #'
 #' @param data A data frame containing the trait and environmental variables.
-#' @param trait_col A numeric or character vector specifying the column index or 
-#' name of the trait in the data frame.
+#' @param trait_cols A numeric or character vector specifying the column indices or 
+#' names of the traits in the data frame.
 #' @param env_col A numeric or character vector specifying the column index or 
 #' name of the environmental variable in the data frame.
 #' 
-#' @return A numeric value representing the Environmental Sensitivity Performance Index (ESPI).
+#' @return A data frame with each trait and its corresponding ESPI value.
 #' 
 #' @details 
 #' The ESPI is a measure of how sensitive a particular trait is to changes 
@@ -598,52 +592,63 @@ rdpi_mean_calculation(df_test20,sp=1, traits=3,factors = 2)
 #' \dontrun{
 #' # Example usage:
 #' df = data.frame(
-#'   trait = rnorm(100),
+#'   trait1 = rnorm(100),
+#'   trait2 = rnorm(100),
 #'   environment = seq(1, 100)
 #' )
 #' 
-#' ESPI_value = calculate_ESPI(df, trait_col = "trait", env_col = "environment")
-#' print(ESPI_value)
+#' ESPI_values = calculate_ESPI(df, trait_cols = c("trait1", "trait2"), env_col = "environment")
+#' print(ESPI_values)
 #' }
 #' 
 #' @seealso 
 #' \code{\link{tapply}}, \code{\link{mean}}
 #' 
 #' @export
-calculate_ESPI = function(data, trait_col, env_col) {
-  # Handle env_col
+calculate_ESPI = function(data, trait_cols, env_col) {
+  
+  # Handle env_col to ensure it's a factor
   if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
+    env_col_data = as.factor(data[[env_col]])
   } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col = env_col
+    env_col_data = as.factor(env_col)
   } else {
-    env_col = data[[env_col]]
+    env_col_data = as.factor(data[[env_col]])
   }
   
-  # Handle trait_col
-  trait_col = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+  # Initialize a list to store ESPI values for each trait
+  ESPI_values_list = list()
   
-  # Calculate mean trait values for each environment
-  means = tapply(trait_col, env_col, mean, na.rm = TRUE)
+  # Loop through each trait column
+  for (i in seq_along(trait_cols)) {
+    trait_column = trait_cols[i]
+    trait_col_data = if (is.numeric(trait_column)) data[[trait_column]] else data[[trait_column]]
+    
+    # Calculate mean trait values for each environment
+    means = tapply(trait_col_data, env_col_data, mean, na.rm = TRUE)
+    
+    # Identify maximum and minimum means
+    max_mean = max(means, na.rm = TRUE)
+    min_mean = min(means, na.rm = TRUE)
+    
+    # Calculate the absolute distance between the max and min environmental values
+    abs_env_distance = abs(max(as.numeric(env_col_data), na.rm = TRUE) - min(as.numeric(env_col_data), na.rm = TRUE))
+    
+    # Calculate ESPI and store it for the current trait
+    ESPI_value = if (abs_env_distance > 0) (max_mean - min_mean) / abs_env_distance else NA
+    
+    # Store ESPI for the current trait in the list
+    ESPI_values_list[[i]] = ESPI_value
+    names(ESPI_values_list)[i] = trait_column
+  }
   
-  # Identify maximum and minimum means
-  max_mean = max(means, na.rm = TRUE)
-  min_mean = min(means, na.rm = TRUE)
-  
-  # Calculate the absolute distance between the maximum and minimum environmental values
-  abs_env_distance = abs(max(env_col, na.rm = TRUE) - min(env_col, na.rm = TRUE))
-  
-  # Calculate ESPI
-  ESPI = (max_mean - min_mean) / abs_env_distance
-  
-  return(ESPI)
+  return(ESPI_values_list)
 }
-
 ## test - passed on synthetic dataset 
 
 
-df_test2.2 = data.frame(Column0 = c(rep(1, 10), rep(2, 10)),Column1 = c(rep(2, 5),rep(4,5) ,rep(1, 10)), Column2 = c(rep(2, 10), rep(4, 10)))
-calculate_ESPI(df_test2.2,trait_col = 2,env_col = 1)
+#df_test2.2 = data.frame(Column0 = c(rep(1, 10), rep(2, 10)),Column1 = c(rep(2, 5),rep(4,5) ,rep(1, 10)), Column2 = c(rep(2, 10), rep(4, 10)))
+#calculate_ESPI(df_test2.2,trait_cols = c(2,3),env_col = 1)
 
 
 #####################################
@@ -659,7 +664,7 @@ calculate_ESPI(df_test2.2,trait_col = 2,env_col = 1)
 #' of phenotypic sensitivity to environmental changes across individual plants.
 #'
 #' @param dataframe A data frame containing the phenotypic data, including traits, genotype identifiers, and environmental factors.
-#' @param traits A vector specifying the column indices or names of the traits to be analyzed.
+#' @param trait_cols A vector specifying the column indices or names of the traits to be analyzed.
 #' @param sp (Optional) A column index or name indicating the species or genotype identifier. If not provided, the data is treated as a single group.
 #' @param factors (Optional) A vector of column indices or names specifying the internal environmental factors within the data frame that should be combined to create unique environmental combinations.
 #' @param factors_not_in_dataframe (Optional) A list of vectors representing external environmental factors that are not included in the data frame. Each vector must have a length equal to the number of rows in the data frame.
@@ -699,7 +704,7 @@ calculate_ESPI(df_test2.2,trait_col = 2,env_col = 1)
 #' print(results$all_results)
 #' 
 #' @export
-espiid_calculation = function(dataframe, traits, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL, use_median = FALSE) {
+espiid_calculation = function(dataframe, trait_cols, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL, use_median = FALSE) {
   
   # List of required packages
   required_packages = c("dplyr", "reshape2")
@@ -711,7 +716,7 @@ espiid_calculation = function(dataframe, traits, sp = NULL, factors = NULL, fact
   if (!is.null(sp)) {
     sp = if (is.numeric(sp)) names(dataframe)[sp] else sp
   }
-  traits = if (is.numeric(traits)) names(dataframe)[traits] else traits
+  traits = if (is.numeric(trait_cols)) names(dataframe)[trait_cols] else trait_cols
   
   # Combine internal and external factors into a single dataframe
   if (!is.null(factors_not_in_dataframe)) {
@@ -793,13 +798,13 @@ espiid_calculation = function(dataframe, traits, sp = NULL, factors = NULL, fact
   return(all_results)
 }
 
-l=list(external_light)
-
-external_factors=list(external_light,external_water)
-
-## test - passed on synthetic dataset 
-
-espiid_calculation(df_test2.2, traits=2,factors=1)
+#l=list(external_light)
+#
+#external_factors=list(external_light,external_water)
+#
+### test - passed on synthetic dataset 
+#
+#espiid_calculation(df_test2.2, trait_cols=2,factors=1)
 
 
 ############################################## dont mind the following 
@@ -810,10 +815,10 @@ espiid_calculation(df_test2.2, traits=2,factors=1)
 #' based on user-specified environments and weighted environmental factors.
 #'
 #' @param dataframe A data frame containing the phenotypic data, including traits, genotype identifiers, and environmental factors.
-#' @param traits A vector specifying the column indices or names of the traits to be analyzed.
+#' @param trait_cols A vector specifying the column indices or names of the traits to be analyzed.
 #' @param sp (Optional) An integer or string specifying the column that identifies the species or group for which EVWPI will be calculated. 
 #' This can be the name or index of the column in the `dataframe`. If omitted, the function assumes the data pertains to a single species.
-#' @param environments A vector specifying the column indices or names of the pre-defined environments or a list of vectors representing the environments.
+#' @param env_col A vector specifying the column indices or names of the pre-defined environments or a list of vectors representing the environments.
 #' @param factors A vector specifying the column indices or names of the environmental factors to be weighted, or a list of vectors representing the environmental factors.
 #' @param use_median (Optional) A logical value indicating whether to use the median instead of the mean for the EVWPI calculation. Defaults to FALSE (use mean).
 #'
@@ -847,17 +852,17 @@ espiid_calculation(df_test2.2, traits=2,factors=1)
 #' print(results$all_results)
 #' 
 #' @export
-evwpi_calculation = function(dataframe, traits, sp = NULL, environments, factors, use_median = FALSE) {
+evwpi_calculation = function(dataframe, trait_cols, sp = NULL, env_col, factors, use_median = FALSE) {
   #NOTE:this was an idea but needs to be worked on
   # Convert traits and sp from column indices to names if necessary
   if (!is.null(sp) && is.numeric(sp)) {
     sp = names(dataframe)[sp]
   }
-  traits = if (is.numeric(traits)) names(dataframe)[traits] else traits
+  traits = if (is.numeric(trait_cols)) names(dataframe)[trait_cols] else trait_cols
   
   # Handle environments: if it's a vector of indices, extract the columns; if it's a list of vectors, use directly
-  if (is.numeric(environments)) {
-    environments = dataframe[[names(dataframe)[environments]]]
+  if (is.numeric(env_col)) {
+    environments = dataframe[[names(dataframe)[env_col]]]
   }
   
   # Handle factors: if factors is a vector of indices/names, extract the columns; if it's a list of vectors, use directly
@@ -932,6 +937,6 @@ evwpi_calculation = function(dataframe, traits, sp = NULL, environments, factors
   return(all_results)
 }
 
-external_ph = sample(rep(c(1, 6, 18), each = 100))
-evwpi=evwpi_calculation(synthetic_data1,traits = 3,environments=1, factors=list(external_ph))
-print(evwpi)
+#external_ph = sample(rep(c(1, 6, 18), each = 100))
+#evwpi=evwpi_calculation(synthetic_data1,trait_cols = c(2,3),env_col=1, factors=1)
+#print(evwpi)
