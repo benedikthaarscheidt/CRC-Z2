@@ -162,176 +162,74 @@ check_and_install_packages = function(packages) {
 
 
 
-#' @title Calculate Relative Distance Plasticity Index (RDPI) Across Multiple Traits and Environmental Conditions
-#'
+#' @title Calculate Relative Distance Plasticity Index (RDPI)
+#' 
 #' @description
-#' This function computes the RDPI (Relative Distance Plasticity Index) for one or more traits within a single species or across multiple species/groups. 
-#' RDPI quantifies the phenotypic plasticity of traits across different environmental conditions. The function allows users to specify 
-#' which columns should be used for species (optional), traits, and environmental factors, either by name or by index.
-#' The function generates boxplots to visualize RDPI distributions and performs ANOVA to determine significant differences in RDPI values 
-#' across environmental groups and traits, followed by Tukey's HSD for pairwise comparisons.
+#' Calculates the Relative Distance Plasticity Index (RDPI) for trait values across different 
+#' environmental conditions. The calculation follows Valladares et al. (2006) methodology.
 #' 
-#' RDPI Calculation:
-#' For each pair of environmental combinations, it calculates the absolute difference between their mean trait values.
-#' This difference is normalized by dividing it by the overall mean trait value across all environmental combinations.
-#' The RDPI for a given trait is the average of these normalized differences across all pairs of environmental combinations.
-
-#'
-#' @param dataframe A data frame containing the data to be analyzed. This should include the traits of interest and the environmental factors. 
-#' The species identifier column is optional and only necessary if multiple species/groups are being analyzed.
-#' @param sp (Optional) An integer or string specifying the column that identifies the species or group for which RDPI will be calculated. 
-#' This can be the name or index of the column in the `dataframe`. If omitted, the function assumes the data pertains to a single species.
-#' @param trait_cols A vector of integers or strings specifying the columns that contain the trait values to be analyzed. 
-#' These can be the names or indices of the columns in the `dataframe`.
-#' @param factors (Optional) A vector of integers or strings specifying the columns that contain the environmental factors. 
-#' RDPI is calculated by comparing trait values across these environmental factors. This can be the names or indices of the columns in the `dataframe`.
-#' If `factors_not_in_dataframe` is provided, this argument can be omitted or set to `NULL`.
-#' @param factors_not_in_dataframe (Optional) A list of vectors representing environmental factors that are not included in the `dataframe`. 
-#' These vectors should have the same length as the `dataframe` and correspond to the environmental conditions for each observation. 
-#' If `factors` is provided, this argument can be omitted or set to `NULL`.
+#' @param trait_values Numeric vector containing trait measurements (already averaged across replicates)
+#' @param env_values Optional vector of environmental conditions. If NULL, equidistant steps are assumed
 #' 
-#' @return A nested list containing:
-#'   \item{all_results}{A list where each element corresponds to a species or group. Each species/group contains a list of RDPI results for each trait. 
-#'   Each trait includes RDPI values, summary statistics, and Tukey's HSD results if applicable.}
-#'   \item{test_result}{The result of an ANOVA test comparing RDPI values across traits and environmental groups.}
-#'   \item{boxplot}{A ggplot object representing the boxplot of RDPI values across all specified traits.}
+#' @return Numeric value representing the RDPI score
 #' 
-#' @details
-#' This function computes RDPI for each species or group based on the trait values across different levels of environmental factors. 
-#' If the `sp` parameter is omitted, the function treats the data as pertaining to a single species. The results include a summary of RDPI values, 
-#' a boxplot for visualization, and the result of a statistical test (ANOVA) comparing RDPI values across traits and environmental groups. 
-#' Tukey's HSD test is performed for pairwise comparisons if applicable.
-#' The RDPI is calculated by taking the absolute differences in trait values between pairs of environmental levels, standardizing these differences by dividing by 
-#' the overall mean trait value across all levels, and averaging these standardized differences.
-#'
 #' @examples
-#' # Example with a custom dataset using column names, without specifying a species identifier
-#' df = data.frame(
-#'   Height = rnorm(36, mean = 50, sd = 10),
-#'   LeafArea = rnorm(36, mean = 25, sd = 5),
-#'   RootDepth = rnorm(36, mean = 15, sd = 3),
-#'   Light = rep(c("Low", "High"), times = 18),
-#'   Water = rep(c("Low", "High"), each = 6, times = 3)
-#' )
+#' # With equidistant environments
+#' traits = c(10, 12, 15, 18, 20)
+#' rdpi = calculate_rdpi(traits)
 #' 
-#' # Calculate RDPI with factors from the dataframe
-#' result = rdpi_calculation(df, traits = c("Height", "LeafArea", "RootDepth"), factors = c("Light", "Water"))
+#' # With specified environments
+#' traits = c(10, 12, 15, 18, 20)
+#' envs = c(1, 2, 4, 6, 8)  # Non-equidistant environments
+#' rdpi = calculate_rdpi(traits, envs)
 #'
-#' # View the RDPI values, summary statistics, boxplot, and test results for a specific trait
-#' print(result$all_results$Single_Group$Height$RDPI_values)
-#' print(result$all_results$Single_Group$Height$summary)
-#' print(result$boxplot)
-#' print(result$test_result)
-#'
-#' # Example using external factors not in the dataframe, without specifying a species identifier
-#' external_light = rep(c("Low", "High"), times = 18)
-#' external_water = rep(c("Low", "High"), each = 6, times = 3)
-#' 
-#' result_external = rdpi_calculation(df, traits = c("Height", "LeafArea", "RootDepth"), factors_not_in_dataframe = list(external_light, external_water))
-#' 
-#' print(result_external$all_results$Single_Group$Height$RDPI_values)
-#' print(result_external$all_results$Single_Group$Height$summary)
-#' print(result_external$boxplot)
-#' print(result_external$test_result)
-#'
-#' # Example using the species identifier
-#' df_with_species = data.frame(
-#'   Species = rep(c("A", "B"), each = 18),
-#'   Height = rnorm(36, mean = 50, sd = 10),
-#'   LeafArea = rnorm(36, mean = 25, sd = 5),
-#'   RootDepth = rnorm(36, mean = 15, sd = 3),
-#'   Light = rep(c("Low", "High"), times = 18),
-#'   Water = rep(c("Low", "High"), each = 6, times = 3)
-#' )
-#' 
-#' result_with_species = rdpi_calculation(df_with_species, sp = "Species", traits = c("Height", "LeafArea", "RootDepth"), factors = c("Light", "Water"))
-#' 
-#' print(result_with_species$all_results$A$Height$RDPI_values)
-#' print(result_with_species$all_results$A$summary)
-#' print(result_with_species$boxplot)
-#' print(result_with_species$test_result)
-#' 
 #' @export
-rdpi_calculation = function(dataframe, trait_cols, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL, stat_analysis = NULL, plot = FALSE) {
-  
-  # Ensure necessary packages are loaded
-  required_packages = c("ggplot2", "agricolae", "dplyr", "reshape2")
-  check_and_install_packages(required_packages)
-  
-  # Convert column indices to names if needed
-  sp = if (!is.null(sp) && is.numeric(sp)) names(dataframe)[sp] else sp
-  traits = if (is.numeric(trait_cols)) names(dataframe)[trait_cols] else trait_cols
-  
-  # Combine internal and external factors into one
-  if (!is.null(factors_not_in_dataframe)) {
-    if (length(factors_not_in_dataframe[[1]]) != nrow(dataframe)) stop("Mismatch in length of external factors.")
-    external_factors_df = as.data.frame(factors_not_in_dataframe)
-    if (!is.null(factors)) factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
-    combined_factors_df = if (!is.null(factors)) cbind(dataframe[factors], external_factors_df) else external_factors_df
-    dataframe$Combined_Factors = interaction(combined_factors_df, drop = TRUE)
-  } else if (!is.null(factors)) {
-    factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
-    dataframe$Combined_Factors = interaction(dataframe[factors], drop = TRUE)
-  } else {
-    stop("Provide either internal or external factors.")
+calculate_rdpi = function(trait_values, env_values = NULL) {
+  # Input validation
+  if (!is.numeric(trait_values)) {
+    stop("trait_values must be numeric")
   }
   
-  dataframe$Combined_Factors = as.factor(dataframe$Combined_Factors)
+  n_envs = length(trait_values)
   
-  # Split data by species if needed
-  species_data = if (is.null(sp)) list("Single_Group" = dataframe) else split(dataframe, dataframe[[sp]])
+  # If no environment values provided, create sequential environments
+  if (is.null(env_values)) {
+    env_values = seq_len(n_envs)
+  }
   
-  # Initialize RDPI results vector
-  RDPI_values = numeric(length(traits))
-  names(RDPI_values) = traits
+  # Ensure same length
+  if (length(trait_values) != length(env_values)) {
+    stop("trait_values and env_values must have the same length")
+  }
   
-  # Main calculation loop for each trait
-  for (trait in traits) {
-    rdpi_trait_values = numeric()
+  # Get all pairs of environment indices
+  env_pairs = combn(n_envs, 2)
+  n_pairs = ncol(env_pairs)
+  
+  # Calculate RDPIs for each pair
+  rdpis = numeric(n_pairs)
+  
+  for (i in seq_len(n_pairs)) {
+    idx1 = env_pairs[1, i]
+    idx2 = env_pairs[2, i]
     
-    for (species_name in names(species_data)) {
-      # Subset data for each species and trait
-      species_subset = species_data[[species_name]]
-      RDPI_temp = as.matrix(dist(species_subset[[trait]], method = "canberra"))
-      filter_frame = outer(species_subset$Combined_Factors, species_subset$Combined_Factors, `!=`)
-      filter_frame[upper.tri(filter_frame, diag = TRUE)] = FALSE
-      rdpi_values = RDPI_temp[filter_frame]
-      
-      # Store mean RDPI value for this species and trait
-      rdpi_trait_values = c(rdpi_trait_values, mean(rdpi_values, na.rm = TRUE))
-    }
+    # Calculate relative distance for this pair
+    abs_diff = abs(trait_values[idx2] - trait_values[idx1])
+    sum_vals = trait_values[idx1] + trait_values[idx2]
     
-    # Average across species
-    RDPI_values[trait] = mean(rdpi_trait_values, na.rm = TRUE)
-    
-    # Optionally generate boxplot for the trait
-    if (plot) {
-      ggplot(dataframe, aes(x = Combined_Factors, y = .data[[trait]], fill = Combined_Factors)) +
-        geom_boxplot() +
-        ggtitle(paste("Boxplot of", trait, "Across Environmental Combinations")) +
-        xlab("Environmental Combinations") +
-        ylab(trait) +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-        print()
+    # Handle potential division by zero
+    if (sum_vals == 0) {
+      rdpis[i] = 0
+    } else {
+      rdpis[i] = abs_diff / sum_vals
     }
   }
   
-  # Return RDPI values if no statistical analysis is requested
-  if (is.null(stat_analysis)) return(RDPI_values)
+  # Calculate final RDPI as mean of all RDPIs
+  rdpi = mean(rdpis, na.rm = TRUE)
   
-  # Perform ANOVA and Tukey's HSD if requested
-  anova_results = list()
-  tukey_results = list()
-  
-  for (trait in traits) {
-    fit = aov(.data[[trait]] ~ Combined_Factors, data = dataframe)
-    anova_results[[trait]] = summary(fit)
-    tukey_results[[trait]] = agricolae::HSD.test(fit, trt = "Combined_Factors")
-  }
-  
-  return(list(rdpi_results = RDPI_values, anova_results = anova_results, tukey_results = tukey_results))
+  return(rdpi)
 }
-
 
 
 ## Example usage with synthetic data
@@ -565,84 +463,82 @@ rdpi_mean_calculation = function(dataframe, trait_cols, sp = NULL, factors = NUL
 #########################################
 
 
-#' Calculate Environmental Sensitivity Performance Index (ESPI) 
+#' Calculate Environmental Sensitivity Performance Index (ESPI)
 #'
-#' This function calculates the Environmental Sensitivity Performance Index (ESPI) 
-#' for multiple traits across different environmental conditions. ESPI is calculated 
-#' using the formula: 
+#' This function calculates the Environmental Sensitivity Performance Index (ESPI)
+#' for one or more traits across different environmental conditions. ESPI is calculated
+#' as:
 #' \deqn{ESPI = \frac{(\text{Maximum mean} - \text{Minimum mean})}{\text{Absolute distance between environmental values}}}
 #'
-#' @param data A data frame containing the trait and environmental variables.
-#' @param trait_cols A numeric or character vector specifying the column indices or 
-#' names of the traits in the data frame.
-#' @param env_col A numeric or character vector specifying the column index or 
-#' name of the environmental variable in the data frame.
-#' 
-#' @return A data frame with each trait and its corresponding ESPI value.
-#' 
-#' @details 
-#' The ESPI is a measure of how sensitive a particular trait is to changes 
-#' in environmental conditions. It is calculated by taking the difference between the 
-#' maximum and minimum mean values of the trait across different environments and 
-#' dividing this by the absolute distance between the maximum and minimum environmental 
-#' values. This index assumes normality in the data, and the choice of an appropriate 
-#' environmental range is crucial for accurate calculations.
-#' 
-#' @examples 
-#' \dontrun{
-#' # Example usage:
-#' df = data.frame(
-#'   trait1 = rnorm(100),
-#'   trait2 = rnorm(100),
-#'   environment = seq(1, 100)
+#' @param trait_values A numeric vector for a single trait or a data frame with one column per trait.
+#' @param env_values (Optional) A numeric vector of environmental values corresponding to `trait_values`. 
+#' If `NULL`, equidistant environments are generated automatically.
+#'
+#' @return A numeric value for a single trait or a named numeric vector for multiple traits, with the ESPI
+#' value for each trait.
+#'
+#' @details
+#' The ESPI measures how sensitive a trait is to changes in environmental conditions. It is based on the
+#' maximum and minimum mean trait values across different environments, normalized by the absolute range
+#' of the environmental values.
+#'
+#' @examples
+#' # Example 1: Single Trait
+#' trait_values = c(10, 15, 20, 25, 30)
+#' env_values = c(1, 2, 3, 4, 5)
+#' calculate_ESPI(trait_values, env_values)
+#'
+#' # Example 2: Multiple Traits
+#' trait_values = data.frame(
+#'   Height = c(10, 15, 20, 25, 30),
+#'   Weight = c(5, 7, 9, 11, 13)
 #' )
-#' 
-#' ESPI_values = calculate_ESPI(df, trait_cols = c("trait1", "trait2"), env_col = "environment")
-#' print(ESPI_values)
-#' }
-#' 
-#' @seealso 
-#' \code{\link{tapply}}, \code{\link{mean}}
-#' 
+#' env_values = c(1, 2, 3, 4, 5)
+#' calculate_ESPI(trait_values, env_values)
+#'
+#' # Example 3: Without env_values
+#' trait_values = c(10, 15, 20, 25, 30)
+#' calculate_ESPI(trait_values)
+#'
 #' @export
-calculate_ESPI = function(data, trait_cols, env_col) {
+calculate_ESPI = function(trait_values, env_values = NULL) {
   
-  # Handle env_col to ensure it's a factor
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col_data = as.factor(data[[env_col]])
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col_data = as.factor(env_col)
-  } else {
-    env_col_data = as.factor(data[[env_col]])
+  if (is.null(env_values)) {
+    env_values = seq_along(trait_values)
+  
   }
   
-  # Initialize a list to store ESPI values for each trait
-  ESPI_values_list = list()
+  if (!is.vector(trait_values) && !is.data.frame(trait_values)) {
+    stop("trait_values must be a numeric vector or a data frame where each column is a trait.")
+  }
   
-  # Loop through each trait column
-  for (i in seq_along(trait_cols)) {
-    trait_column = trait_cols[i]
-    trait_col_data = if (is.numeric(trait_column)) data[[trait_column]] else data[[trait_column]]
-    
-    # Calculate mean trait values for each environment
-    means = tapply(trait_col_data, env_col_data, mean, na.rm = TRUE)
-    
-    # Identify maximum and minimum means
+  if (length(env_values) != length(trait_values)) {
+    stop("env_values must be the same length as trait_values.")
+  }
+  
+  # Function to calculate ESPI for a single trait
+  calculate_single_espi = function(single_trait) {
+    means = tapply(single_trait, env_values, mean, na.rm = TRUE)
     max_mean = max(means, na.rm = TRUE)
     min_mean = min(means, na.rm = TRUE)
     
-    # Calculate the absolute distance between the max and min environmental values
-    abs_env_distance = abs(max(as.numeric(env_col_data), na.rm = TRUE) - min(as.numeric(env_col_data), na.rm = TRUE))
-    
-    # Calculate ESPI and store it for the current trait
-    ESPI_value = if (abs_env_distance > 0) (max_mean - min_mean) / abs_env_distance else NA
-    
-    # Store ESPI for the current trait in the list
-    ESPI_values_list[[i]] = ESPI_value
-    names(ESPI_values_list)[i] = trait_column
+    abs_env_distance = abs(max(as.numeric(env_values), na.rm = TRUE) - min(as.numeric(env_values), na.rm = TRUE))
+    if (abs_env_distance > 0) {
+      return((max_mean - min_mean) / abs_env_distance)
+    } else {
+      return(NA)
+    }
   }
   
-  return(ESPI_values_list)
+  # Handle single trait
+  if (is.vector(trait_values)) {
+    return(calculate_single_espi(trait_values))
+  } else if (is.data.frame(trait_values)) {
+    # Handle multiple traits
+    espi_results = sapply(trait_values, calculate_single_espi)
+    names(espi_results) = colnames(trait_values)
+    return(espi_results)
+  }
 }
 ## test - passed on synthetic dataset 
 
@@ -656,146 +552,99 @@ calculate_ESPI = function(data, trait_cols, env_col) {
 
 #' Calculate Environmental Sensitivity Performance Index for Individual Differences (ESPIID)
 #'
-#' This function calculates the Environmental Sensitivity Performance Index for Individual Differences (ESPIID). 
-#' ESPIID is defined as the absolute phenotypic distance between individuals of the same genotype in different environments, 
-#' divided by the absolute distance between environmental values.
-#' 
-#' The function is designed to handle multiple traits, genotypes, and environmental combinations, providing a comprehensive analysis 
-#' of phenotypic sensitivity to environmental changes across individual plants.
+#' This function calculates the Environmental Sensitivity Performance Index for Individual Differences (ESPIID)
+#' for a single trait across different environmental conditions. ESPIID is calculated as:
+#' \deqn{ESPIID = \frac{\text{Mean or Median Absolute Phenotypic Distance}}{\text{Absolute Environmental Distance}}}
 #'
-#' @param dataframe A data frame containing the phenotypic data, including traits, genotype identifiers, and environmental factors.
-#' @param trait_cols A vector specifying the column indices or names of the traits to be analyzed.
-#' @param sp (Optional) A column index or name indicating the species or genotype identifier. If not provided, the data is treated as a single group.
-#' @param factors (Optional) A vector of column indices or names specifying the internal environmental factors within the data frame that should be combined to create unique environmental combinations.
-#' @param factors_not_in_dataframe (Optional) A list of vectors representing external environmental factors that are not included in the data frame. Each vector must have a length equal to the number of rows in the data frame.
-#' @param use_median (Optional) A logical value indicating whether to use the median instead of the mean for the ESPIID calculation. Defaults to FALSE (use mean).
-#' 
-#' @return A list containing:
-#' \item{all_results}{A list where each entry corresponds to a genotype (or species) and contains the ESPIID values for the specified traits.}
+#' @param trait_values A numeric vector containing the trait values.
+#' @param env_values (Optional) A vector representing the environmental conditions for the trait values.
+#' If `NULL`, equidistant environments are assumed.
+#' @param use_median (Optional) A logical value indicating whether to use the median instead of the mean
+#' for calculating the absolute phenotypic distances. Defaults to `FALSE` (use mean).
 #'
-#' @details 
-#' The ESPIID provides a measure of phenotypic sensitivity by comparing the individual phenotypic values of the same genotype across different environments. 
-#' For each pair of environmental combinations, it calculates the absolute differences between all pairs of individuals in those environments using the `outer()` function. 
-#' The ESPIID is the mean or median of these absolute phenotypic distances, normalized by dividing by the absolute distance between the environmental values.
-#' 
-#' When to use ESPIID vs. ESPI:
-#' - **ESPIID** focuses on the phenotypic sensitivity of individual plants within the same genotype across environments, making it useful for datasets where individual variation is important.
-#' - **ESPI** provides a broader measure of phenotypic plasticity by comparing the mean trait values of genotypes or groups across environments. ESPI is more suitable when you want to assess general plasticity across groups rather than individual sensitivity.
+#' @return A numeric value representing the ESPIID for the given trait.
 #'
-#' Use ESPIID when you are interested in within-genotype variation and want to evaluate the spread of individual phenotypic responses. ESPI, on the other hand, is more suitable when you are comparing the overall average plasticity across environmental conditions.
+#' @details
+#' The ESPIID quantifies the sensitivity of a trait to environmental changes by comparing
+#' the phenotypic distances between individuals across pairs of environments. The phenotypic
+#' distances are normalized by the absolute distance between the environmental values.
+#'
+#' The function assumes that the input trait values and environmental values are of equal length.
+#' If environmental values are not provided, equidistant environments are generated automatically.
 #'
 #' @examples
-#' # Example usage
-#' df = data.frame(
-#'   Genotype = rep(c("G1", "G2"), each = 6),
-#'   Environment = rep(c("Env1", "Env2", "Env3"), times = 4),
-#'   Height = c(10, 12, 11, 14, 16, 15, 20, 22, 21, 23, 25, 24)
-#' )
-#' 
-#' # Calculate ESPIID for the 'Height' trait across genotypes and environments
-#' results = espiid_calculation(
-#'   dataframe = df, 
-#'   traits = "Height", 
-#'   sp = "Genotype", 
-#'   factors = "Environment"
-#' )
-#' 
-#' # Access the ESPIID values
-#' print(results$all_results)
-#' 
+#' # Example 1: Single Trait with Specified Environmental Values
+#' trait_values = c(10, 12, 15, 18, 20, 25)
+#' env_values = c("Env1", "Env1", "Env2", "Env2", "Env3", "Env3")
+#' espiid = calculate_espiid(trait_values, env_values)
+#' print(espiid)
+#'
+#' # Example 2: Single Trait with Equidistant Environments
+#' trait_values = c(10, 12, 15, 18, 20, 25)
+#' espiid = calculate_espiid(trait_values)
+#' print(espiid)
+#'
+#' # Example 3: Use Median for ESPIID Calculation
+#' trait_values = c(10, 12, 15, 18, 20, 25)
+#' env_values = c("Env1", "Env1", "Env2", "Env2", "Env3", "Env3")
+#' espiid = calculate_espiid(trait_values, env_values, use_median = TRUE)
+#' print(espiid)
+#'
 #' @export
-espiid_calculation = function(dataframe, trait_cols, sp = NULL, factors = NULL, factors_not_in_dataframe = NULL, use_median = FALSE) {
+calculate_espiid = function(trait_values, use_median = FALSE) {
+
+
+  env_values = seq_along(trait_values) # Create equidistant environment indices
   
-  # List of required packages
-  required_packages = c("dplyr", "reshape2")
   
-  # Check and install required packages
-  check_and_install_packages(required_packages)
-  
-  # Convert column indices to names if necessary
-  if (!is.null(sp)) {
-    sp = if (is.numeric(sp)) names(dataframe)[sp] else sp
-  }
-  traits = if (is.numeric(trait_cols)) names(dataframe)[trait_cols] else trait_cols
-  
-  # Combine internal and external factors into a single dataframe
-  if (!is.null(factors_not_in_dataframe)) {
-    if (length(factors_not_in_dataframe[[1]]) != nrow(dataframe)) {
-      stop("The length of external factors must match the number of rows in the dataframe.")
-    }
-    # Check if Combined_Factors is continuous
-    for(i in 1:length(factors_not_in_dataframe)){
-      if(!is.numeric(factors_not_in_dataframe[[i]])){
-        stop("The combined environmental factors are not continuous. ESPIID assumes continuous environmental variables. Results may not be accurate.")
-      }
-    }
-    external_factors_df = as.data.frame(factors_not_in_dataframe)
-    if (!is.null(factors)) {
-      factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
-      combined_factors_df = cbind(dataframe[factors], external_factors_df)
-    } else {
-      combined_factors_df = external_factors_df
-    }
-    dataframe$Combined_Factors = interaction(combined_factors_df, drop = TRUE)
-  } else if (!is.null(factors)) {
-    factors = if (is.numeric(factors)) names(dataframe)[factors] else factors
-    dataframe$Combined_Factors = interaction(dataframe[factors], drop = TRUE)
-  } else {
-    stop("You must provide either internal factors, external factors, or both.")
+  # Input validation
+  if (!is.numeric(trait_values)) {
+    stop("trait_values must be a numeric vector.")
   }
   
-  dataframe$Combined_Factors = as.factor(dataframe$Combined_Factors)
-  
-  all_results = list()
-  
-  if (is.null(sp)) {
-    unique_species = list("Single_Group" = dataframe)
-  } else {
-    unique_species = split(dataframe, dataframe[[sp]])
+  if (length(trait_values) != length(env_values)) {
+    stop("trait_values and env_values must have the same length.")
   }
   
-  # Loop over each species or group
-  for (species_name in names(unique_species)) {
-    species_data = unique_species[[species_name]]
-    
-    ESPIID_results = list()
-    
-    # Initialize a data frame to store ESPIID values for each pair of environments
-    ESPIID_values = data.frame(sp = character(), env1 = character(), env2 = character(), espiid = numeric())
-    
-    # Get unique environment combinations
-    env_levels = levels(species_data$Combined_Factors)
-    n_env_levels = length(env_levels)
-    
-    # Loop over each trait
-    for (trait in traits) {
-      for (i in 1:(n_env_levels - 1)) {
-        for (j in (i + 1):n_env_levels) {
-          trait_i = species_data[[trait]][species_data$Combined_Factors == env_levels[i]]
-          trait_j = species_data[[trait]][species_data$Combined_Factors == env_levels[j]]
-          
-          # Calculate absolute phenotypic distances between all pairs of individuals in env_i and env_j
-          abs_diff = abs(outer(trait_i, trait_j, "-"))
-          
-          # Calculate mean or median absolute phenotypic distance
-          mean_abs_diff = if (use_median) median(abs_diff, na.rm = TRUE) else mean(abs_diff, na.rm = TRUE)
-          
-          # Calculate absolute distance between environmental values
-          abs_env_distance = abs(as.numeric(env_levels[i]) - as.numeric(env_levels[j]))
-          
-          # Calculate ESPIID for this pair of environments
-          espiid_value = mean_abs_diff / abs_env_distance
-          
-          # Store the results
-          ESPIID_values = rbind(ESPIID_values, data.frame(sp = species_name, env1 = env_levels[i], env2 = env_levels[j], espiid = espiid_value))
-        }
-      }
+  env_values = as.factor(env_values) # Convert to factor
+  
+  # Get all unique pairs of environments
+  env_levels = levels(env_values)
+  n_envs = length(env_levels)
+  
+  if (n_envs < 2) {
+    stop("At least two environments are required to calculate ESPIID.")
+  }
+  
+  # Initialize storage for ESPIID values
+  espiid_values = numeric()
+  
+  # Loop over all environment pairs
+  for (i in 1:(n_envs - 1)) {
+    for (j in (i + 1):n_envs) {
+      # Extract trait values for the two environments
+      trait_i = trait_values[env_values == env_levels[i]]
+      trait_j = trait_values[env_values == env_levels[j]]
+      
+      # Calculate absolute differences between all pairs of individuals
+      abs_diff = abs(outer(trait_i, trait_j, "-"))
+      
+      # Calculate mean or median absolute phenotypic distance
+      mean_abs_diff = if (use_median) median(abs_diff, na.rm = TRUE) else mean(abs_diff, na.rm = TRUE)
+      
+      # Calculate absolute distance between environmental values
+      abs_env_distance = abs(as.numeric(env_levels[i]) - as.numeric(env_levels[j]))
+      
+      # Handle potential division by zero
+      espiid_value = if (abs_env_distance > 0) mean_abs_diff / abs_env_distance else NA
+      
+      # Store ESPIID value for this environment pair
+      espiid_values = c(espiid_values, espiid_value)
     }
-    
-    all_results[[species_name]] = ESPIID_values
   }
   
-  return(all_results)
+  # Return the mean ESPIID across all environment pairs
+  return(mean(espiid_values, na.rm = TRUE))
 }
 
 #l=list(external_light)

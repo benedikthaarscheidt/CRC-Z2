@@ -23,7 +23,8 @@ if (!requireNamespace("roxygen2", quietly = TRUE)) {
   install.packages("roxygen2")
   library(roxygen2)
 }
-
+library(purrr)
+library(dplyr)
 source("~/CRC 1622 - Z2/R-files/2.R")
 
 ################################
@@ -213,70 +214,99 @@ impute = function(mt, mode = "median") {
 ################################
 
 #' Calculate the Coefficient of Variation for Plasticity (CVt)
-#'
-#' This function calculates the Coefficient of Variation (CVt) for a given dataset. 
-#' The CVt can be calculated either for each trait separately or as an overall value across all traits, 
-#' depending on the `traitwise` parameter.
-#'
-#' @param data A numeric data frame, matrix or vector containing the trait data. Each column represents a trait, and each row represents an observation. 
-#' @param traitwise A logical parameter. If `TRUE`, the CVt is calculated separately for each trait. If `FALSE`, the CVt is calculated across all traits combined.
 #' 
-#' @return A numeric vector if `traitwise = TRUE`, where each element represents the CVt for a single trait. 
-#' If `traitwise = FALSE`, returns a single numeric value representing the overall CVt across all traits.
+#' This function calculates the Coefficient of Variation (CVt) for each trait in the given dataset.
+#' If a Genotype column exists, the CVt will be computed for each Genotype. If no Genotype column exists,
+#' the CVt will be calculated over the entire trait column.
 #' 
-#' @details The Coefficient of Variation (CVt) is calculated as the ratio of the standard deviation to the mean. 
-#' This function provides flexibility in calculating the CVt for each trait individually or for the entire dataset as a whole.
+#' @param data A data frame containing the trait data. The data should include a column for `Genotype` (if available) and `Trait` values.
+#' @param trait_col A character or numeric value specifying the column(s) containing trait values. This can be a single column name, a numeric column index, or a vector of column names/indices.
+#' @param genotype_col An optional character or numeric value specifying the column containing genotype information. If not provided, CVt is calculated for the entire dataset.
+#' @return A data frame with CVt values calculated for each trait, or a numeric vector if only one trait is provided.
 #' 
 #' @examples
 #' # Example dataset
 #' synthetic_data = data.frame(
-#'   Trait_1 = c(100.2, 92, 83.5, 96.5, 103.1),
-#'   Trait_2 = c(101, 127, 139, 103, 113),
-#'   Trait_3 = c(127.8, 103.5, 83.6, 92.5, 101.9)
+#'   Genotype = rep(1:5, each = 3),
+#'   Replicate = rep(1:3, times = 5),
+#'   Environment = rep(1:3, times = 5),
+#'   Trait1 = c(100.2, 92, 83.5, 96.5, 103.1, 101, 127, 139, 103, 113, 127.8, 103.5, 83.6, 92.5, 101.9),
+#'   Trait2 = c(88.1, 92.5, 80.3, 85.9, 98.2, 91.3, 122.1, 130.3, 115.4, 107.6, 121.2, 110.3, 88.5, 98.1, 104.3)
 #' )
 #' 
-#' # Calculate CVt for each trait separately
-#' CVt_per_trait = calculate_CVt(synthetic_data1, traitwise = TRUE)
-#' print(CVt_per_trait)
-#' 
-#' # Calculate overall CVt across all traits
-#' overall_CVt = calculate_CVt(synthetic_data1, traitwise = FALSE)
-#' print(overall_CVt)
+#' # Calculate CVt per genotype for multiple traits
+#' CVt_per_genotype = calculate_CVt(synthetic_data, trait_col = c("Trait1", "Trait2"), genotype_col = "Genotype")
+#' print(CVt_per_genotype)
 #' 
 #' @export
-calculate_CVt = function(data, exclude_col=NULL, traitwise = TRUE) {
-  if (any(is.na(data))) {
+calculate_CVt = function(data, trait_col, genotype_col = NULL) {
+  if (any(is.na(data[trait_col]))) {
     stop("There are missing values in your data. Consider using the function impute().")
   }
   
-  # Exclude specified columns if needed
-  if (!is.null(exclude_col)) {
-    data = data[ , -exclude_col]
+  # Ensure trait_col is either a single column or a vector of columns
+  if (is.numeric(trait_col)) {
+    trait_col = colnames(data)[trait_col]  # Convert numeric index to column name
   }
   
-  if (traitwise) {
-    # Calculate CVt for each trait separately
-    CVt_values = apply(data, 2, function(x) sd(x) / mean(x))
-    names(CVt_values) = colnames(data)
-    return(CVt_values)
+  if (length(trait_col) == 0) {
+    stop("No valid trait columns provided.")
+  }
+  
+  if (!is.null(genotype_col)) {
+    # Convert numeric genotype_col to column name if needed
+    if (is.numeric(genotype_col)) {
+      genotype_col = colnames(data)[genotype_col]
+    }
+    
+    # Check if the genotype column exists in the data
+    if (!(genotype_col %in% colnames(data))) {
+      stop("The specified genotype column does not exist in the dataset.")
+    }
+    
+    # Calculate CVt per genotype for each trait
+    CVt_per_genotype = lapply(trait_col, function(trait_name) {
+      CVt_values = tapply(data[[trait_name]], data[[genotype_col]], function(trait_values) {
+        if (length(trait_values) < 2) {
+          return(NA) # Avoid division by zero for single values
+        }
+        sd(trait_values) / mean(trait_values)
+      })
+      data.frame(Genotype = names(CVt_values), Trait = trait_name, CVt = as.numeric(CVt_values))
+    })
+    
+    # Combine results for all traits into one data frame
+    return(do.call(rbind, CVt_per_genotype))
   } else {
-    # Calculate overall CVt across all traits
-    flattened_data = as.numeric(unlist(data))  # Flatten the data frame to a numeric vector
-    overall_CVt = sd(flattened_data) / mean(flattened_data)
-    return(overall_CVt)
+    # If no genotype column, calculate CVt for the entire dataset for each trait
+    CVt_values = sapply(trait_col, function(trait_name) {
+      if (length(data[[trait_name]]) < 2) {
+        return(NA) # Avoid division by zero for single values
+      }
+      sd(data[[trait_name]]) / mean(data[[trait_name]])
+    })
+    
+    # Create a data frame for results
+    result_df = data.frame(
+      Trait = trait_col,
+      CVt = as.numeric(CVt_values)
+    )
+    return(result_df)
   }
 }
 
 
+
+
 ### test - passed in by hand calculation with this dataset
 
-#df_test1 = data.frame(Column1 = c(rep(4, 10), rep(2, 10)), Column2 = c(rep(10, 10), rep(1, 10)))
+df_test1 = data.frame(genotype=c(rep(1,10),rep(1,10)),Column1 = c(rep(4, 10), rep(2, 10)), Column2 = c(rep(10, 10), rep(1, 10)))
 #
 ##traitwise
-#calculate_CVt(df_test1)
-#print(sd(df_test1[,1])/mean(df_test1[,1]))
+#cv=calculate_CVt(df_test1,genotype_col = 1, trait_col = 2)
 #print(sd(df_test1[,2])/mean(df_test1[,2]))
-#
+##print(sd(df_test1[,2])/mean(df_test1[,2]))
+#print(cv)
 ##total
 #df_test1_flattened=as.numeric(unlist(df_test1))
 #calculate_CVt(df_test1,traitwise = F)
@@ -288,75 +318,200 @@ calculate_CVt = function(data, exclude_col=NULL, traitwise = TRUE) {
 
 ################################
 
-#' Calculate the Reaction Norm Slope for a Specific Trait
+
+#' Calculate the Reaction Norm Slope for a Specific Trait per Genotype
 #'
-#' This function calculates the reaction norm slope for a specified trait in a data frame, 
-#' using the first column as the environment indicator. It also provides an option to plot the reaction norm.
+#' This function calculates the reaction norm slope for each genotype and trait in a data frame.
+#' If replicates are present, trait values are averaged across replicates for each genotype-environment combination.
+#' If no `env_col` is specified, the environment is assumed to be equally spaced.
 #'
-#' @param data A data frame containing the environment indicators in the first column and the trait data in the remaining columns.
-#' @param trait_col The column number of the trait for which the reaction norm slope is to be calculated. This can also be multiple indicator numbers in a vector which then will be used separately to calculate the slope.
-#' @param plot A logical flag indicating whether to plot the reaction norm. Defaults to FALSE.
-#' @return The slope of the reaction norm for the specified trait.
+#' @param data A data frame containing the trait data, environmental values, and optionally a genotype and replicate column.
+#' @param env_col (Optional) The column number or name of the environmental factor. If not provided, the environment is assumed to be equally spaced.
+#' @param trait_cols A vector of column numbers or names specifying the traits for which the slopes are calculated.
+#' @param genotype_col The column number or name specifying the genotype information.
+#' @param replicate_col (Optional) The column number or name specifying replicate information. If provided, trait values are averaged across replicates for each genotype-environment combination.
+#' @param plot A logical flag indicating whether to plot the reaction norms. Defaults to FALSE.
+#' @return A data frame with the calculated slopes for each genotype and trait. The returned data frame includes:
+#'   \itemize{
+#'     \item \code{Genotype}: The genotype ID.
+#'     \item \code{Slope}: The calculated reaction norm slope.
+#'     \item \code{Trait}: The trait name.
+#'   }
 #' @examples
+#' # Example dataset
 #' df = data.frame(
-#'   Environment = c(1, 1, 2, 2, 3, 3),
-#'   Trait_1 = c(1, 2, 3, 4, 5, 6),
-#'   Trait_2 = c(2, 4, 6, 8, 10, 12)
+#'   Genotype = rep(1:3, each = 6),
+#'   Environment = rep(c(10, 20, 30), times = 6),
+#'   Replicate = rep(1:2, each = 3, times = 3),
+#'   Trait_1 = c(1, 1.1, 2, 2.1, 3, 3.1, 4, 4.1, 5, 5.1, 6, 6.1, 7, 7.1, 8, 8.1, 9, 9.1),
+#'   Trait_2 = c(2, 2.1, 4, 4.1, 6, 6.1, 8, 8.1, 10, 10.1, 12, 12.1, 14, 14.1, 16, 16.1, 18, 18.1)
 #' )
-#' slope = calculate_reaction_norm_slope(df, trait_col = 2, plot = TRUE)
+#'
+#' # Calculate reaction norm slopes
+#' RN_slopes = calculate_reaction_norm_slope(
+#'   df,
+#'   env_col = "Environment",
+#'   trait_cols = c("Trait_1", "Trait_2"),
+#'   genotype_col = "Genotype",
+#'   replicate_col = "Replicate",
+#'   plot = TRUE
+#' )
+#'
+#' print(RN_slopes)
 #' @export
-calculate_reaction_norm_slope = function(data, env_col, trait_cols, plot = FALSE) {
+calculate_reaction_norm_slope = function(data, env_col = NULL, trait_cols, genotype_col, replicate_col = NULL) {
+  # Convert numeric indices to column names if necessary
+  if (is.numeric(env_col)) env_col = colnames(data)[env_col]
+  if (is.numeric(trait_cols)) trait_cols = colnames(data)[trait_cols]
+  if (is.numeric(genotype_col)) genotype_col = colnames(data)[genotype_col]
+  if (!is.null(replicate_col) && is.numeric(replicate_col)) replicate_col = colnames(data)[replicate_col]
   
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_indicators = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_indicators = env_col
-  } else {
-    env_indicators = data[[env_col]]
+  # Validate column existence
+  required_cols = c(genotype_col, trait_cols)
+  if (!is.null(env_col)) required_cols = c(required_cols, env_col)
+  if (!is.null(replicate_col)) required_cols = c(required_cols, replicate_col)
+  if (any(!required_cols %in% colnames(data))) {
+    stop("One or more specified columns do not exist in the dataset.")
   }
   
-  # Initialize an empty list to store slopes for multiple traits
-  slopes_list = list()
+  # Handle missing environmental column
+  if (is.null(env_col)) {
+    message("No environment column provided. Assuming equally spaced environmental values.")
+    env_values = seq_len(nrow(data))
+    data$Env = rep(env_values, length.out = nrow(data))
+    env_col = "Env"
+  }
   
-  # Loop over each specified trait column
+  # Step 1: Group by genotype
+  data_grouped = data
+  
+  # Step 2: If replicates exist, average trait values for each genotype-environment combination
+  if (!is.null(replicate_col)) {
+    data_grouped = data %>%
+      group_by(across(all_of(c(genotype_col, env_col)))) %>%
+      summarise(across(all_of(trait_cols), mean, na.rm = TRUE), .groups = "drop")
+  }
+  
+  # Initialize a list to store results
+  results = list()
+  
+  # Step 3: Calculate slopes and p-values for each trait column
   for (trait_col in trait_cols) {
+    # Subset data for the current trait
+    trait_data = data_grouped %>%
+      select(all_of(c(genotype_col, env_col, trait_col))) %>%
+      rename(Env = all_of(env_col), Trait = all_of(trait_col), Genotype = all_of(genotype_col))
     
-    if (!is.numeric(data[[trait_col]])) {
-      stop(paste("The column", colnames(data)[trait_col], "is not numeric."))
-    }
+    # Calculate slope and p-value per genotype
+    slopes = trait_data %>%
+      group_by(Genotype) %>%
+      summarise(
+        Slope = if (n_distinct(Env) > 1) coef(lm(Trait ~ Env))[["Env"]] else NA,
+        P_Value = if (n_distinct(Env) > 1) summary(lm(Trait ~ Env))$coefficients["Env", "Pr(>|t|)"] else NA,
+        .groups = "drop"
+      )
     
-    if (any(is.na(data[[trait_col]]))) {
-      stop(paste("There are missing values in column", colnames(data)[trait_col], ". Consider using the function impute()."))
-    }
+    # Add trait information
+    slopes$Trait = trait_col
     
-    if (length(env_indicators) != nrow(data)) {
-      stop("Length of env_indicators must match the number of rows in the data.")
-    }
-    
-    # Fit a linear model to estimate the slope for the trait column
-    model = lm(data[[trait_col]] ~ env_indicators)
-    
-    # Extract the slope of the reaction norm
-    slope = coef(model)[["env_indicators"]]
-    
-    # Store the slope in the list with the trait name
-    slopes_list[[colnames(data)[trait_col]]] = slope
-    
-    # Plot the reaction norm if requested
-    if (plot) {
-      par(mai = c(1, 1, 0.5, 0.5))  # Adjust the margins for plotting
-      plot(data[[trait_col]] ~ env_indicators, 
-           xlab = "Environment Indicator", 
-           ylab = colnames(data)[trait_col],
-           main = paste("Reaction Norm for", colnames(data)[trait_col]),
-           pch = 19, col = "blue")
-      abline(model, col = "red", lwd = 2)
-      legend("topleft", legend = c("Observed", "Fitted Line"), col = c("blue", "red"), pch = c(19, NA), lty = c(NA, 1), lwd = c(NA, 2))
-    }
+    # Append to results
+    results[[trait_col]] = slopes
   }
   
-  return(slopes_list)  # Return the list of slopes for each trait
+  # Combine results for all traits into a single data frame
+  final_results = bind_rows(results)
+  
+  return(final_results)
 }
+
+##############################
+
+calculate_reaction_norm_nonlinear = function(data,env_col = NULL,trait_cols,genotype_col,replicate_col = NULL,degree = 2) {
+  # Load required libraries
+  library(dplyr)
+  
+  # Convert numeric indices to column names if necessary
+  if (is.numeric(env_col)) env_col = colnames(data)[env_col]
+  if (is.numeric(trait_cols)) trait_cols = colnames(data)[trait_cols]
+  if (is.numeric(genotype_col)) genotype_col = colnames(data)[genotype_col]
+  if (!is.null(replicate_col) && is.numeric(replicate_col)) replicate_col = colnames(data)[replicate_col]
+  
+  # Validate column existence
+  required_cols = c(genotype_col, trait_cols)
+  if (!is.null(env_col)) required_cols = c(required_cols, env_col)
+  if (!is.null(replicate_col)) required_cols = c(required_cols, replicate_col)
+  if (any(!required_cols %in% colnames(data))) {
+    stop("One or more specified columns do not exist in the dataset.")
+  }
+  
+  # Handle missing environmental column
+  if (is.null(env_col)) {
+    message("No environment column provided. Assuming equally spaced environmental values.")
+    env_values = seq_len(nrow(data))
+    data$Env = rep(env_values, length.out = nrow(data))
+    env_col = "Env"
+  }
+  
+  # Step 1: Group by genotype
+  data_grouped = data
+  
+  # Step 2: If replicates exist, average trait values for each genotype-environment combination
+  if (!is.null(replicate_col)) {
+    data_grouped = data %>%
+      group_by(across(all_of(c(genotype_col, env_col)))) %>%
+      summarise(across(all_of(trait_cols), mean, na.rm = TRUE), .groups = "drop")
+  }
+  
+  # Initialize a list to store results
+  results = list()
+  
+  # Step 3: Fit nonlinear models and extract statistics
+  for (trait_col in trait_cols) {
+    # Subset data for the current trait
+    trait_data = data_grouped %>%
+      select(all_of(c(genotype_col, env_col, trait_col))) %>%
+      rename(Env = all_of(env_col), Trait = all_of(trait_col), Genotype = all_of(genotype_col))
+    
+    # Fit nonlinear models per genotype
+    slopes = trait_data %>%
+      group_by(Genotype) %>%
+      reframe(
+        Coefficients = list({
+          if (n_distinct(Env) >= degree + 1) {
+            tryCatch(coef(lm(Trait ~ poly(Env, degree))), error = function(e) NA)
+          } else {
+            NA
+          }
+        }),
+        P_Value = {
+          if (n_distinct(Env) >= degree + 1) {
+            tryCatch({
+              anova_model = lm(Trait ~ poly(Env, degree))
+              anova(anova_model)$`Pr(>F)`[1]
+            }, error = function(e) NA)
+          } else {
+            NA
+          }
+        }
+      ) %>%
+      mutate(
+        Linear_Slope = map_dbl(Coefficients, ~if (!is.null(.) && length(.) >= 2) .[2] else NA_real_),
+        Quadratic_Term = map_dbl(Coefficients, ~if (!is.null(.) && degree >= 2 && length(.) >= 3) .[3] else NA_real_)
+      )
+    
+    # Add trait information
+    slopes$Trait = trait_col
+    
+    # Append to results
+    results[[trait_col]] = slopes
+  }
+  
+  # Combine results for all traits into a single data frame
+  final_results = bind_rows(results)
+  
+  return(final_results)
+}
+
 
 #test - passed with synthetic dataset
 
@@ -373,73 +528,95 @@ calculate_reaction_norm_slope = function(data, env_col, trait_cols, plot = FALSE
 #' Calculate the D Slope for a Specific Trait Between High and Low Resource Availability
 #'
 #' This function calculates the D slope, which is the difference in the mean value of a specified trait 
-#' between high and low resource availability conditions. The D slope quantifies the scope of the plastic response.
-#' 
-#' The function assumes that the environmental indicator is in the `env_col` column of the data frame or passed as a vector. 
-#' The function will automatically assume that the lowest values represent the low resource environment and 
-#' the highest values represent the high resource environment.
+#' between high and low resource availability conditions for each genotype. The D slope quantifies 
+#' the scope of the plastic response. If replicate data is present, the function averages trait values over 
+#' replicates before performing the calculation.
 #'
-#' @param data A data frame containing the environmental indicators and trait data.
-#' @param env_col The column number, name, or a vector representing the environmental conditions. Defaults to 1 if not specified.
-#' @param trait_col The column number or name of the trait to analyze.
-#' @return The D slope, representing the difference in mean trait values between high and low resource conditions.
+#' The function uses the environmental indicator (`env_col`) to classify data into "High" and "Low" 
+#' resource levels. You can specify boundaries for these levels using `low_boundary` and `high_boundary`.
+#'
+#' @param data A data frame containing the environmental indicators, trait data, and optionally genotype and replicate information.
+#' @param env_col The column number or name representing the environmental conditions.
+#' @param trait_cols The column numbers or names of the trait(s) to analyze.
+#' @param genotype_col The column number or name representing genotype information.
+#' @param replicate_col An optional column number or name representing replicate information. If provided, the function averages trait values over replicates.
+#' @param low_boundary A numeric value specifying the upper boundary for the "Low" resource level. Defaults to the 25th percentile of the environment column.
+#' @param high_boundary A numeric value specifying the lower boundary for the "High" resource level. Defaults to the 75th percentile of the environment column.
+#' @return A data frame with D slope values for each genotype and trait.
 #' @examples
-#' df = data.frame(
-#'   Environment = c(1, 2, 3, 4),
-#'   Height = c(10, 12, 20, 22)
+#' # Example dataset
+#' example_data = data.frame(
+#'   Genotype = rep(1:3, each = 6),
+#'   Replicate = rep(1:2, times = 9),
+#'   Environment = c(1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6),
+#'   Trait = c(10, 12, 20, 22, 25, 28, 11, 13, 21, 23, 26, 29, 9, 11, 19, 21, 24, 27)
 #' )
-#' D_slope = calculate_D_slope(df, trait_col = "Height")
-#' print(D_slope)
-#' 
-#' # With an explicit environment vector
-#' env_vector = c("Low", "Low", "High", "High")
-#' D_slope = calculate_D_slope(df, trait_col = "Height", env_col = env_vector)
-#' print(D_slope)
+#'
+#' # Calculate D slope
+#' D_slope_results = calculate_D_slope(
+#'   data = example_data,
+#'   env_col = "Environment",
+#'   trait_cols = "Trait",
+#'   genotype_col = "Genotype",
+#'   replicate_col = "Replicate",
+#'   low_boundary = 2,
+#'   high_boundary = 5
+#' )
+#' print(D_slope_results)
 #' @export
-calculate_D_slope = function(data, env_col, trait_cols) {
+calculate_D_slope = function(data, env_col, trait_cols, genotype_col, replicate_col = NULL, low_boundary = NULL, high_boundary = NULL) {
+ 
   
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    # If env_col is a vector, keep it as is
-    env_col = env_col
-  } else {
-    env_col = data[[env_col]]
+  # Convert column indices to column names if necessary
+  if (is.numeric(env_col)) env_col = colnames(data)[env_col]
+  if (is.numeric(trait_cols)) trait_cols = colnames(data)[trait_cols]
+  if (is.numeric(genotype_col)) genotype_col = colnames(data)[genotype_col]
+  if (!is.null(replicate_col) && is.numeric(replicate_col)) replicate_col = colnames(data)[replicate_col]
+  
+  # Validate column existence
+  required_cols = c(genotype_col, trait_cols, env_col)
+  if (!is.null(replicate_col)) required_cols = c(required_cols, replicate_col)
+  if (any(!required_cols %in% colnames(data))) {
+    stop("One or more specified columns do not exist in the dataset.")
   }
   
-  # Combine env_col with the data to maintain alignment after sorting
-  sorted_data = data[order(env_col), ]
-  sorted_env_col = env_col[order(env_col)]
-  
-  # Determine the midpoint for splitting
-  num_rows = nrow(sorted_data)
-  mid_point = ceiling(num_rows / 2)
-  
-  # Assign "Low" to the first half and "High" to the second half
-  env_vector = c(rep("Low", mid_point), rep("High", num_rows - mid_point))
-  
-  # Initialize a vector to store the D slope for each trait
-  D_slope_values = numeric(length(trait_cols))
-  names(D_slope_values) = trait_cols  # Name the vector by trait columns
-  
-  # Loop over each trait column to calculate the D slope
-  for (i in seq_along(trait_cols)) {
-    trait_column = trait_cols[i]
-    
-    # Extract the trait data aligned with "High" and "Low" conditions
-    trait_high = sorted_data[env_vector == "High", trait_column]
-    trait_low = sorted_data[env_vector == "Low", trait_column]
-    
-    # Calculate the mean trait value for each condition
-    mean_high = mean(trait_high, na.rm = TRUE)
-    mean_low = mean(trait_low, na.rm = TRUE)
-    
-    # Calculate the D slope for the current trait
-    D_slope_values[i] = mean_high - mean_low
+  # Step 1: Group by genotype and environment, averaging over replicates if specified
+  data_grouped = data
+  if (!is.null(replicate_col)) {
+    data_grouped = data %>%
+      group_by(across(all_of(c(genotype_col, env_col)))) %>%
+      summarise(across(all_of(trait_cols), mean, na.rm = TRUE), .groups = "drop")
   }
   
-  return(D_slope_values)
+  # Step 2: Determine "Low" and "High" resource levels
+  if (is.null(low_boundary)) {
+    low_boundary = quantile(data_grouped[[env_col]], 0.25, na.rm = TRUE)
+  }
+  if (is.null(high_boundary)) {
+    high_boundary = quantile(data_grouped[[env_col]], 0.75, na.rm = TRUE)
+  }
+  
+  data_grouped = data_grouped %>%
+    mutate(Resource_Level = case_when(
+      .data[[env_col]] <= low_boundary ~ "Low",
+      .data[[env_col]] >= high_boundary ~ "High",
+      TRUE ~ NA_character_
+    ))
+  
+  # Step 3: Calculate the D slope for each trait and genotype
+  D_slope_results = data_grouped %>%
+    filter(!is.na(Resource_Level)) %>%
+    group_by(across(all_of(genotype_col))) %>%
+    summarise(
+      across(
+        all_of(trait_cols),
+        ~ mean(.x[Resource_Level == "High"], na.rm = TRUE) - mean(.x[Resource_Level == "Low"], na.rm = TRUE),
+        .names = "D_slope_{.col}"
+      ),
+      .groups = "drop"
+    )
+  
+  return(D_slope_results)
 }
 
 #test - passed with synthetic 
@@ -1406,6 +1583,7 @@ calculate_PIR = function(data, trait_cols, env_col, rgr_col) {
 #specific_growthrate=c(rep(10,10),rep(20,10))
 #
 #calculate_PIR(df_test2 , trait_col = 2 , env_col = 1, rgr_col = specific_growthrate)
+
 
 
 
