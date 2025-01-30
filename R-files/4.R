@@ -70,43 +70,51 @@ df_test_simple = data.frame(
 
 #########################################
 
-#' Calculate Developmental Plasticity Index (DPI)
-#'
-#' This function calculates the Developmental Plasticity Index (DPI) by quantifying how a trait value 
+#' @title Calculate Developmental Plasticity Index (DPI)
+#' @description This function calculates the Developmental Plasticity Index (DPI) by quantifying how a trait value 
 #' changes between two time points during development.
 #'
 #' The formula used is:
 #' \deqn{DPI = \frac{Trait Value at Time2 - Trait Value at Time1}{Time Interval}}
 #'
-#' @param data A data frame containing the input data, with columns for trait values at different time points.
-#' @param trait_col_time1 A string or numeric value indicating the column for trait values at Time 1.
-#' @param trait_col_time2 A string or numeric value indicating the column for trait values at Time 2.
+#' @param trait_values_time1 A numeric vector containing trait values at Time 1.
+#' @param trait_values_time2 A numeric vector containing trait values at Time 2.
 #' @param time_interval Numeric, the time interval between the two time points.
-#' @return A numeric value representing the Developmental Plasticity Index (DPI).
 #'
+#' @return A numeric vector of DPI values.
+#' 
 #' @examples
 #' # Example usage with synthetic data
-#' synthetic_data = data.frame(
-#'   Trait_Time1 = c(10, 12, 14),
-#'   Trait_Time2 = c(15, 18, 22)
-#' )
-#' 
+#' trait_time1 = c(10, 12, 14)
+#' trait_time2 = c(15, 18, 22)
+#'
 #' # Calculate DPI
-#' dpi_value = calculate_DPI(synthetic_data, "Trait_Time1", "Trait_Time2", 5)
-#' print(dpi_value)
+#' dpi_values = calculate_DPI(trait_time1, trait_time2, 5)
+#' print(dpi_values)
 #'
 #' @export
-calculate_DPI = function(data, trait_col_time1, trait_col_time2, time_interval) {
+calculate_DPI = function(trait_values_time1, trait_values_time2, time_interval) {
+  # Ensure inputs are numeric vectors
+  if (!is.numeric(trait_values_time1) || !is.numeric(trait_values_time2)) {
+    stop("trait_values_time1 and trait_values_time2 must be numeric vectors.")
+  }
   
-  # Handle the input columns for time1 and time2
-  trait_time1 = if (is.numeric(trait_col_time1)) data[[trait_col_time1]] else data[[trait_col_time1]]
-  trait_time2 = if (is.numeric(trait_col_time2)) data[[trait_col_time2]] else data[[trait_col_time2]]
+  # Ensure the vectors are of equal length
+  if (length(trait_values_time1) != length(trait_values_time2)) {
+    stop("trait_values_time1 and trait_values_time2 must have the same length.")
+  }
+  
+  # Ensure the time interval is a positive numeric value
+  if (!is.numeric(time_interval) || time_interval <= 0) {
+    stop("time_interval must be a positive numeric value.")
+  }
   
   # Calculate DPI
-  dpi = (trait_time2 - trait_time1) / time_interval
+  dpi = (trait_values_time2 - trait_values_time1) / time_interval
   
   return(dpi)
 }
+
 
 ## test - passed on synthetic dataset - however it is not clear how one would structure a dataset with time resolved data (will the measurements at time x for one sample be in different columns all with equally separated time intervals or in rows?)
 # mathematically the function does the wanted if one knows how to structure the data
@@ -753,7 +761,7 @@ calculate_MVPi = function(data, env_col, trait_cols, n_axes) {
 ## test - to be tested with dataset from DOI: 10.1093/jxb/eraa545
 
 
-calculate_MVPi(synthetic_data1,1,c(3,4,5),3)
+#calculate_MVPi(synthetic_data1,1,c(3,4,5),3)
 
 
 #######################

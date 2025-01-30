@@ -62,80 +62,78 @@ check_and_install_packages = function(packages) {
 
 ########################################
 
-#' Calculate the Phenotypic Stability Index (PSI) for Multiple Traits Using Linear Regression
+
+
+
+
+
+########################################
+
+#' Calculate the Phenotypic Stability Index (PSI) Using Linear Regression
 #'
-#' This function calculates the Phenotypic Stability Index (PSI) for multiple traits across different environments.
+#' This function calculates the Phenotypic Stability Index (PSI) for a given trait across different environments.
 #' The PSI is derived from the regression coefficient obtained by regressing the trait values against the environmental factor.
 #' A lower regression coefficient indicates higher phenotypic stability.
 #'
-#' The environmental factors can be provided either as a column in the data frame or as an external vector.
+#' The environmental values should be provided as a numeric vector. If they are not given, they will be assumed to be equidistant.
 #'
-#' @param data A data frame containing the environmental indicators and trait data.
-#' @param trait_cols A vector of column numbers or names of the traits to analyze.
-#' @param env_col The column number or name representing the environmental conditions within the data frame, or NULL if using an external vector.
-#' @param external_env_factor (Optional) A numeric vector representing external environmental factors. If provided, this will override `env_col`.
-#' @return A data frame with the PSI values for each trait.
+#' @param trait_values A numeric vector representing the trait values.
+#' @param env_values (Optional) A numeric vector representing the environmental values. If NULL, equidistant values will be generated.
+#' @return The PSI value for the given trait.
+#'
 #' @examples
-#' df = data.frame(
-#'   Environment = rep(1:3, each = 10),
-#'   Trait_1 = c(rnorm(10, 100, 10), rnorm(10, 110, 15), rnorm(10, 120, 20)),
-#'   Trait_2 = c(rnorm(10, 200, 8), rnorm(10, 195, 12), rnorm(10, 205, 10))
-#' )
-#' 
-#' # Calculate PSI for multiple traits using the internal environment column
-#' PSI_results = calculate_PSI(df, trait_cols = c("Trait_1", "Trait_2"), env_col = "Environment")
-#' print(PSI_results)
-#' 
-#' # Calculate PSI for multiple traits using an external environmental factor vector
-#' external_env = rep(1:3, each = 10)
-#' PSI_results_external = calculate_PSI(df, trait_cols = c("Trait_1", "Trait_2"), env_col = NULL, external_env_factor = external_env)
-#' print(PSI_results_external)
+#' trait_values = c(100, 110, 120, 105, 115, 125)
+#' env_values = c(1, 2, 3, 1, 2, 3)
+#'
+#' # Calculate PSI with given environmental values
+#' PSI_result = calculate_PSI(trait_values, env_values)
+#' print(PSI_result)
+#'
+#' # Calculate PSI assuming equidistant environments
+#' PSI_result_no_env = calculate_PSI(trait_values)
+#' print(PSI_result_no_env)
+#'
 #' @export
-calculate_PSI = function(data, trait_cols, env_col = NULL, external_env_factor = NULL) {
-  
-  # Determine the environmental values to use
-  if (!is.null(external_env_factor)) {
-    environment_values = external_env_factor
-  } else if (!is.null(env_col)) {
-    environment_values = if (is.numeric(env_col)) data[[env_col]] else data[[env_col]]
-  } else {
-    stop("Either 'env_col' or 'external_env_factor' must be provided.")
+calculate_PSI = function(trait_values, env_values = NULL) {
+  # Input validation
+  if (!is.numeric(trait_values)) {
+    stop("trait_values must be a numeric vector")
   }
   
-  # Ensure environment values are treated as numeric
-  environment_values = as.numeric(environment_values)
+  n_values = length(trait_values)
+  
+  # If no environmental values are provided, create equidistant values
+  if (is.null(env_values)) {
+    env_values = seq_len(n_values)
+  }
+  
+  # Ensure environmental values are numeric
+  if (!is.numeric(env_values)) {
+    stop("env_values must be numeric")
+  }
+  
+  # Check for length mismatch
+  if (length(trait_values) != length(env_values)) {
+    stop("trait_values and env_values must have the same length")
+  }
   
   # Check for near-constant environmental values
-  if (sd(environment_values) < .Machine$double.eps) {
+  if (sd(env_values) < .Machine$double.eps) {
     warning("Environmental factor has too little variation, making the PSI calculation unreliable.")
   }
   
-  # Initialize a list to store PSI values for each trait
-  PSI_values_list = list()
+  # Perform a linear regression of trait values on environmental values
+  model = lm(trait_values ~ env_values)
   
-  # Loop over each trait and calculate PSI
-  for (i in seq_along(trait_cols)) {
-    trait_column = trait_cols[i]
-    
-    # Extract the trait values
-    trait_values = if (is.numeric(trait_column)) data[[trait_column]] else data[[trait_column]]
-    
-    # Perform a linear regression of trait values on environment values
-    model = lm(trait_values ~ environment_values)
-    
-    # Extract the regression coefficient (slope)
-    stability_coefficient = coef(model)[2]
-    
-    # Calculate the stability score
-    stability_score = 1 / (1 + abs(stability_coefficient))
-    
-    # Store the PSI for the current trait
-    PSI_values_list[[i]] = stability_score
-    names(PSI_values_list)[i] = trait_column
-  }
+  # Extract the regression coefficient (slope)
+  stability_coefficient = unname(coef(model)[2])
   
-  return(PSI_values_list)
+  # Calculate the stability score
+  stability_score = 1 / (1 + abs(stability_coefficient))
+  
+  return(stability_score)
 }
+
 
 
 
@@ -147,121 +145,67 @@ calculate_PSI = function(data, trait_cols, env_col = NULL, external_env_factor =
 
 
 
-#' Calculate Relative Plasticity Index (RPI) for all environment combinations across multiple traits
-#' 
-#' This function calculates the Relative Plasticity Index (RPI) for multiple traits across all pairs of environments
-#' if no specific environments are provided. Otherwise, RPI is calculated between two specified environments.
-#' 
-#' @param data A data frame containing the input data, with columns for the traits and another column or external vector for the environment.
-#' @param trait_cols A vector of strings or numeric values indicating the columns in `data` that contain the trait values.
-#' @param env_col A string, numeric, or vector indicating the column in `data` that contains the environment labels, or an external vector specifying environment belonging.
-#' @param env1 A value indicating the first environment to compare. Must be present in `env_col`. Defaults to `NULL` for calculating all combinations.
-#' @param env2 A value indicating the second environment to compare. Must be present in `env_col`. Defaults to `NULL` for calculating all combinations.
-#' 
-#' @return If env1 and env2 are provided, a data frame with the RPI values for each trait between the two environments.
-#' If env1 and env2 are not provided, a data frame of RPI values for all possible environment pairs for each trait.
-#' 
-#' @details The RPI is calculated by taking the absolute difference between the trait values in the two environments
-#' and dividing it by the sum of the trait values in the two environments. This is done for all specified traits.
-#' 
-#' @examples
-#' # Example usage with synthetic data
-#' synthetic_data = data.frame(
-#'   Trait_1 = c(100, 110, 120, 130, 140, 150),
-#'   Trait_2 = c(200, 210, 220, 230, 240, 250),
-#'   Environment = factor(c(1, 1, 2, 2, 3, 3))
-#' )
-#' 
-#' # Calculate RPI for all environment combinations for multiple traits
-#' rpi_values = calculate_RPI(synthetic_data, trait_cols = c("Trait_1", "Trait_2"), env_col = "Environment")
-#' print(rpi_values)
-#' 
-#' @export
-calculate_RPI = function(data, trait_cols, env_col, env1 = NULL, env2 = NULL) {
+calculate_RPI = function(trait_values, env_values = NULL, env1 = NULL, env2 = NULL) {
+  # Ensure trait_values is numeric
+  if (!is.numeric(trait_values)) stop("trait_values must be a numeric vector.")
   
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col = env_col
-  } else {
-    env_col = data[[env_col]]
+  n = length(trait_values)
+  
+  # Assume equidistant environments if not provided
+  if (is.null(env_values)) {
+    env_values = seq_len(n)
   }
   
-  # Ensure trait_cols are either numeric or character and fetch the respective columns
-  trait_cols = if (is.numeric(trait_cols)) names(data)[trait_cols] else trait_cols
+  # Ensure env_values has correct length
+  if (length(env_values) != n) stop("env_values must have the same length as trait_values.")
   
-  # Initialize a data frame to store results
-  RPI_results_all = data.frame()
+  unique_envs = unique(env_values)
   
-  # Loop through each trait
-  for (trait_col in trait_cols) {
-    
-    # Extract trait data
-    trait_data = data[[trait_col]]
-    
-    # If no specific environments are provided, calculate RPI for all pairs of environments
-    if (is.null(env1) && is.null(env2)) {
-      
-      # Get unique environments
-      unique_envs = unique(env_col)
-      env_combinations = combn(unique_envs, 2, simplify = TRUE)  # All pairs of environments
-      
-      # Initialize a data frame to store RPI values for all environment pairs
-      RPI_results = data.frame(env1 = character(), env2 = character(), Trait = character(), RPI = numeric())
-      
-      # Loop through all environment pairs
-      for (i in 1:ncol(env_combinations)) {
-        env1_data = trait_data[env_col == env_combinations[1, i]]
-        env2_data = trait_data[env_col == env_combinations[2, i]]
-        
-        # Ensure there are equal numbers of values for env1 and env2
-        if (length(env1_data) != length(env2_data)) {
-          stop("The number of trait values for the two environments must be equal.")
-        }
-        
-        # Calculate RPI for each pair of values between the two environments
-        RPI_values = abs(env1_data - env2_data) / (env1_data + env2_data)
-        
-        # Store the average RPI for this environment pair
-        RPI_results = rbind(RPI_results, data.frame(
-          env1 = env_combinations[1, i],
-          env2 = env_combinations[2, i],
-          Trait = trait_col,
-          RPI = mean(RPI_values, na.rm = TRUE)
-        ))
-      }
-      
-      # Append to overall results
-      RPI_results_all = rbind(RPI_results_all, RPI_results)
-      
-    } else {
-      
-      # If specific environments are provided, filter the data for the two specified environments
-      env1_data = trait_data[env_col == env1]
-      env2_data = trait_data[env_col == env2]
-      
-      # Ensure there are equal numbers of values for env1 and env2
-      if (length(env1_data) != length(env2_data)) {
-        stop("The number of trait values for the two environments must be equal.")
-      }
-      
-      # Calculate RPI for each pair of values between the two environments
-      RPI_values = abs(env1_data - env2_data) / (env1_data + env2_data)
-      
-      # Store the average RPI for this trait between the two environments
-      RPI_results_all = rbind(RPI_results_all, data.frame(
-        env1 = env1,
-        env2 = env2,
-        Trait = trait_col,
-        RPI = mean(RPI_values, na.rm = TRUE)
-      ))
-    }
+  # If only one environment is present, return NA
+  if (length(unique_envs) < 2) {
+    warning("Only one unique environment present. RPI cannot be calculated.")
+    return(NA)
   }
   
-  # Return the combined RPI results for all traits
-  return(RPI_results_all)
+  # If specific environments are given, calculate RPI for that pair
+  if (!is.null(env1) && !is.null(env2)) {
+    if (!(env1 %in% unique_envs) || !(env2 %in% unique_envs)) stop("env1 and env2 must be in env_values.")
+    
+    idx1 = which(env_values == env1)
+    idx2 = which(env_values == env2)
+    
+    # Ensure equal sample size
+    min_len = min(length(idx1), length(idx2))
+    idx1 = idx1[seq_len(min_len)]
+    idx2 = idx2[seq_len(min_len)]
+    
+    RPI_values = abs(trait_values[idx1] - trait_values[idx2]) / (trait_values[idx1] + trait_values[idx2])
+    return(mean(RPI_values, na.rm = TRUE))
+  }
+  
+  # Otherwise, compute RPI for all pairs
+  env_combinations = combn(unique_envs, 2, simplify = TRUE)
+  RPI_results = numeric(ncol(env_combinations))
+  
+  for (i in seq_len(ncol(env_combinations))) {
+    env1_current = env_combinations[1, i]
+    env2_current = env_combinations[2, i]
+    
+    idx1 = which(env_values == env1_current)
+    idx2 = which(env_values == env2_current)
+    
+    min_len = min(length(idx1), length(idx2))
+    idx1 = idx1[seq_len(min_len)]
+    idx2 = idx2[seq_len(min_len)]
+    
+    RPI_values = abs(trait_values[idx1] - trait_values[idx2]) / (trait_values[idx1] + trait_values[idx2])
+    RPI_results[i] = mean(RPI_values, na.rm = TRUE)
+  }
+  
+  names(RPI_results) = apply(env_combinations, 2, paste, collapse = "-")
+  return(RPI_results)
 }
+
 
 
 ## test - passed on synthetic dataset
@@ -270,74 +214,75 @@ calculate_RPI = function(data, trait_cols, env_col, env1 = NULL, env2 = NULL) {
 
 ######################################
 
-#' @title Calculate Plasticity Quotient (PQ) for Multiple Traits
-#' @description This function calculates the Plasticity Quotient (PQ) based on the range of trait values across different environmental conditions and the corresponding environmental factor range for multiple traits.
+#' @title Calculate Plasticity Quotient (PQ)
+#' @description Computes the Plasticity Quotient (PQ) based on the range of trait values 
+#' and the corresponding environmental factor range.
 #' 
-#' @param data A data frame containing the data for the analysis.
-#' @param trait_cols A vector of column names (strings) or numeric indices representing the trait values in the data. Each will be analyzed separately.
-#' @param env_col A column name (string) or numeric index representing the environmental variable in the data, or a vector of environmental values. This specifies the environmental conditions for calculating plasticity.
-#' @param factor_col A column name (string) or numeric index representing a relevant environmental factor (e.g., temperature, moisture) in the data, or a vector of environmental factor values. This will be used for standardizing the trait range.
+#' @param trait_values A numeric vector representing the measured trait values across environments.
+#' @param env_values (Optional) A numeric vector representing the environmental conditions 
+#' in which the traits were measured. If NULL, equidistant environments are assumed.
 #' 
 #' @details 
-#' The function first handles the provided column names or indices for `trait_cols`, `env_col`, and `factor_col`, ensuring they are correctly extracted from the data. 
+#' The Plasticity Quotient (PQ) is calculated as:
 #' 
-#' It then calculates the mean trait values and factor values across the different environmental conditions specified in `env_col`. The range of the mean trait values is computed, and this is divided by the range of the mean factor values to compute the Plasticity Quotient (PQ) for each trait.
+#' \deqn{PQ = \frac{\max(trait\_values) - \min(trait\_values)}{\max(env\_values) - \min(env\_values)}}
 #' 
-#' @return A data frame where each row corresponds to a trait and the calculated Plasticity Quotient (PQ) for that trait.
+#' If `env_values` is not provided, it is assumed that the environments are equidistant (i.e., 
+#' `env_values = 1, 2, 3, ..., n` where `n` is the number of trait values).
+#' 
+#' If the environmental range is zero (i.e., all values are identical), a warning is issued and `NA` is returned.
+#' 
+#' @return A numeric value representing the Plasticity Quotient (PQ).
 #' 
 #' @examples
-#' # Example usage:
-#' # Assuming 'data' is a data frame with columns 'Trait_1', 'Trait_2', 'env', and 'factor':
-#' PQ = calculate_PQ(data, c('Trait_1', 'Trait_2'), 'env', 'factor')
-#' print(PQ)
+#' # Example 1: Using explicitly defined environmental values
+#' trait_values = c(10, 12, 15, 17, 20)
+#' env_values = c(5, 10, 15, 20, 25)
+#' calculate_PQ(trait_values, env_values)
+#' 
+#' # Example 2: Using equidistant environments (default behavior)
+#' trait_values = c(10, 15, 20, 25, 30)
+#' calculate_PQ(trait_values)  
+#' 
+#' # Example 3: Handling zero environment range (returns NA with warning)
+#' trait_values = c(10, 15, 20, 25, 30)
+#' env_values = rep(5, 5)
+#' calculate_PQ(trait_values, env_values)
 #' 
 #' @export
-calculate_PQ = function(data, env_col, trait_cols, factor_col) {
+calculate_PQ = function(trait_values, env_values = NULL) {
+  # Ensure trait_values is numeric
+  if (!is.numeric(trait_values)) stop("trait_values must be a numeric vector.")
   
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col_data = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col_data = env_col
-  } else {
-    env_col_data = data[[env_col]]
+  n = length(trait_values)
+  
+  # If no explicit env_values are given, assume equidistant environments
+  if (is.null(env_values)) {
+    env_values = seq_len(n)
   }
   
-  # Handle factor_col
-  if (is.numeric(factor_col) && length(factor_col) == 1) {
-    factor_data = data[[factor_col]]
-  } else if (is.vector(factor_col) && length(factor_col) == nrow(data)) {
-    factor_data = factor_col
-  } else {
-    factor_data = data[[factor_col]]
+  # Ensure env_values is numeric and of correct length
+  if (!is.numeric(env_values)) stop("env_values must be a numeric vector.")
+  if (length(env_values) != n) stop("trait_values and env_values must have the same length.")
+  
+  # Compute the range of trait values
+  range_trait = abs(max(trait_values) - min(trait_values))
+  
+  # Compute the range of environment values (used for standardization)
+  range_env = abs(max(env_values) - min(env_values))
+  
+  # Ensure env range is non-zero to avoid division errors
+  if (range_env == 0) {
+    warning("Environment range is zero. PQ calculation is not meaningful.")
+    return(NA)
   }
   
-  # Initialize a list to store PQ values for each trait
-  PQ_values_list = list()
+  # Compute the Plasticity Quotient (PQ)
+  PQ_value = range_trait / range_env
   
-  # Loop over each trait in trait_cols
-  for (i in seq_along(trait_cols)) {
-    trait_column = trait_cols[i]
-    
-    # Extract trait data
-    trait_data = if (is.numeric(trait_column)) data[[trait_column]] else data[[trait_column]]
-    
-    # Calculate mean values for the current trait by environment and factor levels
-    mean_values = aggregate(trait_data ~ env_col_data, data = data, FUN = mean)
-    range_trait = abs(max(mean_values$trait_data) - min(mean_values$trait_data))
-    env_range = abs(max(factor_data) - min(factor_data))
-    
-    # Calculate PQ for the current trait
-    PQ_value = range_trait / env_range
-    
-    # Store the PQ value in the list
-    PQ_values_list[[i]] = PQ_value
-    names(PQ_values_list)[i] = trait_column
-  }
-  
-  # Return the PQ values list
-  return(PQ_values_list)
+  return(PQ_value)
 }
+
 
 ## test - passed on synthetic dataframe
 
@@ -345,75 +290,73 @@ calculate_PQ = function(data, env_col, trait_cols, factor_col) {
 
 ###########################################
 
-#' @description This function calculates the Phenotypic Range (PR) for multiple traits across specified environments. PR is defined as the difference between the maximum and minimum trait values within each environment.
+#' @title Calculate Phenotypic Range (PR)
+#' @description Computes the Phenotypic Range (PR) for a trait across different environments.
 #' 
-#' @param data A data frame containing the data for the analysis.
-#' @param env_col A column name (string), numeric index, or vector representing the environmental variable in the data. This specifies the environment for calculating the PR.
-#' @param trait_cols A vector of column names (strings) or numeric indices representing the trait values in the data. Each will be analyzed separately.
-#' @param env Optional. A vector specifying which environments to include in the calculation. If not provided, all unique environments from `env_col` are used.
-#' @param across Optional. A logical value indicating whether to calculate the PR across all environments combined. If `TRUE`, calculates the PR across all environments for each trait.
+#' @param trait_values A numeric vector representing the measured trait values.
+#' @param env_values (Optional) A numeric vector representing the environmental conditions.
+#' If NULL, equidistant environments are assumed.
+#' @param across A logical value. If TRUE, calculates the PR across all environments combined.
 #' 
 #' @details 
-#' The function calculates the Phenotypic Range (PR) for each specified environment, defined as the range (maximum minus minimum) of trait values within each environment. If `env` is provided, only the specified environments are used; otherwise, it uses all unique environments in `env_col`. 
+#' The Phenotypic Range (PR) is defined as:
 #' 
-#' @return A data frame where each row corresponds to a trait and contains the PR for each environment.
+#' \deqn{PR = \max(trait\_values) - \min(trait\_values)}
+#' 
+#' If `across = TRUE`, PR is calculated across **all** environments.
+#' 
+#' If `env_values` is **not provided**, equidistant environments are assumed.
+#' 
+#' @return A numeric value representing the Phenotypic Range (PR).
 #' 
 #' @examples
-#' # Example usage:
-#' # Assuming 'data' is a data frame with columns 'Trait_1', 'Trait_2', and 'env':
-#' PR = calculate_PR(data, 'env', c('Trait_1', 'Trait_2'))
+#' # Example 1: Using explicitly defined environmental values
+#' trait_values = c(10, 12, 15, 17, 20)
+#' env_values = c(5, 10, 15, 20, 25)
+#' calculate_PR(trait_values, env_values)
 #' 
-#' # Example with specific environments:
-#' PR = calculate_PR(data, 'env', c('Trait_1', 'Trait_2'), env = c("Environment1", "Environment2"))
+#' # Example 2: Using equidistant environments (default behavior)
+#' trait_values = c(10, 15, 20, 25, 30)
+#' calculate_PR(trait_values)  
+#' 
+#' # Example 3: Calculating PR across all environments
+#' calculate_PR(trait_values, env_values, across = TRUE)
 #' 
 #' @export
-calculate_PR = function(data, env_col, trait_cols, env = NULL, across = FALSE) {
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col = env_col
-  } else {
-    env_col = data[[env_col]]
+calculate_PR = function(trait_values, env_values = NULL, across = TRUE) {
+  # Ensure trait_values is numeric
+  if (!is.numeric(trait_values)) stop("trait_values must be a numeric vector.")
+  
+  n = length(trait_values)
+  
+  # If no explicit env_values are given, assume equidistant environments
+  if (is.null(env_values)) {
+    env_values = seq_len(n)
   }
   
-  # Initialize a data frame to store the PR for each trait and environment
-  PR_results = data.frame(Trait = character(), Environment = character(), PR = numeric(), stringsAsFactors = FALSE)
+  # Ensure env_values is numeric and matches trait_values in length
+  if (!is.numeric(env_values)) stop("env_values must be a numeric vector.")
+  if (length(env_values) != n) stop("trait_values and env_values must have the same length.")
   
-  # Loop through each trait in trait_cols
-  for (trait_col in trait_cols) {
-    
-    # Extract trait data
-    trait_data = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
-    
-    # If across = TRUE, calculate PR across all environments combined
-    if (across == TRUE) {
-      # Calculate mean trait values for each environment
-      means = tapply(trait_data, env_col, mean, na.rm = TRUE)
-      # Identify maximum and minimum means
-      max_mean = max(means, na.rm = TRUE)
-      min_mean = min(means, na.rm = TRUE)
-      PR_across = abs(max_mean - min_mean)
-      PR_results = rbind(PR_results, data.frame(Trait = colnames(data)[trait_col], Environment = "Across", PR = PR_across))
-      
-    } else {
-      # If across = FALSE, calculate PR for each environment
-      
-      if (is.null(env)) {
-        env = unique(env_col)
-      }
-      
-      # Loop through each environment and calculate the PR
-      for (e in env) {
-        env_data = trait_data[env_col == e]
-        PR_value = max(env_data, na.rm = TRUE) - min(env_data, na.rm = TRUE)
-        PR_results = rbind(PR_results, data.frame(Trait = colnames(data)[trait_col], Environment = e, PR = PR_value))
-      }
-    }
+  # If across = TRUE, compute PR across all environments
+  if (across) {
+    PR_value = max(trait_values, na.rm = TRUE) - min(trait_values, na.rm = TRUE)
+    return(PR_value)
   }
   
-  return(PR_results)
+  # Compute PR within each environment
+  unique_envs = unique(env_values)
+  PR_values = numeric(length(unique_envs))
+  
+  for (i in seq_along(unique_envs)) {
+    env_mask = env_values == unique_envs[i]
+    env_trait_values = trait_values[env_mask]
+    PR_values[i] = max(env_trait_values, na.rm = TRUE) - min(env_trait_values, na.rm = TRUE)
+  }
+  
+  return(PR_values)
 }
+
 
 
 ## test - passed on synthetic dataset 
@@ -429,59 +372,64 @@ calculate_PR = function(data, env_col, trait_cols, env = NULL, across = FALSE) {
 
 ##########################
 
-#' @description This function calculates the Norm of Reaction Width (NRW) for a specific genotype or group, measuring the range of trait values across different environments. If no grouping factor is specified, it calculates the NRW for the entire dataset.
+#' @title Calculate Norm of Reaction Width (NRW)
+#' @description Computes the Norm of Reaction Width (NRW) for a given trait across multiple environments.
 #'
-#' @param data A data frame containing the data for the analysis.
-#' @param trait_col A column name (string) or numeric index representing the trait values in the data. This can also be a vector of trait values with the same length as the number of rows in the data.
-#' @param env_col A column name (string) or numeric index representing the environmental variable in the data, or a vector of environmental values. This specifies the environmental conditions for calculating NRW.
-#' @param group_col Optional. A column name (string) or numeric index representing the grouping factor (e.g., genotype) in the data. If not provided, all data will be treated as one group.
+#' @param trait_values A numeric vector representing measured trait values.
+#' @param env_values (Optional) A numeric vector representing environments. If NULL, assumes equidistant environments.
+#' @param group_values (Optional) A vector indicating genotypes or other grouping factors. If provided, NRW is computed per group.
+#' @param across Logical. If TRUE, calculates NRW **across all environments**.
 #'
-#' @details 
-#' The function calculates the Norm of Reaction Width (NRW) by determining the range (maximum minus minimum) of trait values for each group (or the entire dataset if no group is specified) across all environments. It returns a data frame with the NRW for each group.
+#' @details
+#' NRW is calculated as:
+#' \deqn{NRW = \max(\bar{z}_e) - \min(\bar{z}_e)}
+#' where **\(\bar{z}_e\)** is the mean trait value per environment.
 #'
-#' @return A data frame with two columns: one for the group identifier and the other for the corresponding Norm of Reaction Width (NRW) for each group.
+#' If `across = TRUE`, NRW is computed **for all environments**.
+#'
+#' If an environment has **only one measurement**, NRW is set to `NA`.
+#'
+#' @return A numeric value or named vector representing NRW.
 #'
 #' @examples
-#' # Example usage:
-#' # Assuming 'data' is a data frame with columns 'trait', 'env', and 'genotype':
-#' NRW = calculate_NRW(data, 'trait', 'env', 'genotype')
-#' # If no grouping factor is provided:
-#' NRW = calculate_NRW(data, 'trait', 'env')
+#' trait_values = c(10, 12, 15, 17, 20, 25, 30)
+#' env_values = c(1, 1, 2, 2, 3, 3, 3)
+#' calculate_NRW(trait_values, env_values)
 #'
 #' @export
-calculate_NRW = function(data, env_col = NULL, trait_cols) {
+calculate_NRW = function(trait_values, env_values = NULL, group_values = NULL, across = FALSE) {
+  if (!is.numeric(trait_values)) stop("trait_values must be numeric.")
   
-  # Handle env_col
-  if (is.null(env_col)) {
-    env_col_data = rep(1, nrow(data))  # Treat as one environment if not provided
-  } else if (is.numeric(env_col)) {
-    env_col_data = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col_data = env_col
-  } else {
-    env_col_data = data[[env_col]]
+  # Assume equidistant environments if not provided
+  if (is.null(env_values)) env_values = seq_along(trait_values)
+  if (length(env_values) != length(trait_values)) stop("trait_values and env_values must be the same length.")
+  
+  # Compute NRW across all environments
+  if (across) {
+    return(max(trait_values, na.rm = TRUE) - min(trait_values, na.rm = TRUE))
   }
   
-  # Initialize a vector to store NRW values for each trait
-  NRW_values = numeric(length(trait_cols))
-  names(NRW_values) = trait_cols  # Name the vector by trait columns
-  
-  # Loop through each trait in trait_cols
-  for (i in seq_along(trait_cols)) {
-    trait_col = trait_cols[i]
+  # Compute NRW per group (e.g., genotype)
+  if (!is.null(group_values)) {
+    unique_groups = unique(group_values)
+    NRW_values = setNames(numeric(length(unique_groups)), unique_groups)
     
-    # Extract trait data
-    trait_data = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
+    for (g in unique_groups) {
+      mask = group_values == g
+      mean_per_env = tapply(trait_values[mask], env_values[mask], mean, na.rm = TRUE)
+      NRW_values[g] = max(mean_per_env, na.rm = TRUE) - min(mean_per_env, na.rm = TRUE)
+    }
     
-    # Calculate the range (NRW) for each environment or group
-    NRW_df = aggregate(trait_data ~ env_col_data, data = data, FUN = function(x) max(x) - min(x))
-    
-    # Calculate the mean NRW across all groups for the current trait
-    NRW_values[i] = mean(NRW_df$trait_data, na.rm = TRUE)
+    return(NRW_values)
   }
   
-  return(NRW_values)
+  # Default: Calculate NRW across environments
+  mean_per_env = tapply(trait_values, env_values, mean, na.rm = TRUE)
+  NRW_value = max(mean_per_env, na.rm = TRUE) - min(mean_per_env, na.rm = TRUE)
+  
+  return(NRW_value)
 }
+
 
 ## test - passed on synthetic dataset
 
@@ -491,81 +439,53 @@ calculate_NRW = function(data, env_col = NULL, trait_cols) {
 ##############################
 
 
-#' @title Calculate Environmental Sensitivity Performance (ESP) for Multiple Traits
-#' @description This function calculates the Environmental Sensitivity Performance (ESP) for multiple traits across specified environments. 
-#' ESP is calculated as the relative change in trait values within each environment compared to the overall mean trait value across all environments.
-#' 
-#' @param data A data frame containing the data for the analysis.
-#' @param env_col A column name (string), numeric index, or vector representing the environmental variable in the data. This specifies the environment for calculating ESP.
-#' @param trait_cols A vector of column names (strings) or numeric indices representing the trait values in the data. This can also be a vector of trait values with the same length as the number of rows in the data.
-#' @param env Optional. A vector specifying which environments to include in the calculation. If not provided, all unique environments from `env_col` are used.
-#' 
-#' @details 
-#' The function calculates the Environmental Sensitivity Performance (ESP) for each trait specified in `trait_cols` by determining the difference between the mean trait value for each environment and the overall mean trait value across all environments, divided by the overall mean. 
-#' This results in a measure of how sensitive the trait is to environmental conditions, with values closer to zero indicating low sensitivity and larger values indicating higher sensitivity.
-#' 
-#' @return A data frame containing the ESP values for each trait across each environment. The data frame includes the following columns:
-#' \item{Trait}{The name of the trait for which ESP was calculated.}
-#' \item{Environment}{The environment in which the trait's ESP was calculated.}
-#' \item{ESP}{The calculated Environmental Sensitivity Performance value.}
-#' 
-#' @examples 
-#' # Example usage:
-#' df_test <- data.frame(
-#'   Environment = rep(1:3, each = 10),
-#'   Trait_1 = c(rnorm(10, 100, 10), rnorm(10, 110, 15), rnorm(10, 120, 20)),
-#'   Trait_2 = c(rnorm(10, 200, 8), rnorm(10, 195, 12), rnorm(10, 205, 10))
-#' )
-#' 
-#' # Calculate ESP for multiple traits
-#' ESP_values <- calculate_ESP(df_test, env_col = "Environment", trait_cols = c(2, 3))
-#' print(ESP_values)
-#' 
+#' @title Calculate Environmental Sensitivity Performance (ESP)
+#' @description Computes the Environmental Sensitivity Performance (ESP) for multiple traits across environments.
+#'
+#' @param trait_values A numeric vector representing measured trait values.
+#' @param env_values (Optional) A numeric vector representing environments. If NULL, assumes equidistant environments.
+#' @param env_subset (Optional) A vector specifying which environments to include in the calculation. If NULL, all unique environments are used.
+#'
+#' @details
+#' ESP is calculated as:
+#' \deqn{ESP = \frac{\bar{z}_e - \bar{z}}{\bar{z}}}
+#' where **\(\bar{z}_e\)** is the mean trait value in environment \( e \) and **\(\bar{z}\)** is the overall mean across all environments.
+#'
+#' If `env_values` is NULL, environments are assumed to be **equidistant**.
+#'
+#' @return A named numeric vector containing ESP values for each environment.
+#'
+#' @examples
+#' trait_values = c(10, 12, 15, 17, 20, 25, 30)
+#' env_values = c(1, 1, 2, 2, 3, 3, 3)
+#' calculate_ESP(trait_values, env_values)
+#'
 #' @export
-calculate_ESP = function(data, env_col, trait_cols, env = NULL) {
+calculate_ESP = function(trait_values, env_values = NULL, env_subset = NULL) {
+  if (!is.numeric(trait_values)) stop("trait_values must be numeric.")
   
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col = env_col
-  } else {
-    env_col = data[[env_col]]
+  # Assume equidistant environments if not provided
+  if (is.null(env_values)) env_values = seq_along(trait_values)
+  if (length(env_values) != length(trait_values)) stop("trait_values and env_values must be the same length.")
+  
+  # Use all unique environments unless specific ones are given
+  unique_envs = unique(env_values)
+  if (!is.null(env_subset)) unique_envs = unique_envs[unique_envs %in% env_subset]
+  
+  # Compute mean trait value across all environments
+  mean_trait_all = mean(trait_values, na.rm = TRUE)
+  
+  # Compute ESP per environment
+  ESP_values = setNames(numeric(length(unique_envs)), unique_envs)
+  
+  for (e in unique_envs) {
+    mean_trait_env = mean(trait_values[env_values == e], na.rm = TRUE)
+    ESP_values[as.character(e)] = (mean_trait_env - mean_trait_all) / mean_trait_all
   }
   
-  # If env is NULL, calculate ESP for all unique environments
-  if (is.null(env)) {
-    env = unique(env_col)
-  }
-  
-  # Initialize a data frame to store the ESP results for each trait
-  ESP_results = data.frame(Trait = character(), Environment = character(), ESP = numeric(), stringsAsFactors = FALSE)
-  
-  # Loop through each trait in trait_cols
-  for (trait_col in trait_cols) {
-    
-    # Extract trait data
-    trait_data = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
-    
-    # Calculate the mean trait value across all environments
-    mean_trait_all_envs = mean(trait_data, na.rm = TRUE)
-    
-    # Loop through each environment and calculate ESP
-    for (i in 1:length(env)) {
-      trait_values_env = trait_data[env_col == env[i]]
-      ESP_value = (mean(trait_values_env, na.rm = TRUE) - mean_trait_all_envs) / mean_trait_all_envs
-      
-      # Store the results in the data frame
-      ESP_results = rbind(ESP_results, data.frame(
-        Trait = colnames(data)[trait_col],
-        Environment = env[i],
-        ESP = ESP_value
-      ))
-    }
-  }
-  
-  return(ESP_results)
+  return(ESP_values)
 }
+
 
 
 ## test - passed on synthetic dataset 
@@ -574,76 +494,119 @@ calculate_ESP = function(data, env_col, trait_cols, env = NULL) {
 
 ######################### 01.10.2024
 
-#' @title Calculate Plasticity Differential (PD) for Multiple Traits
-#' @description This function calculates the Plasticity Differential (PD) for multiple traits across control and stress conditions.
-#' PD quantifies the absolute difference in trait values between control and stress environments using the formula:
-#' \deqn{PD = |TraitValueStress - TraitValueControl|}
+#' @title Calculate Generalized Plasticity Differential (PD)
+#' @description Computes the Plasticity Differential (PD) for traits across environments.
+#' If control vs. stress environments are explicitly given, it calculates PD based on those.
+#' Otherwise, PD is computed using pairwise environment comparisons.
 #'
-#' @param data A data frame containing the input data, with one or more columns for traits and another column or external vector for the environment.
-#' @param trait_cols A vector of strings or numeric values indicating the columns in `data` that contain the trait values.
-#' @param env_col A string, numeric, or vector indicating the column in `data` that contains the environment labels, or an external vector specifying environment belonging.
-#' @param control_env A value indicating the control environment to compare. Must be present in `env_col`.
-#' @param stress_env A value indicating the stress environment to compare. Must be present in `env_col`.
+#' @param trait_values A numeric vector of measured trait values.
+#' @param env_values Optional. A numeric or categorical vector representing environments.
+#'   If NULL, assumes equidistant environments.
+#' @param control_stress_vector Optional. A vector indicating control vs. stress conditions (e.g., "Control"/"Stress" or `0`/`1`).
+#'   If provided, PD is calculated as |Trait_Stress - Trait_Control|.
+#' @param method A string specifying the calculation approach:
+#'   - `"pairwise"`: Computes mean absolute difference across all environment pairs (default if `control_stress_vector` is missing).
+#'   - `"reference"`: Uses the lowest mean trait environment as reference.
+#'   - `"variability"`: Uses the range (max - min) of trait values as PD.
 #'
-#' @return A data frame with columns for each trait and the calculated PD between the control and stress environments.
-#'
-#' @details The PD is calculated for each trait by taking the absolute difference between the trait values in the stress and control environments.
-#' This index provides a measure of the change in trait value under stress relative to the control for each trait.
+#' @return A single numeric value representing the computed PD.
 #'
 #' @examples
-#' # Example usage with synthetic data
-#' synthetic_data = data.frame(
-#'   Trait_1 = c(100, 110, 120, 130, 140, 150),
-#'   Trait_2 = c(200, 210, 220, 230, 240, 250),
-#'   Environment = factor(c(1, 1, 2, 2, 3, 3)) # Assume 1=Control, 2=Stress
-#' )
-#' 
-#' # Calculate PD between control (1) and stress (2) for multiple traits
-#' pd_values = calculate_PD(synthetic_data, trait_cols = c("Trait_1", "Trait_2"), env_col = "Environment", control_env = 1, stress_env = 2)
-#' print(pd_values)
+#' trait_values = c(100, 110, 120, 130, 140, 150)
+#' control_stress = c(0, 0, 1, 1, 1, 1)  # Numeric encoding of Control (0) and Stress (1)
+#'
+#' # Explicit control vs. stress comparison
+#' calculate_general_PD(trait_values, control_stress_vector = control_stress)
+#'
+#' # Pairwise comparisons with equidistant environments (default)
+#' calculate_general_PD(trait_values)
+#'
+#' # Variability-based PD
+#' calculate_general_PD(trait_values, method = "variability")
 #'
 #' @export
-calculate_PD = function(data, env_col, trait_cols, control_env, stress_env) {
+calculate_general_PD = function(trait_values, env_values = NULL, control_stress_vector = NULL, method = "pairwise") {
+  if (!is.numeric(trait_values)) stop("trait_values must be numeric.")
   
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col = env_col
-  } else {
-    env_col = data[[env_col]]
+  num_values = length(trait_values)
+  if (num_values < 2) stop("At least two trait values are required.")
+  
+  # If no env_values are provided, assume equidistant environments
+  if (is.null(env_values)) {
+    env_values = seq_len(num_values)
   }
   
-  # Initialize a data frame to store the PD results for each trait
-  PD_results = data.frame(Trait = character(), PD = numeric(), stringsAsFactors = FALSE)
+  if (length(env_values) != num_values) stop("trait_values and env_values must have the same length.")
   
-  # Loop through each trait column
-  for (trait_col in trait_cols) {
-    
-    # Extract trait data
-    trait_data = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
-    
-    # Filter the data for the control and stress environments
-    control_data = trait_data[env_col == control_env]
-    stress_data = trait_data[env_col == stress_env]
-    
-    # Ensure there are equal numbers of values for control and stress
-    if (length(control_data) != length(stress_data)) {
-      stop("The number of trait values for the control and stress environments must be equal.")
+  unique_envs = unique(env_values)
+  num_envs = length(unique_envs)
+  
+  if (num_envs < 2) stop("At least two distinct environments are required.")
+  
+  # If a control vs. stress vector is provided, use it directly
+  if (!is.null(control_stress_vector)) {
+    if (length(control_stress_vector) != num_values) {
+      stop("control_stress_vector must have the same length as trait_values.")
     }
     
-    # Calculate PD for each pair of values between the control and stress environments
-    PD_values = abs(stress_data - control_data)
+    # Automatically detect whether the vector is categorical or numeric
+    if (all(control_stress_vector %in% c("Control", "Stress"))) {
+      control_values = trait_values[control_stress_vector == "Control"]
+      stress_values = trait_values[control_stress_vector == "Stress"]
+    } else if (all(control_stress_vector %in% c(0, 1))) {
+      control_values = trait_values[control_stress_vector == 0]
+      stress_values = trait_values[control_stress_vector == 1]
+    } else {
+      stop("control_stress_vector must contain 'Control'/'Stress' labels or numeric 0/1 values.")
+    }
     
-    # Calculate and store the average PD for this trait
-    PD = mean(PD_values, na.rm = TRUE)
+    if (length(control_values) != length(stress_values)) {
+      stop("Control and stress groups must have the same number of values.")
+    }
     
-    # Append the result to the data frame
-    PD_results = rbind(PD_results, data.frame(Trait = colnames(data)[trait_col], PD = PD))
+    # Compute PD as mean absolute difference
+    return(mean(abs(stress_values - control_values), na.rm = TRUE))
   }
   
-  return(PD_results)
+  # If no control vs. stress is provided, use the selected method
+  if (method == "pairwise") {
+    pd_values = c()
+    env_combinations = combn(unique_envs, 2)
+    for (i in 1:ncol(env_combinations)) {
+      env1 = env_combinations[1, i]
+      env2 = env_combinations[2, i]
+      
+      values1 = trait_values[env_values == env1]
+      values2 = trait_values[env_values == env2]
+      
+      if (length(values1) != length(values2)) next  # Skip if unequal sample sizes
+      
+      pd_values = c(pd_values, mean(abs(values1 - values2), na.rm = TRUE))
+    }
+    return(mean(pd_values, na.rm = TRUE))
+    
+  } else if (method == "reference") {
+    env_means = tapply(trait_values, env_values, mean, na.rm = TRUE)
+    reference_env = names(which.min(env_means))
+    
+    pd_values = c()
+    for (env in unique_envs) {
+      if (env == reference_env) next
+      values1 = trait_values[env_values == reference_env]
+      values2 = trait_values[env_values == env]
+      if (length(values1) != length(values2)) next  # Skip if unequal sample sizes
+      pd_values = c(pd_values, mean(abs(values1 - values2), na.rm = TRUE))
+    }
+    return(mean(pd_values, na.rm = TRUE))
+    
+  } else if (method == "variability") {
+    return(max(trait_values, na.rm = TRUE) - min(trait_values, na.rm = TRUE))
+    
+  } else {
+    stop("Invalid method. Choose 'pairwise', 'reference', or 'variability'.")
+  }
 }
+
 
 ## test - passed on synthetic dataset 
 
@@ -651,76 +614,104 @@ calculate_PD = function(data, env_col, trait_cols, control_env, stress_env) {
 ##########################
 
 
-#' @title Calculate Fitness Plasticity Index (FPI) for Multiple Traits
-#' @description This function calculates the Fitness Plasticity Index (FPI) for multiple fitness-related traits
-#' across control and stress conditions. The FPI quantifies the relative change in fitness between control
-#' and stress environments for each trait.
+#' @title Calculate Fitness Plasticity Index (FPI)
+#' @description This function calculates the Fitness Plasticity Index (FPI) for a given trait
+#' across control and stress conditions. If no control-stress mapping is provided, FPI is calculated across all environment pairs.
 #'
-#' @param data A data frame containing the input data, with multiple columns for fitness traits and another column or external vector for the environment.
-#' @param trait_cols A vector of strings or numeric values indicating the columns in `data` that contain the fitness trait values.
-#' @param env_col A string, numeric, or vector indicating the column in `data` that contains the environment labels, or an external vector specifying environment belonging.
-#' @param control_env A value indicating the control environment to compare. Must be present in `env_col`.
-#' @param stress_env A value indicating the stress environment to compare. Must be present in `env_col`.
+#' @param trait_values A numeric vector containing trait values measured across different environments.
+#' @param env_values (Optional) A numeric vector specifying the environment associated with each trait measurement.
+#'                   If NULL, environments are assumed to be equidistant.
+#' @param control_stress (Optional) A binary vector (0/1 or "Control"/"Stress") specifying which measurements belong to control and stress.
+#'                       If NULL, pairwise FPI is calculated across all environments.
 #'
-#' @return A data frame with each trait and the calculated FPI for each trait between the control and stress environments.
-#'
-#' @details The FPI is calculated for each trait by taking the difference between the fitness values in the stress and control environments,
-#' divided by the fitness values in the control environment. This index provides a relative measure of each fitness trait's
-#' plasticity across the two environments.
+#' @return A numeric value (mean FPI) if control-stress mapping is provided, otherwise a named vector of mean FPI values across all pairs.
 #'
 #' @examples
-#' # Example usage with synthetic data
-#' synthetic_data = data.frame(
-#'   Fitness_1 = c(10, 12, 14, 16),
-#'   Fitness_2 = c(20, 22, 24, 26),
-#'   Environment = factor(c(1, 1, 2, 2))  # Control = 1, Stress = 2
-#' )
+#' trait_values = c(10, 12, 15, 17, 20, 22, 25, 27, 30, 32)
 #' 
-#' # Calculate FPI between control (1) and stress (2) for multiple traits
-#' fpi_values = calculate_FPI(synthetic_data, trait_cols = c("Fitness_1", "Fitness_2"), env_col = "Environment", control_env = 1, stress_env = 2)
-#' print(fpi_values)
+#' # Compute FPI across all environment pairs with equidistant environments
+#' result = calculate_FPI(trait_values)
+#' print(result)
+#'
+#' # Specify explicit environments
+#' env_values = seq_along(trait_values)  
+#' control_stress = c(0, 0, 1, 1, 1, 1, 0, 0, 1, 1) # 0 = Control, 1 = Stress
+#' result_with_control = calculate_FPI(trait_values, env_values, control_stress)
+#' print(result_with_control)
 #'
 #' @export
-calculate_FPI = function(data, env_col, trait_cols, control_env, stress_env) {
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col = env_col
-  } else {
-    env_col = data[[env_col]]
+calculate_FPI = function(trait_values, env_values = NULL, control_stress = NULL) {
+  # Ensure trait_values is numeric
+  if (!is.numeric(trait_values)) stop("trait_values must be a numeric vector.")
+  
+  n = length(trait_values)
+  
+  # Assume equidistant environments if not provided
+  if (is.null(env_values)) {
+    env_values = seq_len(n)
   }
   
-  # Initialize a data frame to store FPI results for each trait
-  FPI_results = data.frame(Trait = character(), FPI = numeric(), stringsAsFactors = FALSE)
+  # Ensure env_values has correct length
+  if (length(env_values) != n) stop("env_values must have the same length as trait_values.")
   
-  # Loop through each trait column
-  for (trait_col in trait_cols) {
+  unique_envs = unique(env_values)
+  
+  # If only one environment is present, return NA
+  if (length(unique_envs) < 2) {
+    warning("Only one unique environment present. FPI cannot be calculated.")
+    return(NA)
+  }
+  
+  # If control-stress mapping is provided
+  if (!is.null(control_stress)) {
+    if (length(control_stress) != n) stop("control_stress must have the same length as trait_values.")
     
-    # Extract trait data
-    trait_data = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
-    
-    # Filter the data for the control and stress environments
-    control_data = trait_data[env_col == control_env]
-    stress_data = trait_data[env_col == stress_env]
-    
-    # Ensure there are equal numbers of values for control and stress
-    if (length(control_data) != length(stress_data)) {
-      stop("The number of trait values for the control and stress environments must be equal.")
+    # Ensure binary format (0/1 or Control/Stress)
+    if (!all(control_stress %in% c(0, 1, "Control", "Stress"))) {
+      stop("control_stress must be a vector of 0/1 or 'Control'/'Stress'.")
     }
     
-    # Calculate FPI for each pair of values between the control and stress environments
-    FPI_values = (stress_data - control_data) / control_data
+    # Convert to 0/1 if needed
+    if (is.character(control_stress)) {
+      control_stress = ifelse(control_stress == "Control", 0, 1)
+    }
     
-    # Calculate and store the average FPI for this trait
-    FPI = mean(FPI_values, na.rm = TRUE)
+    control_values = trait_values[control_stress == 0]
+    stress_values = trait_values[control_stress == 1]
     
-    # Append the result to the data frame
-    FPI_results = rbind(FPI_results, data.frame(Trait = colnames(data)[trait_col], FPI = FPI))
+    # Ensure equal sample size
+    min_len = min(length(control_values), length(stress_values))
+    control_values = control_values[seq_len(min_len)]
+    stress_values = stress_values[seq_len(min_len)]
+    
+    # Compute FPI
+    FPI_values = (stress_values - control_values) / control_values
+    return(mean(FPI_values, na.rm = TRUE))
   }
   
+  # Otherwise, compute FPI for all environment pairs
+  env_combinations = combn(unique_envs, 2, simplify = TRUE)
+  FPI_results = numeric(ncol(env_combinations))
+  
+  for (i in seq_len(ncol(env_combinations))) {
+    env1 = env_combinations[1, i]
+    env2 = env_combinations[2, i]
+    
+    idx1 = which(env_values == env1)
+    idx2 = which(env_values == env2)
+    
+    min_len = min(length(idx1), length(idx2))
+    idx1 = idx1[seq_len(min_len)]
+    idx2 = idx2[seq_len(min_len)]
+    
+    FPI_values = (trait_values[idx2] - trait_values[idx1]) / trait_values[idx1]
+    FPI_results[i] = mean(FPI_values, na.rm = TRUE)
+  }
+  
+  names(FPI_results) = apply(env_combinations, 2, paste, collapse = "-")
   return(FPI_results)
 }
+
 
 
 ## test - passed on synthetic dataset
@@ -731,78 +722,50 @@ calculate_FPI = function(data, env_col, trait_cols, control_env, stress_env) {
 #################################
 
 
-#' @title Calculate Transplant Plasticity Score (TPS) for Multiple Traits
-#' @description This function calculates the Transplant Plasticity Score (TPS) for multiple traits when an organism is transplanted to a different environment.
+#' @title Calculate Transplant Plasticity Score (TPS)
+#' @description This function calculates the Transplant Plasticity Score (TPS) for a given trait when an organism is transplanted to a different environment.
 #' The TPS quantifies the relative change in a trait between the native environment and the transplanted environment.
 #'
-#' @param data A data frame containing the input data, with multiple columns for trait values and another column or external vector for the environment.
-#' @param trait_cols A vector of strings or numeric values indicating the columns in `data` that contain the trait values.
-#' @param env_col A string, numeric, or vector indicating the column in `data` that contains the environment labels, or an external vector specifying environment belonging.
-#' @param native_env A value indicating the native environment. Must be present in `env_col`.
-#' @param transplanted_env A value indicating the transplanted environment. Must be present in `env_col`.
+#' @param trait_values A numeric vector containing trait values measured across different environments.
+#' @param env_values A numeric vector specifying the environment associated with each trait measurement.
+#'                   If NULL, environments are assumed to be equidistant.
+#' @param native_env A value indicating the native environment. Must be present in `env_values`.
+#' @param transplanted_env A value indicating the transplanted environment. Must be present in `env_values`.
 #'
-#' @return A data frame with each trait and the calculated TPS for each trait between the native and transplanted environments.
-#'
-#' @details The TPS is calculated for each trait by taking the difference between the trait values in the transplanted and native environments,
-#' divided by the trait values in the native environment. This index provides a relative measure of each trait's plasticity after transplantation.
-#'
+#' @return A numeric value representing the mean TPS for the trait.
 #' @examples
-#' # Example usage with synthetic data
-#' synthetic_data = data.frame(
-#'   Trait_1 = c(50, 60, 70, 80),
-#'   Trait_2 = c(30, 40, 50, 60),
-#'   Environment = factor(c(1, 1, 2, 2))  # Native = 1, Transplanted = 2
-#' )
+#' trait_values = c(50, 60, 70, 80)
+#' env_values = c(1, 1, 2, 2)  # Native = 1, Transplanted = 2
 #'
-#' # Calculate TPS between native (1) and transplanted (2) for multiple traits
-#' tps_values = calculate_TPS(synthetic_data, trait_cols = c("Trait_1", "Trait_2"), env_col = "Environment", native_env = 1, transplanted_env = 2)
-#' print(tps_values)
+#' # Calculate TPS between native (1) and transplanted (2)
+#' tps_result = calculate_TPS(trait_values, env_values, native_env = 1, transplanted_env = 2)
+#' print(tps_result)
 #'
 #' @export
-calculate_TPS = function(data, env_col, trait_cols, native_env, transplanted_env) {
-  # Handle env_col
-  if (is.numeric(env_col) && length(env_col) == 1) {
-    env_col = data[[env_col]]
-  } else if (is.vector(env_col) && length(env_col) == nrow(data)) {
-    env_col = env_col
-  } else {
-    env_col = data[[env_col]]
+calculate_TPS = function(trait_values, env_values, native_env, transplanted_env) {
+  # Ensure trait_values is numeric
+  if (!is.numeric(trait_values)) stop("trait_values must be a numeric vector.")
+  
+  # Ensure env_values is provided and has correct length
+  if (is.null(env_values)) stop("env_values must be provided.")
+  if (length(env_values) != length(trait_values)) stop("env_values must have the same length as trait_values.")
+  
+  # Check if specified native and transplanted environments exist in env_values
+  unique_envs = unique(env_values)
+  if (!(native_env %in% unique_envs) || !(transplanted_env %in% unique_envs)) {
+    stop("native_env and transplanted_env must be in env_values.")
   }
   
-  # Initialize a data frame to store TPS results for each trait
-  TPS_results = data.frame(Trait = character(), TPS = numeric(), stringsAsFactors = FALSE)
+  # Extract trait values for native and transplanted environments
+  native_data = trait_values[env_values == native_env]
+  transplanted_data = trait_values[env_values == transplanted_env]
   
-  # Loop through each trait column
-  for (trait_col in trait_cols) {
-    
-    # Extract trait data
-    trait_data = if (is.numeric(trait_col)) data[[trait_col]] else data[[trait_col]]
-    
-    # Filter the data for the native and transplanted environments
-    native_data = trait_data[env_col == native_env]
-    transplanted_data = trait_data[env_col == transplanted_env]
-    
-    # Ensure there are equal numbers of values for native and transplanted environments
-    if (length(native_data) != length(transplanted_data)) {
-      stop("The number of trait values for the native and transplanted environments must be equal.")
-    }
-    
-    # Calculate TPS for each pair of values between the native and transplanted environments
-    TPS_values = (transplanted_data - native_data) / native_data
-    
-    # Calculate and store the average TPS for this trait
-    TPS = mean(TPS_values, na.rm = TRUE)
-    
-    # Append the result to the data frame
-    TPS_results = rbind(TPS_results, data.frame(Trait = colnames(data)[trait_col], TPS = TPS))
-  }
+  # Ensure equal sample size
+  min_len = min(length(native_data), length(transplanted_data))
+  native_data = native_data[seq_len(min_len)]
+  transplanted_data = transplanted_data[seq_len(min_len)]
   
-  return(TPS_results)
+  # Compute TPS
+  TPS_values = (transplanted_data - native_data) / native_data
+  return(mean(TPS_values, na.rm = TRUE))
 }
-
-## test - passed on synthetic dataset
-
-
-#calculate_TPS(df_test6,1,c(2,3),1,2)
-
-###########################

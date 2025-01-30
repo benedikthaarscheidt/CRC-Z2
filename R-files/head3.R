@@ -301,8 +301,8 @@ PIR=post_process(processed_data_list,calculate_PIR,type_labels,env)
 
 
 
+############### 2.R
 ###############
-
 
 RDPI=post_process(processed_data_list,calculate_rdpi,type_labels)
 
@@ -313,6 +313,69 @@ ESPI=post_process(processed_data_list,calculate_ESPI,type_labels)
 
 
 ESPIID=post_process(processed_data_list,calculate_espiid,type_labels)
+
+
+
+################# 3.R
+#################
+
+
+PSI=post_process(processed_data_list,calculate_PSI,type_labels)
+
+
+
+RPI=post_process(processed_data_list,calculate_RPI,type_labels)
+
+
+
+
+PQ=post_process(processed_data_list,calculate_PQ,type_labels)
+
+
+
+
+PR=post_process(processed_data_list,calculate_PR,type_labels) #not really comparable as it required individual level data
+
+
+
+
+NRW=post_process(processed_data_list,calculate_NRW,type_labels)
+
+
+
+
+ESP=post_process(processed_data_list,calculate_ESP,type_labels)
+
+
+
+
+PD=post_process(processed_data_list,calculate_general_PD,type_labels) # not comparable as it required stress env and control env
+
+
+
+
+FPI=post_process(processed_data_list,calculate_FPI,type_labels) # not comparable as it required stress env and control env
+
+################## 4.R
+##################
+
+
+
+
+
+  
+
+
+################### 5.R
+###################
+
+Plasticity=post_process(processed_data_list,calculate_plasticity,type_labels)
+
+
+
+
+env_cov=post_process(processed_data_list,cross_env_cov,type_labels)
+
 
 
 
