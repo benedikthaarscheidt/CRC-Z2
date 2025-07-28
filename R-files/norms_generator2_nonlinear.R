@@ -202,14 +202,22 @@ create_plot2 = function(gaussian_data, sinusoidal_data, wave_data, show_replicat
   return(p)
 }
 
-pdf("reaction_norms_plots_combined.pdf", width = 12, height = 8)
+pdf("~/CRC_1644_Z2/plots/reaction_norms_plots_combined.pdf", width = 12, height = 8)
 print(create_plot(gaussian_data))   # Plot for Gaussian norms
 print(create_plot(sinusoidal_data))   # Plot for Sinusoidal norms
 print(create_plot(wave_data))         # Plot for Wave norms
 print(create_plot2(gaussian_data, sinusoidal_data, wave_data)) # Combined plot with 3 randomly sampled norms
 dev.off()
 
-write.csv(gaussian_data, "gaussian_data.csv", row.names = FALSE)
-write.csv(sinusoidal_data, "sinusoidal_data.csv", row.names = FALSE)
-write.csv(wave_data, "wave_data.csv", row.names = FALSE)
-write.csv(all_data, "CRC 1622 - Z2/synthetic_data/fixed_full/all_combined_data.csv", row.names = FALSE)
+ensure_dir_exists <- function(file_path) {
+  dir_path <- dirname(file_path)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE, showWarnings = FALSE)
+  }
+}
+
+ensure_dir_exists("~/CRC_1644_Z2/synthetic_data/fixed_full")
+write.csv(gaussian_data, "~/CRC_1644_Z2/synthetic_data/fixed_full/gaussian_data.csv", row.names = FALSE)
+write.csv(sinusoidal_data, "~/CRC_1644_Z2/synthetic_data/fixed_full/sinusoidal_data.csv", row.names = FALSE)
+write.csv(wave_data, "~/CRC_1644_Z2/synthetic_data/fixed_full/wave_data.csv", row.names = FALSE)
+write.csv(all_data, "~/CRC_1644_Z2/synthetic_data/fixed_full/all_combined_data.csv", row.names = FALSE)

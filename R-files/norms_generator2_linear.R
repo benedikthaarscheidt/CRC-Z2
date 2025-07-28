@@ -142,12 +142,21 @@ create_plot = function(individual_data, genotypes_per_plot = 5, title = "Reactio
 
 
 p = create_plot(individual_norms, genotypes_per_plot = 3, title = "Random Sample of 3 Genotypes")
-pdf("linear_reaction_norms2.pdf", width = 8, height = 6)
+pdf("~/CRC_1644_Z2/plots/linear_reaction_norms2.pdf", width = 8, height = 6)
 print(p)
 dev.off()
-output_file <- "~/CRC 1622 - Z2/synthetic_data/fixed_full/linear_reaction_norms_data.csv"
+output_file <- "~/CRC_1644_Z2/synthetic_data/fixed_full/linear_reaction_norms_data.csv"
+
+ensure_dir_exists <- function(file_path) {
+  dir_path <- dirname(file_path)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE, showWarnings = FALSE)
+  }
+}
+ensure_dir_exists(output_file)
+
 
 # write out without row names
 write.csv(individual_norms, file = output_file, row.names = FALSE)
 
-message("Saved linear reaction-norm data to: ", output_file)
+

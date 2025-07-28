@@ -92,15 +92,15 @@ for (range_name in names(range_list)) {
     indices <- unique(c(seq(global_start_index, global_end_index, by = global_sampling_interval),
                         global_end_index))
     
-    
+    #print(indices)
     
     global_traits <- length(indices)
     traits <- global_traits  
     env=seq_along(indices)
     # Source the processing script that uses the globals.
     # head3.R is modified to use global_sampling_interval, global_start_index, global_end_index, and traits.
-    source("~/CRC 1622 - Z2/R-files/head3.R")
-    source("~/CRC 1622 - Z2/R-files/summary_stats_vs_scores.R")
+    source("~/CRC_1644_Z2/R-files/head3.R")
+    source("~/CRC_1644_Z2/R-files/summary_stats_vs_scores.R")
     # After sourcing, all preprocessed data and score objects (e.g. CV_t, RN, etc.) are recalculated.
     
     # Build the scores list from the computed objects

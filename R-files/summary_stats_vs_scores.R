@@ -1,5 +1,5 @@
 if (!exists("data_loaded") || !data_loaded) {
-  source("~/CRC 1622 - Z2/R-files/head3.R")
+  source("~/CRC_1644_Z2/R-files/head3.R")
   data_loaded = TRUE
 }
 
@@ -82,6 +82,8 @@ rn_matrix_list <- list(
 )
 
 genotype_forms = c("linear", "gaussian", "sinusoidal", "wave")
+
+indices= c(1,11,21,31,41,50)
 
 prepare_score_vector <- function(score_df, genotype_form) {
   # Assumes score_df has columns "Score" and "Type"

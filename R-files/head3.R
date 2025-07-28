@@ -33,7 +33,7 @@
 #   indices, interval, env, Covariate, type_labels,
 #   gaussian_data, sinusoidal_data, wave_data, linear_data
 
-source("~/CRC 1622 - Z2/R-files/Plasticity_scores/1_2.R")
+source("~/CRC_1644_Z2/R-files/Plasticity_scores/1_2.R")
 #coefficient-of variation total (calculate_CVt) - tested,
 #slope of norm reaction (calculate_reaction_norm_slope) - tested,
 #slope of plastic response (D) (calculate_D_slope)- tested,
@@ -47,13 +47,13 @@ source("~/CRC 1622 - Z2/R-files/Plasticity_scores/1_2.R")
 #PILSM (calculate_PILSM)- tested,
 #RTR (calculate_RTR)- tested,
 #PIR (calculate_PIR) - tested
-source("~/CRC 1622 - Z2/R-files/Plasticity_scores/2.R")
+source("~/CRC_1644_Z2/R-files/Plasticity_scores/2.R")
 #RDPI	(rdpi_calculation) - tested,
 #RDPIs (rdpi_mean_calculation) - tested,
 #ESPI (calculate_ESPI) - tested,
 #ESPIid (espiid_calculation) - tested,
 #evwpi_calculation (idea from Benedikt)
-source("~/CRC 1622 - Z2/R-files/Plasticity_scores/3.R")
+source("~/CRC_1644_Z2/R-files/Plasticity_scores/3.R")
 #Phenotypic Stability Index (calculate_PSI),
 #Relative Plasticity Index (calculate_RPI) - tested,
 #Plasticity Quotient (calculate_PQ) - tested,
@@ -63,7 +63,7 @@ source("~/CRC 1622 - Z2/R-files/Plasticity_scores/3.R")
 #Calculate Plasticity Differential (PD) (calculate_PD) - tested,
 #Calculate Fitness Plasticity Index (FPI) (calculate_FPI) - tested,
 #Calculate Transplant Plasticity Score (TPS)(calculate_TPS) - tested,
-source("~/CRC 1622 - Z2/R-files/Plasticity_scores/4.R")
+source("~/CRC_1644_Z2/R-files/Plasticity_scores/4.R")
 #Calculate Developmental Plasticity Index (DPI)(calculate_DPI) - tested,
 #Calculate Coefficient of Environmental Variation (CEV)(calculate_CEV) - tested,
 #Calculate Plasticity Response Index (PRI)(calculate_PRI) - tested,
@@ -78,30 +78,23 @@ source("~/CRC 1622 - Z2/R-files/Plasticity_scores/4.R")
 #Calculate Standardized Plasticity Metric (SPM)(calculate_SPM) - tested,
 #Calculate SSpop/SStotal Plasticity Ratio(calculate_Plasticity_Ratio) - tested
 
-source("~/CRC 1622 - Z2/R-files/Plasticity_scores/5.R")
-source("~/CRC 1622 - Z2/R-files/norms_generator2_nonlinear.R")
-source("~/CRC 1622 - Z2/R-files/norms_generator2_linear.R")
+source("~/CRC_1644_Z2/R-files/Plasticity_scores/5.R")
+source("~/CRC_1644_Z2/R-files/norms_generator2_nonlinear.R")
+source("~/CRC_1644_Z2/R-files/norms_generator2_linear.R")
 
-#n_datasets=3
-#gaussian_rn=gaussian_data
-#sinusoidal_rn=sinusoidal_data
-#wave_rn=wave_data
-#linear_rn=individual_norms
-#linear_data=individual_norms
+
 ## ──────────────────────────────────────────────────────────────────────────────
 ##  1) Define defaults for any globals you need
 ## ──────────────────────────────────────────────────────────────────────────────
 default_indices   <- seq(1, 50)   #sampling over the whole interval every index
-default_interval  <- 1 #sampling every index
 default_env       <- seq_along(default_indices)
 default_Covariate <- rep(1, length(default_indices))
 default_type_labels <- c("gaussian", "sinusoidal", "wave", "linear")
 
-## ──────────────────────────────────────────────────────────────────────────────JO
+## ──────────────────────────────────────────────────────────────────────────────
 ##  2) Only assign them if they don't already exist
 ## ──────────────────────────────────────────────────────────────────────────────
 if (!exists("indices",   envir = .GlobalEnv)) indices      <- default_indices
-if (!exists("interval",  envir = .GlobalEnv)) interval     <- default_interval
 if (!exists("env",       envir = .GlobalEnv)) env          <- default_env
 if (!exists("Covariate", envir = .GlobalEnv)) Covariate    <- default_Covariate
 if (!exists("type_labels", envir = .GlobalEnv)) type_labels <- default_type_labels
@@ -123,6 +116,8 @@ combined_data=list(linear=linear_data,
                    gaussian=gaussian_data,
                    sinusoidal=sinusoidal_data,
                    wave=wave_data)
+
+
 ############################################################
 
 #' Preprocess Dataset for Modular Index Functions
@@ -189,7 +184,7 @@ preprocess_data = function(data, trait_col, genotype_col, replicate_col = NULL, 
         indices = unique(c(seq(1, length(averaged_vector), by = interval),
                            length(averaged_vector)))
       }
-      print(indices)
+    
       result[[genotype]] = averaged_vector[indices]
     }
   }

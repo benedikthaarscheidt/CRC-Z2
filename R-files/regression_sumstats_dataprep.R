@@ -27,8 +27,15 @@
 #       regression_data_<range>_interval_<interval>_indices_<indices>.csv
 #     containing columns = all score values + all summary‐stat predictors.
 
-output_folder <- "~/CRC 1622 - Z2/R-files/regression_summary_stats"
-dir.create(output_folder, recursive = TRUE, showWarnings = FALSE)
+ensure_dir_exists <- function(file_path) {
+  dir_path <- dirname(file_path)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE, showWarnings = FALSE)
+  }
+}
+
+output_folder <- "~/CRC_1644_Z2/R-files/regression_summary_stats"
+ensure_dir_exists(output_folder)
 
 sampling_intervals <- c(1, 2, 5, 10, 15, 20,25, 49)#1, 2, 5, 10, 15, 20,25, 49
 global_initial_length <- 50
@@ -75,8 +82,8 @@ for (range_name in names(range_list)) {
     traits <- length(indices)
     
     
-    source("~/CRC 1622 - Z2/R-files/head3.R")
-    source("~/CRC 1622 - Z2/R-files/summary_stats_vs_scores.R")
+    source("~/CRC_1644_Z2/R-files/head3.R")
+    source("~/CRC_1644_Z2/R-files/summary_stats_vs_scores.R")
     
     ###################################
     ## Build Predictor Matrix (X)

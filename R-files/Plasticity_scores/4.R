@@ -13,7 +13,7 @@
 #Calculate SSpop/SStotal Plasticity Ratio(calculate_Plasticity_Ratio) - tested
 
 
-source("~/CRC 1622 - Z2/R-files/Plasticity_scores/2.R")
+source("~/CRC_1644_Z2/R-files/Plasticity_scores/2.R")
 
 ########################################
 

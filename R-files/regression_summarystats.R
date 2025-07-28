@@ -60,10 +60,19 @@ library(cluster)
 library(dendextend)
 library(RColorBrewer)
 
+ensure_dir_exists <- function(file_path) {
+  dir_path <- dirname(file_path)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE, showWarnings = FALSE)
+  }
+}
+
 # Directories for input data and output
-input_folder  <- "~/CRC 1622 - Z2/R-files/regression_summary_stats"
-output_folder <- "~/CRC 1622 - Z2/plots"
-dir.create(output_folder, showWarnings = FALSE, recursive = TRUE)
+input_folder  <- "~/CRC_1644_Z2/R-files/regression_summary_stats"
+output_folder <- "~/CRC_1644_Z2/plots"
+
+ensure_dir_exists(input_folder)
+ensure_dir_exists(output_folder)
 
 # Load combined data
 combined_file <- file.path(input_folder,

@@ -1,9 +1,18 @@
 library(dplyr)
 library(ggplot2)
 
-# Directory containing CSV files
-dir_path <- path.expand("~/CRC 1622 - Z2/correlation_summary_stats")
-output_dir <- path.expand("~/CRC 1622 - Z2/plots")
+ensure_dir_exists <- function(file_path) {
+  dir_path <- dirname(file_path)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE, showWarnings = FALSE)
+  }
+}
+dir_path <- path.expand("~/CRC_1644_Z2/correlation_summary_stats")
+output_dir <- path.expand("~/CRC_1644_Z2/plots")
+ensure_dir_exists(dir_path)
+ensure_dir_exists(output_dir)
+
+
 # Our predetermined range tags as they appear in your filenames.
 # For example, files contain "full", "partial1", or "partial2".
 range_names <- c("full", "partial1", "partial2")
