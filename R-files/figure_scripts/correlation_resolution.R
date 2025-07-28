@@ -182,7 +182,6 @@ for(j in seq_len(nr)) {
 delta <- 0.001  # Define the equivalence margin for slope values.
 # This sets the threshold below which slopes are considered 
 # equal to zero 
-delta <- 0.001
 
 model_df$peq <- NA_real_
 
@@ -202,7 +201,7 @@ for (j in seq_len(nrow(model_df))) {
     
     p2 <- pt(t2, df, lower.tail = FALSE)
   
-    # equivalence p‐value is the *maximum* of the two one‐sided p’s
+    # equivalence p‐value is the maximum of the two one‐sided p’s
     model_df$peq[j] <- max(p1, p2)
   }
 }
