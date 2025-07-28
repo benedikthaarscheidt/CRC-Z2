@@ -1,0 +1,251 @@
+---
+title: "Grouping of plasticity scores"
+author: "Bene"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 5
+  html_document:
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(lme4)
+library(emmeans)
+```
+
+
+## Grouping of plasticity scores
+
+1. **Variability/Dispersion Measures** – Indices that capture the overall spread of trait values across environments.
+2. **Slope/Gradient and Change Measures** – Indices that quantify the rate or direction of trait change along environmental gradients.
+3. **Relative and Adjusted Means Measures** – Indices that compare environment-specific summaries (means, medians, or least-square means) to assess the relative magnitude of plastic responses.
+
+---
+
+## Group 1: Variability/Dispersion Measures  
+
+
+1. **CV_t (Coefficient of Variation)**  
+
+   \[
+   CV_t = \frac{\sigma_T}{\mu_T}
+   \]  
+
+   Measures relative variability of trait values by dividing the standard deviation (\(\sigma_T\)) by the mean (\(\mu_T\)). 
+
+2. **CEV (Coefficient of Environmental Variation)**  
+  
+   \[
+   CEV = \left(\frac{SD(T)}{Mean(T)}\right) \times 100
+   \]  
+  
+   Similar to \(CV_t\) but expressed as a percentage.
+
+3. **PR (Phenotypic Range)**  
+
+   \[
+   PR = T_{\max} - T_{\min}
+   \]  
+   
+   The difference between the maximum and minimum trait values observed across environments
+
+4. **NRW (Norm of Reaction Width)**  
+  
+   \[
+   NRW = \max(\bar{T}_e) - \min(\bar{T}_e)
+   \]  
+
+   Uses the means of trait values for each environment (\(\bar{T}_e\)) to capture the range of the reaction norm.
+
+5. **SI (Stability Index)**  
+
+   \[
+   SI = \frac{\mathrm{Var}(\{\bar{T}_e\})}{\mathrm{Mean}(\{\bar{T}_e\})}
+   \]  
+  
+   Quantifies the variability of environment-specific means relative to their overall average
+
+6. **RSI (Relative Stability Index)**  
+  
+   \[
+   RSI = 1 - \frac{SD(\{\bar{T}_e\})}{\mathrm{Mean}(\{\bar{T}_e\})}
+   \]  
+
+  
+
+7. **EVS (Environmental Variance Sensitivity)**  
+
+   \[
+   EVS = \frac{\mathrm{Var}(T)}{\mathrm{Var}(E)}
+   \]  
+   
+   Compares the variance of trait values to the variance in environmental values -->how sensitive the trait is to environmental changes
+
+---
+
+## Group 2: Slope/Gradient and Change Measures  
+
+
+1. **RN (Reaction Norm Slope)**  
+   
+   \[
+   RN = \beta
+   \]  
+   
+   
+
+2. **RNN (Nonlinear Reaction Norm)**  
+   
+   \[
+   RNN = \sum_{k=1}^{d} \left| \beta_k \right|
+   \]  
+   
+   Sum of the absolute coefficients (excluding the intercept) from a polynomial regression of degree \(d\)
+
+3. **D_slope**  
+  
+   \[
+   D_{\text{slope}} = \mu_{\text{upper}} - \mu_{\text{lower}}
+   \]  
+   
+   Computes the difference between the mean trait values of the upper and lower fractions (e.g., top 20% vs. bottom 20%) of sorted trait data
+
+4. **RC (Response Coefficient)**  
+   \[
+   RC = \frac{\mu_{\text{high}}}{\mu_{\text{low}}}
+   \]  
+   
+   The ratio of mean trait values in the upper 50% of environmental value vs. lower environmental values
+
+5. **APC (Absolute Plasticity Coefficient)**  
+  
+   \[
+   APC = \frac{1}{n-1}\sum_{i=1}^{n-1}\left|\bar{T}_{e_{i+1}} - \bar{T}_{e_i}\right|
+   \]  
+   
+   Average absolute difference between  environment-specific means
+
+6. **PQ (Plasticity Quotient)**  
+   \[
+   PQ = \frac{\Delta T}{\Delta E}
+   \]  
+
+   The ratio of the change in trait value (\(\Delta T\)) to the change in environmental value (\(\Delta E\)) --> sensitivity of the trait to the environment
+
+7. **PSI (Phenotypic Stability Index)**  
+
+   \[
+   PSI = \frac{1}{1 + |\beta|}
+   \]  
+   
+   
+
+8. **RPI (Relative Plasticity Index)**  
+   
+   \[
+   RPI = \text{average}\left(\frac{|T_i - T_j|}{T_i + T_j}\right) \quad \text{for all pairs } i, j
+   \]  
+  
+  relative differences between trait values from different environments
+
+9. **RTR (Relative Trait Response)**  
+  
+   \[
+   RTR = \frac{\mu_{\text{high}} - \mu_{\text{low}}}{\max(|T|)}
+   \]  
+
+   Scales the difference between high and low trait means by the maximum observed absolute trait value.
+
+---
+
+## Group 3: Relative and Adjusted Means Measures  
+These indices compare summary statistics (means, medians, or least-square means) across environments to quantify plasticity.
+
+1. **gPi (Grand Plasticity Index)**  
+  
+   \[
+   gPi = \frac{SD(\{LSM_e\})}{Mean(\{LSM_e\})}
+   \]  
+  
+   Uses adjusted (least-square) means for each environment to calculate the relative dispersion among environments.
+
+2. **PPF (Phenotypic Plasticity Factor)**  
+   
+   \[
+   PPF = 100 \times \frac{|LSM_1 - LSM_2|}{LSM_1}
+   \]  
+   
+   Expresses the percentage difference between two environment-specific least-square means
+
+3. **PPi (Phenotypic Plasticity Index)**  
+  
+   \[
+   PPi = \frac{T_{\max} - T_{\min}}{T_{\max}}
+   \]  
+
+   Measures the range of trait values relative to the maximum observed value
+
+4. **PImd (Proportional Inter-Median Difference)**  
+   
+   \[
+   PImd = \frac{\max(\{\tilde{T}_e\}) - \min(\{\tilde{T}_e\})}{\max(\{\tilde{T}_e\})}
+   \]  
+   
+   Similar to PPi but uses environment-specific medians instead of extremes
+
+5. **PILSM (Proportional Inter-Least Square Mean Difference)**  
+
+   \[
+   PILSM = \frac{\max(\{LSM_e\}) - \min(\{LSM_e\})}{\max(\{LSM_e\})}
+   \]  
+   
+   Uses least-square means to determine the range of trait expression across environments.
+
+6. **PIR (Phenotypic Instability Ratio)**  
+
+   \[
+   PIR = \frac{\max(\{\bar{T}_e\}) - \min(\{\bar{T}_e\})}{\mu_R}
+   \]  
+   
+   quantifies how much the mean trait value varies across different environments relative to the trait value in the environment with the highest responsiveness.
+
+7. **RDPI (Relative Distance Plasticity Index)**  
+   
+   \[
+   RDPI = \frac{1}{\binom{n}{2}} \sum_{i<j} \frac{|T_i - T_j|}{T_i + T_j}
+   \]  
+   
+   Averages the relative differences between all pairs of trait values from different environments
+
+8. **ESPI (Environmental Sensitivity Performance Index)**  
+   
+   \[
+   ESPI = \frac{\max(\bar{T}_e) - \min(\bar{T}_e)}{|\max(E) - \min(E)|}
+   \]  
+   
+   Range of environment-specific trait means normalized by the environmental range
+
+9. **ESPIID (ESPI for Individual Differences)**  
+  
+   \[
+   ESPIID = \frac{\text{Mean Absolute Difference Among Individuals}}{|\Delta E|}
+   \]  
+  
+   Similar to ESPI, but applied to individual-level differences rather than environment means
+
+10. **ESP (Environment-Specific Plasticity)**  
+    
+    Sum of deviations of trait values in specific environments from the overall mean
+
+11. **PFI (Phenotypic Flexibility Index)**  
+    
+    maximum deviation from a baseline (overall mean) relative to that baseline

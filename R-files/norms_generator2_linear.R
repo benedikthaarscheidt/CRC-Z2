@@ -5,9 +5,37 @@ build_cov_matrix = function(VE, VS, rES) {
 }
 
 
-generate_fixed_norm = function(intercept, slope, env) {
+generate_fixed_norm = function(intercept, slope, env,outliers="None") {
+  
   curve = intercept + slope * env
   curve[curve < 0] = 0  
+  if(outliers=="None"){
+    return(curve)}
+  else if(outliers=="positive"){
+    i=runif(1,1,length(env))
+    print("original")
+    print(curve[i])
+    curve[i]=curve[i]*runif(1,1,2)
+    print("mod")
+    print(curve[i])
+  }
+  else if(outliers=="negative"){
+    i=runif(1,1,length(env))
+    print("original")
+    print(curve[i])
+    curve[i]=curve[i]*runif(1,0,1)
+    print("mod")
+    print(curve[i])
+  }
+  else if(outliers=="both"){
+    i=runif(1,1,length(env))
+    print("original")
+    print(curve[i])
+    curve[i]=curve[i]*runif(1,0,4)
+    print("mod")
+    print(curve[i])
+  }
+  
   return(curve)
 }
 
@@ -25,6 +53,7 @@ generate_reaction_norm_with_covariance = function(intercept, slope, env, cov_mat
   return(deviations)
 }
 
+introduce_outliers=function(){}
 
 set.seed(42)
 environmental_factors = seq(1, 10, length.out = 50)  # 50 environments
@@ -41,35 +70,42 @@ rES = 1
 cov_matrix = build_cov_matrix(VE, VS, rES)
 
 # Generate individual (replicate) norms for each genotype
+
 individual_norms = do.call(rbind, lapply(1:num_genotypes, function(i) {
-  random_effects = MASS::mvrnorm(3, mu = c(0, 0), Sigma = cov_matrix)
   
+  # Sample random effects for the replicates for this genotype
+  random_effects = MASS::mvrnorm(num_individuals_per_genotype, mu = c(0, 0), Sigma = cov_matrix)
   
-  fixed_effect = generate_fixed_norm(fixed_intercepts[i], fixed_slopes[i], environmental_factors)
+  # Compute the fixed (mother) curve with outlier modifications
+  fixed_effect = generate_fixed_norm(fixed_intercepts[i], fixed_slopes[i], 
+                                     environmental_factors, outliers = "none")
   
-  # Generate individual replicates
-  replicate_data = do.call(rbind, lapply(1:3, function(j) {
+  # Generate individual replicates by adding random deviations to the fixed_effect
+  replicate_data = do.call(rbind, lapply(1:num_individuals_per_genotype, function(j) {
     u0 = random_effects[j, 1]
     u1 = random_effects[j, 2]
-    base_shift_indiv = fixed_intercepts[i] + u0
-    slope_indiv = fixed_slopes[i] + u1
-    curve = generate_fixed_norm(base_shift_indiv, slope_indiv, environmental_factors)
+    
+    # Compute the additive deviation for each environment
+    deviation = u0 + u1 * environmental_factors
+    
+    # The replicate curve is the mother curve plus the individual deviation
+    replicate_curve = fixed_effect + deviation
     
     data.frame(
       Genotype = i,
       Replicate = j,
       Environment = environmental_factors,
-      Trait = curve,
+      Trait = replicate_curve,
       ReactionNorm = "Linear",
-      BaseShift = base_shift_indiv,
-      Slope = slope_indiv,
+      BaseShift = fixed_intercepts[i] + u0,
+      Slope = fixed_slopes[i] + u1,
       VarianceOffset = VE,
       VarianceSlope = VS,
       Covariance = rES * sqrt(VE * VS)
     )
   }))
   
-  # Combine fixed effect with replicates
+  # Fixed data row for the mother curve
   fixed_data = data.frame(
     Genotype = i,
     Replicate = 0,
@@ -83,9 +119,9 @@ individual_norms = do.call(rbind, lapply(1:num_genotypes, function(i) {
     Covariance = NA
   )
   
+  # Combine the mother curve with the replicate data
   return(rbind(fixed_data, replicate_data))
 }))
-
 
 create_plot = function(individual_data, genotypes_per_plot = 5, title = "Reaction Norms with Individual Deviations") {
   selected_genotypes = sample(unique(individual_data$Genotype), genotypes_per_plot)
@@ -109,3 +145,9 @@ p = create_plot(individual_norms, genotypes_per_plot = 3, title = "Random Sample
 pdf("linear_reaction_norms2.pdf", width = 8, height = 6)
 print(p)
 dev.off()
+output_file <- "~/CRC 1622 - Z2/synthetic_data/fixed_full/linear_reaction_norms_data.csv"
+
+# write out without row names
+write.csv(individual_norms, file = output_file, row.names = FALSE)
+
+message("Saved linear reaction-norm data to: ", output_file)

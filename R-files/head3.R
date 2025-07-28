@@ -1,4 +1,39 @@
-source("~/CRC 1622 - Z2/R-files/1_2.R")
+# Script:    head3.R
+# Purpose:   Load all plasticity‐score functions, set sampling parameters (range,
+#            interval, indices, covariate, type labels, etc.), preprocess reaction‐
+#            norm data into per‐genotype trait vectors, and compute every plasticity
+#            score across the four genotype forms (linear, gaussian, sinusoidal, wave).
+#
+# Steps:
+#   1. Source the five score‐definition files (1_2.R, 2.R, 3.R, 4.R, 5.R) plus
+#      the linear and nonlinear norms generators.
+#   2. Define default globals (indices, interval, env, Covariate, type_labels) and
+#      only override them if already defined in the calling environment (which happens when the script is launched from the resolution.R file).
+#   3. Ensure the raw reaction‐norm data frames (gaussian_data, sinusoidal_data,
+#      wave_data, individual_norms) are present, assigning defaults if needed.
+#   4. Combine the four raw data sets into one data frame for any combined‐data ops.
+#   5. Preprocess each form’s data via `preprocess_data()` to:
+#        • average replicates per genotype × environment,
+#        • subsample at `indices`,
+#        • return a named list of genotype‐vectors.
+#   6. For each of the plasticity functions :
+#        • Call them over each genotype list via `call_function()`,
+#        • Post‐process into a unified data frame with `Type` labels.
+#   7. Build four reaction‐norm matrices (`linear`, `gaussian`, `sinusoidal`, `wave`)
+#      by row‐binding the per‐genotype vectors.
+#   8. Make “long” trait + environment data frames for plotting or summary stats.
+#
+# Outputs (in memory):
+#   • `processed_data_list`: list of four preprocessed genotype‐lists
+#   • Score tables
+#   • Reaction‐norm matrices: `linear_matrix`, `gaussian_matrix`, `sinusoidal_matrix`,
+#     `wave_matrix`
+#
+# Globals used/produced:
+#   indices, interval, env, Covariate, type_labels,
+#   gaussian_data, sinusoidal_data, wave_data, linear_data
+
+source("~/CRC 1622 - Z2/R-files/Plasticity_scores/1_2.R")
 #coefficient-of variation total (calculate_CVt) - tested,
 #slope of norm reaction (calculate_reaction_norm_slope) - tested,
 #slope of plastic response (D) (calculate_D_slope)- tested,
@@ -12,13 +47,13 @@ source("~/CRC 1622 - Z2/R-files/1_2.R")
 #PILSM (calculate_PILSM)- tested,
 #RTR (calculate_RTR)- tested,
 #PIR (calculate_PIR) - tested
-source("~/CRC 1622 - Z2/R-files/2.R")
+source("~/CRC 1622 - Z2/R-files/Plasticity_scores/2.R")
 #RDPI	(rdpi_calculation) - tested,
 #RDPIs (rdpi_mean_calculation) - tested,
 #ESPI (calculate_ESPI) - tested,
 #ESPIid (espiid_calculation) - tested,
 #evwpi_calculation (idea from Benedikt)
-source("~/CRC 1622 - Z2/R-files/3.R")
+source("~/CRC 1622 - Z2/R-files/Plasticity_scores/3.R")
 #Phenotypic Stability Index (calculate_PSI),
 #Relative Plasticity Index (calculate_RPI) - tested,
 #Plasticity Quotient (calculate_PQ) - tested,
@@ -28,7 +63,7 @@ source("~/CRC 1622 - Z2/R-files/3.R")
 #Calculate Plasticity Differential (PD) (calculate_PD) - tested,
 #Calculate Fitness Plasticity Index (FPI) (calculate_FPI) - tested,
 #Calculate Transplant Plasticity Score (TPS)(calculate_TPS) - tested,
-source("~/CRC 1622 - Z2/R-files/4.R")
+source("~/CRC 1622 - Z2/R-files/Plasticity_scores/4.R")
 #Calculate Developmental Plasticity Index (DPI)(calculate_DPI) - tested,
 #Calculate Coefficient of Environmental Variation (CEV)(calculate_CEV) - tested,
 #Calculate Plasticity Response Index (PRI)(calculate_PRI) - tested,
@@ -42,16 +77,52 @@ source("~/CRC 1622 - Z2/R-files/4.R")
 #Calculate Multivariate Plasticity Index (MVPi)(calculate_MVPi) NEEDS TO BE TESTED WITH THE REQUESTED DATASET FROM PROF. BARBOSA,
 #Calculate Standardized Plasticity Metric (SPM)(calculate_SPM) - tested,
 #Calculate SSpop/SStotal Plasticity Ratio(calculate_Plasticity_Ratio) - tested
+
+source("~/CRC 1622 - Z2/R-files/Plasticity_scores/5.R")
 source("~/CRC 1622 - Z2/R-files/norms_generator2_nonlinear.R")
 source("~/CRC 1622 - Z2/R-files/norms_generator2_linear.R")
 
-n_datasets=3
-gaussian_data=gaussian_data
-sinusoidal_data=sinusoidal_data
-wave_data=wave_data
-linear_data=individual_norms
+#n_datasets=3
+#gaussian_rn=gaussian_data
+#sinusoidal_rn=sinusoidal_data
+#wave_rn=wave_data
+#linear_rn=individual_norms
+#linear_data=individual_norms
+## ──────────────────────────────────────────────────────────────────────────────
+##  1) Define defaults for any globals you need
+## ──────────────────────────────────────────────────────────────────────────────
+default_indices   <- seq(1, 50)   #sampling over the whole interval every index
+default_interval  <- 1 #sampling every index
+default_env       <- seq_along(default_indices)
+default_Covariate <- rep(1, length(default_indices))
+default_type_labels <- c("gaussian", "sinusoidal", "wave", "linear")
 
-combined=rbind(gaussian_data, wave_data, sinusoidal_data, linear_data)
+## ──────────────────────────────────────────────────────────────────────────────JO
+##  2) Only assign them if they don't already exist
+## ──────────────────────────────────────────────────────────────────────────────
+if (!exists("indices",   envir = .GlobalEnv)) indices      <- default_indices
+if (!exists("interval",  envir = .GlobalEnv)) interval     <- default_interval
+if (!exists("env",       envir = .GlobalEnv)) env          <- default_env
+if (!exists("Covariate", envir = .GlobalEnv)) Covariate    <- default_Covariate
+if (!exists("type_labels", envir = .GlobalEnv)) type_labels <- default_type_labels
+
+## ──────────────────────────────────────────────────────────────────────────────
+##  3) And likewise for your data‐frames, before you try to rbind them
+## ──────────────────────────────────────────────────────────────────────────────
+if (!exists("gaussian_data",  envir = .GlobalEnv))   gaussian_rn  = gaussian_data  
+if (!exists("sinusoidal_data",envir = .GlobalEnv))   sinusoidal_rn = sinusoidal_data
+if (!exists("wave_data",      envir = .GlobalEnv))   wave_rn       = wave_data       
+if (!exists("linear_data",envir = .GlobalEnv))      linear_data     = individual_norms
+
+
+
+
+combined=rbind(linear_data,gaussian_data, sinusoidal_data,wave_data )
+
+combined_data=list(linear=linear_data,
+                   gaussian=gaussian_data,
+                   sinusoidal=sinusoidal_data,
+                   wave=wave_data)
 ############################################################
 
 #' Preprocess Dataset for Modular Index Functions
@@ -87,7 +158,7 @@ combined=rbind(gaussian_data, wave_data, sinusoidal_data, linear_data)
 #' print(preprocessed)
 #'
 #' @export
-preprocess_data = function(data, trait_col, genotype_col, replicate_col = NULL) {
+preprocess_data = function(data, trait_col, genotype_col, replicate_col = NULL, indices = NULL) {
   if (is.numeric(trait_col)) trait_col = colnames(data)[trait_col]
   if (is.numeric(genotype_col)) genotype_col = colnames(data)[genotype_col]
   if (!is.null(replicate_col) && is.numeric(replicate_col)) replicate_col = colnames(data)[replicate_col]
@@ -99,9 +170,9 @@ preprocess_data = function(data, trait_col, genotype_col, replicate_col = NULL) 
     genotype_data = genotype_split[[genotype]]
     
     if (is.null(replicate_col)) {
-      result[[genotype]] = genotype_data[[trait_col]][seq(1, length(genotype_data[[trait_col]]), 5)]
+      result[[genotype]] = genotype_data[[trait_col]][seq(1, length(genotype_data[[trait_col]]), 1)]
     } else {
-      unique_replicates = unique(genotype_data[[replicate_col]])#unique(genotype_data[[replicate_col]][genotype_data[[replicate_col]] != 0])#
+      unique_replicates = unique(genotype_data[[replicate_col]])
       
       temp = do.call(
         cbind,
@@ -109,14 +180,23 @@ preprocess_data = function(data, trait_col, genotype_col, replicate_col = NULL) 
           genotype_data[genotype_data[[replicate_col]] == rep, trait_col]
         })
       )
-  
+      
       averaged_vector = rowMeans(temp, na.rm = TRUE)
-      result[[genotype]] = averaged_vector[seq(1, length(averaged_vector), 5)] # for more or less samples of the same norm for a different environmental value just change this value here
+      
+      # If indices are provided externally, use them.
+      # Otherwise, compute default indices over the entire vector.
+      if (is.null(indices)) {
+        indices = unique(c(seq(1, length(averaged_vector), by = interval),
+                           length(averaged_vector)))
+      }
+      print(indices)
+      result[[genotype]] = averaged_vector[indices]
     }
   }
-  
+
   return(result)
 }
+
 
 
 call_function = function(data_list, score, additional_1 = NULL, additional_2 = NULL) {
@@ -186,8 +266,8 @@ combine_traits_with_groups = function(processed_data_list) {
     # Combine all sublists within the dataset into a single vector
     traits = unlist(dataset, use.names = FALSE)
     
-    env=seq(1:10)
-    
+    env = seq(1, length(traits))
+  
     
     # Create a data frame for this dataset
     combined_results[[dataset_name]] = data.frame(
@@ -201,7 +281,7 @@ combine_traits_with_groups = function(processed_data_list) {
   
   # Add a dataset identifier to distinguish between datasets
   final_result$Dataset = rep(names(combined_results), 
-                              times = sapply(combined_results, nrow))
+                             times = sapply(combined_results, nrow))
   
   return(final_result)
 }
@@ -209,93 +289,73 @@ combine_traits_with_groups = function(processed_data_list) {
 
 ##############################################################################
 
-processed_data_list = list(
-  gaussian = preprocess_data(gaussian_data, trait_col = 4, genotype_col = 1, replicate_col = 2),
-  sinusoidal = preprocess_data(sinusoidal_data, trait_col = 4, genotype_col = 1, replicate_col = 2),
-  wave = preprocess_data(wave_data, trait_col = 4, genotype_col = 1, replicate_col = 2),
-  linear = preprocess_data(linear_data, trait_col = 4, genotype_col = 1, replicate_col = 2)
+# Now call preprocess_data with the indices parameter.
+processed_data_list <- list(
+  gaussian = preprocess_data(gaussian_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices),
+  sinusoidal = preprocess_data(sinusoidal_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices),
+  wave = preprocess_data(wave_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices),
+  linear = preprocess_data(linear_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices)
 )
-linear = preprocess_data(linear_data, trait_col = 4, genotype_col = 1, replicate_col = 2)
-gaussian = preprocess_data(gaussian_data, trait_col = 4, genotype_col = 1, replicate_col = 2)
-sinusoidal = preprocess_data(sinusoidal_data, trait_col = 4, genotype_col = 1, replicate_col = 2)
-wave = preprocess_data(wave_data, trait_col = 4, genotype_col = 1, replicate_col = 2)
-type_labels = c("gaussian", "sinusoidal", "wave", "linear")
 
-gaussian_long=combine_traits_with_groups(gaussian)
-wave_long=combine_traits_with_groups(wave)
-sinus_long=combine_traits_with_groups(sinusoidal)
-linear_long=combine_traits_with_groups(linear)
+linear <- preprocess_data(linear_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices)
+gaussian <- preprocess_data(gaussian_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices)
+sinusoidal <- preprocess_data(sinusoidal_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices)
+wave <- preprocess_data(wave_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices)
+type_labels <- c("gaussian", "sinusoidal", "wave", "linear")
 
 
+gaussian_long <- combine_traits_with_groups(gaussian)
+wave_long <- combine_traits_with_groups(wave)
+sinus_long <- combine_traits_with_groups(sinusoidal)
+linear_long <- combine_traits_with_groups(linear)
 
-test=data.frame(genotype=rep(1,40),replicate=c(rep(0,10),rep(1,10),rep(2,10),rep(3,10)),Trait=c(rep(1,20),rep(3,20)))
-test_processed=preprocess_data(test,trait_col = 3,genotype_col = 1,replicate_col = 2)
-print(test_processed)
-CV_t_test=call_function(test_processed,calculate_CVt)
-RN_test=call_function(test_processed,calculate_reaction_norm_slope)
+#test <- data.frame(genotype = rep(1, 40),
+#                   replicate = c(rep(0, 10), rep(1, 10), rep(2, 10), rep(3, 10)),
+#                   Trait = c(rep(1, 20), rep(3, 20)))
+#test_processed <- preprocess_data(test, trait_col = 3, genotype_col = 1, replicate_col = 2, indices = indices)
+#
+#CV_t_test <- call_function(test_processed, calculate_CVt)
+#RN_test <- call_function(test_processed, calculate_reaction_norm_slope)
 #################################################################################################################################### 1.R
 ####################################################################################################################################
 
-
 CV_t=post_process(processed_data_list,calculate_CVt,type_labels)
-
-
 
 RN=post_process(processed_data_list,calculate_reaction_norm_slope,type_labels)
 
-
-
 RNN=post_process(processed_data_list,calculate_reaction_norm_non_linear,type_labels,3)
-
-
 
 D_slope=post_process(processed_data_list,calculate_D_slope,type_labels)
 
-
-
 RC=post_process(processed_data_list,calculate_RC,type_labels)
 
+#comparative score -- not one score for a single genotype but for a population of different genotypes. Therefore not suitable for direct comparison 
+CVm_gaussian=calculate_CVm(trait_values = gaussian)
+CVm_wave=calculate_CVm(trait_values = wave)
+CVm_sinus=calculate_CVm(trait_values = sinusoidal)
+CVm_linear=calculate_CVm(trait_values = linear)
+
+#comparative score -- not one score for a single genotype but for a population of different genotypes. Therefore not suitable for direct comparison 
+CVmd_gaussian=calculate_CVmd(trait_values = gaussian)
+CVmd_wave=calculate_CVmd(trait_values = wave)
+CVmd_sinus=calculate_CVmd(trait_values = sinusoidal)
+CVmd_linear=calculate_CVmd(trait_values = linear)
+
+Covariate=rep(1,length(indices)) #static covariate to minimize influence on the realisation of the score 
+# sequential environment
 
 
-#comparative score
-CVm_gaussian=calculate_CVm(trait_values = gaussian_long[,1], group_labels = gaussian_long[,2])
-CVm_wave=calculate_CVm(trait_values = wave_long[,1], group_labels = wave_long[,2])
-CVm_sinus=calculate_CVm(trait_values = sinus_long[,1], group_labels = sinus_long[,2])
-CVm_linear=calculate_CVm(trait_values = linear_long[,1], group_labels = linear_long[,2])
-
-
-
-CVmd_gaussian=calculate_CVmd(trait_values = gaussian_long[,1], group_labels = gaussian_long[,2])
-CVmd_wave=calculate_CVmd(trait_values = wave_long[,1], group_labels = wave_long[,2])
-CVmd_sinus=calculate_CVmd(trait_values = sinus_long[,1], group_labels = sinus_long[,2])
-CVmd_linear=calculate_CVmd(trait_values = linear_long[,1], group_labels = linear_long[,2])
-
-
-
-Covariate=rep(1,10) #static covariate to minimize influence on the realisation of the score 
-env=seq(1:10)# sequential environment
 gPi=post_process(processed_data_list,calculate_grand_plasticity,type_labels,env,Covariate)
-
 
 PPF=post_process(processed_data_list,calculate_PPF,type_labels,env,Covariate)
 
-
-
 PPi=post_process(processed_data_list,calculate_Phenotypic_Plasticity_Index,type_labels)
-
-
 
 PImd=post_process(processed_data_list,calculate_PImd,type_labels,env)
 
-
-
 PILSM=post_process(processed_data_list,calculate_PILSM,type_labels,env,Covariate)
 
-
-
 RTR=post_process(processed_data_list,calculate_RTR,type_labels,env)
-
-
 
 PIR=post_process(processed_data_list,calculate_PIR,type_labels,env)
 
@@ -306,11 +366,7 @@ PIR=post_process(processed_data_list,calculate_PIR,type_labels,env)
 
 RDPI=post_process(processed_data_list,calculate_rdpi,type_labels)
 
-
-
 ESPI=post_process(processed_data_list,calculate_ESPI,type_labels)
-
-
 
 ESPIID=post_process(processed_data_list,calculate_espiid,type_labels)
 
@@ -322,37 +378,17 @@ ESPIID=post_process(processed_data_list,calculate_espiid,type_labels)
 
 PSI=post_process(processed_data_list,calculate_PSI,type_labels)
 
-
-
 RPI=post_process(processed_data_list,calculate_RPI,type_labels)
-
-
-
 
 PQ=post_process(processed_data_list,calculate_PQ,type_labels)
 
-
-
-
 PR=post_process(processed_data_list,calculate_PR,type_labels) #not really comparable as it required individual level data
-
-
-
 
 NRW=post_process(processed_data_list,calculate_NRW,type_labels)
 
-
-
-
 ESP=post_process(processed_data_list,calculate_ESP,type_labels)
 
-
-
-
 PD=post_process(processed_data_list,calculate_general_PD,type_labels) # not comparable as it required stress env and control env
-
-
-
 
 FPI=post_process(processed_data_list,calculate_FPI,type_labels) # not comparable as it required stress env and control env
 
@@ -360,22 +396,33 @@ FPI=post_process(processed_data_list,calculate_FPI,type_labels) # not comparable
 ##################
 
 
+add_arg=rep(1,length(linear[1][[1]]))
 
+#DPI=post_process(processed_data_list,calculate_DPI,type_labels,add_arg) # not comparable as this requires time resolved data
 
+CEV=post_process(processed_data_list,calculate_CEV,type_labels) 
 
-  
+#PRI=post_process(processed_data_list,calculate_PRI,type_labels) not comparable as extreme env needs to be specified 
 
+PFI=post_process(processed_data_list,calculate_PFI,type_labels) 
+
+APC=post_process(processed_data_list,calculate_APC,type_labels) 
+
+SI=post_process(processed_data_list,calculate_SI,type_labels) 
+
+RSI=post_process(processed_data_list,calculate_RSI,type_labels) 
+
+EVS=post_process(processed_data_list,calculate_EVS,type_labels) 
+
+MVPi=post_process(processed_data_list,calculate_MVPi,type_labels) 
 
 ################### 5.R
 ###################
 
-Plasticity=post_process(processed_data_list,calculate_plasticity,type_labels)
-
-
-
-
-env_cov=post_process(processed_data_list,cross_env_cov,type_labels)
-
+#Plasticity=post_process(processed_data_list,calculate_plasticity,type_labels)
+#
+#env_cov=post_process(processed_data_list,cross_env_cov,type_labels)
+#
 
 
 
