@@ -25,7 +25,7 @@ library(aricode)
 library(knitr)
 library(scales)
 # Read 
-df <- read_csv("CRC 1622 - Z2/R-files/regression_summary_stats/regression_data_full_interval_15_indices_1_16_31_46_50.csv")
+df <- read_csv("~/CRC_1644_Z2/R-files/regression_summary_stats/regression_data_full_interval_15_indices_1_16_31_46_50.csv")
 na_counts <- colSums(is.na(df))
 
 # keep only columns with zero NAs (there are some in the case of 1 and 2 samples across the environmental gradient as the RN and RNN cannot be calculated in this scenario)
@@ -65,7 +65,7 @@ make_plot <- function(metric_name) {
 plots   <- lapply(unique(scores_long$Metric), make_plot)
 combined <- wrap_plots(plots, ncol = 4) 
 print(combined)
-ggsave("~/CRC 1622 - Z2/plots/plasticity_scores_histograms.pdf", combined, width = 10, height = 8,
+ggsave("~/CRC_1644_Z2/plots/plasticity_scores_histograms.pdf", combined, width = 10, height = 8,
        dpi = 900, units = "in", device = "pdf")
 
 
@@ -102,7 +102,7 @@ pp=ggplot(scores_long, aes(x = Metric, y = Score)) +
   )
 print(pp)
 
-ggsave("~/CRC 1622 - Z2/plots/figures/plasticity_scores_boxplots.pdf", pp, width = 10, height = 8,
+ggsave("~/CRC_1644_Z2/plots/figures/plasticity_scores_boxplots.pdf", pp, width = 10, height = 8,
        dpi = 900, units = "in", device = "pdf")
 
 ##########################################################
@@ -264,12 +264,12 @@ sep_panel <- (plot_comb | plots_sep[[2]]) /
 
 print(sep_panel)
 ggsave(
-  "~/CRC 1622 - Z2/plots/figures/plasticity_scores_dendrograms.pdf",
+  "~/CRC_1644_Z2/plots/figures/plasticity_scores_dendrograms.pdf",
   sep_panel,
   width = 10, height = 8, dpi = 900, units = "in", device = "pdf")
 
 ggsave(
-  "~/CRC 1622 - Z2/plots/figures/dendrogram_linear.pdf",
+  "~/CRC_1644_Z2/plots/figures/dendrogram_linear.pdf",
   plots_sep[[1]],
   width = 10, height = 8, dpi = 900, units = "in", device = "pdf")
 
@@ -346,7 +346,7 @@ print(tbl_obs_plot)
 
 
 ggsave(
-  "~/CRC 1622 - Z2/plots/figures/plasticity_scores_ari_table.pdf",
+  "~/CRC_1644_Z2/plots/figures/plasticity_scores_ari_table.pdf",
   tbl_obs_plot,
   width = 6, height = 6, dpi = 900, units = "in", device = "pdf"
 )
@@ -384,7 +384,7 @@ BBBBCC
 print(final_fig3)
 
 ggsave(
-  "~/CRC 1622 - Z2/plots/figures/figure2_2.pdf",
+  "~/CRC_1644_Z2/plots/figures/figure2_2.pdf",
   final_fig3,
   width = 15, height = 18, dpi = 900, units = "in", device = "pdf"
 )
@@ -420,7 +420,7 @@ BBBBCC
   )
 
 ggsave(
-  "~/CRC 1622 - Z2/plots/figures/figure2_3.pdf",
+  "~/CRC_1644_Z2/plots/figures/figure2_3.pdf",
   final_fig4,
   width = 15, height = 18, dpi = 900, units = "in", device = "pdf"
 )
@@ -453,7 +453,7 @@ CCDD
   )
 
 ggsave(
-  "~/CRC 1622 - Z2/plots/figures/dendro_supp.pdf",
+  "~/CRC_1644_Z2/plots/figures/dendro_supp.pdf",
   final_fig7,
   width = 15, height = 13, dpi = 900, units = "in", device = "pdf"
 )

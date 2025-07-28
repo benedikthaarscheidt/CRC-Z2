@@ -6,7 +6,7 @@ library(lme4)
 library(lmerTest)
 
 
-directory <- "~/CRC 1622 - Z2/R-files/regression_summary_stats"
+directory <- "~/CRC_1644_Z2/R-files/regression_summary_stats"
 files     <- c(
   "regression_data_full_interval_49_indices_1_50.csv",
   "regression_data_full_interval_25_indices_1_26_50.csv",
@@ -160,9 +160,13 @@ legend(
 )
 par(mar = old_mar)
 
+path="~/CRC_1644_Z2/plots/figures"
+if (!dir.exists(dirname(path))) {
+  dir.create(dirname(path), recursive = TRUE)
+}
 
 pdf(
-  file   = file.path("~/CRC 1622 - Z2/plots/figures/confoundermodel_sumstats.pdf"),
+  file   = file.path("~/CRC_1644_Z2/plots/figures/confoundermodel_sumstats.pdf"),
   width  = 8,
   height = 10
 )

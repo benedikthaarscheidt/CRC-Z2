@@ -22,7 +22,7 @@ library(viridis)
 
 
 ############################# data reading and computation of the linear regression for the slope heatmaps 
-df <- read_csv("CRC 1622 - Z2/R-files/regression_summary_stats/regression_data_full_interval_15_indices_1_16_31_46_50.csv")
+df <- read_csv("CRC_1644_Z2/R-files/regression_summary_stats/regression_data_full_interval_15_indices_1_16_31_46_50.csv")
 
 
 PS      <- df[, 2:28]
@@ -162,7 +162,7 @@ p_slope <- ggplot(slope_df, aes(x = Stat, y = PS, fill = precision)) +
   )
 
 print(p_slope)
-#ggsave("~/CRC 1622 - Z2/plots/scatter_plots/heatmap_slope_with_stars.png", p_slope, width = 12, height = 9, dpi = 300)
+#ggsave("~/CRC_1644_Z2/plots/scatter_plots/heatmap_slope_with_stars.png", p_slope, width = 12, height = 9, dpi = 300)
 
 ################################################################ this creates scatter plots for each and every combination of summary stat and plasticity score --> linear regression plot 
 # I didnt use this anywhere but it is useful for looking the regressions up 
@@ -201,7 +201,10 @@ plot_scatter <- function(data, xvar, yvar) {
 }
 
 # 10) Generate & save scatter plots for every PS × summary-stat pair
-out_base <- "~/CRC 1622 - Z2/plots/scatter_plots/"
+out_base <- "~/CRC_1644_Z2/plots/scatter_plots/"
+if (!dir.exists(out_base)) {
+  dir.create(out_base, recursive = TRUE)
+}
 for(ps in colnames(PS)) {
   dir.create(file.path(out_base, ps), recursive = TRUE, showWarnings = FALSE)
   for(st in colnames(sumstat)) {
@@ -448,8 +451,13 @@ CCCCCC
 
 print(final_fig3)
 
+
+out= "~/CRC_1644_Z2/plots/figures"
+if (!dir.exists(out)) {
+  dir.create(out, recursive = TRUE)
+}
 ggsave(
-  filename = "~/CRC 1622 - Z2/plots/figures/sum_stats_cor.pdf",
+  filename = "~/CRC_1644_Z2/plots/figures/sum_stats_cor.pdf",
   plot     = final_fig3,
   device   = "pdf",
   width    = 15,
@@ -459,7 +467,7 @@ ggsave(
 )
 
 ggsave(
-  filename = "~/CRC 1622 - Z2/plots/figures/hclust_dend_corrdist.pdf",
+  filename = "~/CRC_1644_Z2/plots/figures/hclust_dend_corrdist.pdf",
   plot     = p_dend_ps,
   device   = "pdf",
   width    = 15,
@@ -497,7 +505,7 @@ CCCDDD
 print(final_fig4)
 
 ggsave(
-  filename = "~/CRC 1622 - Z2/plots/figures/ols.pdf",
+  filename = "~/CRC_1644_Z2/plots/figures/ols.pdf",
   plot     = final_fig4,
   device   = "pdf",
   width    = 15,
@@ -735,7 +743,7 @@ AAABBBB
 print(final_fig5)
 
 ggsave(
-  filename = "~/CRC 1622 - Z2/plots/figures/fig4.pdf",
+  filename = "~/CRC_1644_Z2/plots/figures/fig4.pdf",
   plot     = final_fig5,
   device   = "pdf",
   width    = 15,
@@ -854,7 +862,7 @@ CCCCCC
 print(final_fig6)
 
 ggsave(
-  filename = "~/CRC 1622 - Z2/plots/figures/fig5.pdf",
+  filename = "~/CRC_1644_Z2/plots/figures/fig5.pdf",
   plot     = final_fig6,
   device   = "pdf",
   width    = 10,

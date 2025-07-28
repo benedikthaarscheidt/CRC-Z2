@@ -37,7 +37,7 @@ ensure_dir_exists <- function(file_path) {
 output_folder <- "~/CRC_1644_Z2/R-files/regression_summary_stats"
 ensure_dir_exists(output_folder)
 
-sampling_intervals <- c(1, 2, 5, 10, 15, 20,25, 49)#1, 2, 5, 10, 15, 20,25, 49
+sampling_intervals <- c(1, 2, 5, 10, 15, 20,25, 49)
 global_initial_length <- 50
 
 

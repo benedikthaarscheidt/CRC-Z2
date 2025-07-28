@@ -7,7 +7,7 @@ library(lmerTest)
 library(ggplot2)
 library(forcats)
 
-directory   <- "~/CRC 1622 - Z2/R-files/regression_summary_stats"
+directory   <- "~/CRC_1644_Z2/R-files/regression_summary_stats"
 resolutions <- c(50, 25, 20, 15, 10, 5, 2, 1)
 n_samples   <- c( 2,  3, 4,  5,   6, 11,26,50)#
 files       <- c(
@@ -95,9 +95,14 @@ combined=ggplot(df_all, aes(x = metric, y = value, fill = type)) +
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank()
   )
+
+path <- "~/CRC_1644_Z2/plots/figures"
+if (!dir.exists(dirname(path))) {
+  dir.create(dirname(path), recursive = TRUE)
+}
 ggsave(
   combined,
-  filename = file.path("~/CRC 1622 - Z2/plots/figures/boxplot_resolution.pdf"),
+  filename = file.path("~/CRC_1644_Z2/plots/figures/boxplot_resolution.pdf"),
   width    = 13,
   height   = 15,
   dpi      = 900

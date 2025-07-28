@@ -10,11 +10,11 @@ library(dplyr)
 
 ############## load and subset 
 
-all_combined_data <- read_csv("CRC 1622 - Z2/plots/all_combined_data.csv")
+all_combined_data <- read_csv("~/CRC_1644_Z2/synthetic_data/fixed_full/all_combined_data.csv")
 gaussian=all_combined_data[all_combined_data[,5]=="Gaussian",]
 wave=all_combined_data[all_combined_data[,5]=="Wave",]
 sinusoid=all_combined_data[all_combined_data[,5]=="Sinusoidal",]
-linear<- read_csv("CRC 1622 - Z2/plots/linear_reaction_norms_data.csv")
+
 
 wave=as.data.frame(wave)
 xvals <- as.numeric(wave[1001:1050, "Environment"])
@@ -35,8 +35,8 @@ plot(
 )
 ###############
 # 1) Load & tag
-all_combined_data <- read_csv("CRC 1622 - Z2/plots/all_combined_data.csv")
-linear <- read_csv("CRC 1622 - Z2/synthetic_data/fixed_full/linear_reaction_norms_data.csv") %>%
+
+linear <- read_csv("~/CRC_1644_Z2/synthetic_data/fixed_full/linear_reaction_norms_data.csv") %>%
   mutate(ReactionNorm = "Linear")
 
 df = bind_rows(all_combined_data, linear) %>%
@@ -441,7 +441,7 @@ final_fig3 <- wrap_plots(
 print(final_fig3)
 
 ggsave(
-  filename = "~/CRC 1622 - Z2/plots/figures/reaction_norms_final_figure.pdf",
+  filename = "~/CRC_1644_Z2/plots/figures/reaction_norms_final_figure.pdf",
   plot     = final_fig3,
   device   = "pdf",
   width    = 10,    # adjust to your desired width
@@ -450,7 +450,7 @@ ggsave(
   dpi      = 900
 )
 ggsave(
-  filename = "~/CRC 1622 - Z2/plots/figures/reaction_norms_final_figure_panels.pdf",
+  filename = "~/CRC_1644_Z2/plots/figures/reaction_norms_final_figure_panels.pdf",
   plot     = final_fig2,
   device   = "pdf",
   width    = 10,    # adjust to your desired width
@@ -460,7 +460,7 @@ ggsave(
 )
 
 ggsave(
-  filename = "~/CRC 1622 - Z2/plots/figures/p_combined.pdf",
+  filename = "~/CRC_1644_Z2/plots/figures/p_combined.pdf",
   plot     = p_combined,
   device   = "pdf",
   width    = 10,    # adjust to your desired width
