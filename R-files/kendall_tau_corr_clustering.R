@@ -24,11 +24,11 @@ tau_threshold <- 0.8
 topk_values  <- c(3,5,10,15,20)
 AGREE_THR_FULL <- 1.00
 
-# Use your regression/summary-stats file (contains PS columns + stat columns)
+# Summary-stats/PS realisations file used in your other figure
 sumstats_path_override <-
   "~/CRC_1644_Z2/R-files/regression_summary_stats/regression_data_full_interval_15_indices_1_16_31_46_50.csv"
-# Adjust column ranges here if your file layout differs:
-sumstats_ps_cols   <- 2:28   # PS (plasticity indices) columns
+# Adjust columns if your file layout differs:
+sumstats_ps_cols   <- 2:28   # plasticity index realisations (methods)
 sumstats_stat_from <- 29     # first summary-stat column
 # ======================================================
 
@@ -114,7 +114,7 @@ plot_tau_heatmap <- function(Tm, tag) {
   ord <- rownames(m)[hc$order]
   df <- as.data.frame(m) |>
     tibble::rownames_to_column("score_i") |>
-    pivot_longer(-score_i, names_to = "score_j", values_to = "tau") |>
+    tidyr::pivot_longer(-score_i, names_to = "score_j", values_to = "tau") |>
     mutate(score_i = factor(score_i, levels = ord),
            score_j = factor(score_j, levels = ord))
   ggplot(df, aes(score_j, score_i, fill = tau)) +
@@ -137,8 +137,7 @@ plot_agreement_network <- function(Tm, tau_threshold, tag) {
   ggraph(g, layout = "fr") +
     geom_edge_link(alpha = 0.4) +
     geom_node_point(aes(fill = component, size = deg), shape = 21, color = "black", stroke = 0.2) +
-    ggrepel::geom_text_repel(aes(x = x, y = y, label = name),
-                             size = 3, max.overlaps = 50, inherit.aes = FALSE) +
+    ggraph::geom_node_text(aes(label = name), repel = TRUE, size = 3, max.overlaps = 50) +
     scale_size_continuous(range = c(3,10), breaks = scales::pretty_breaks(3)) +
     scale_fill_disc_pub() +
     guides(size = guide_legend(title = "Degree"), fill = guide_legend(title = "Component")) +
@@ -281,7 +280,7 @@ plot_topk_overlap_heatmap_matrix <- function(Om, tag, k) {
   d <- as.dist(1 - m); hc <- hclust(d, method = "average"); ord <- rownames(m)[hc$order]
   df <- as.data.frame(m) |>
     tibble::rownames_to_column("method_i") |>
-    pivot_longer(-method_i, names_to = "method_j", values_to = "overlap") |>
+    tidyr::pivot_longer(-method_i, names_to = "method_j", values_to = "overlap") |>
     mutate(method_i = factor(method_i, levels = ord),
            method_j = factor(method_j, levels = ord))
   ggplot(df, aes(method_j, method_i, fill = overlap)) +
@@ -320,16 +319,16 @@ plot_threshold_sweep <- function(sweep_df, tag) {
 # ======================================================
 
 
-# ====== SUMMARY-STATS LINKING (includes PS–PS heatmap) ======
+# ====== SUMMARY-STATS LINK (+ PS–PS τ/ρ/r HEATMAPS) ======
 read_sumstats_and_cor <- function(path_to_csv, ps_cols, stat_start) {
   df <- read_csv(path_to_csv, show_col_types = FALSE)
   
-  PS      <- df[, ps_cols, drop = FALSE]
+  PS      <- df[, ps_cols,   drop = FALSE]
   sumstat <- df[, stat_start:ncol(df), drop = FALSE]
   
-  # Method × Stat Kendall
+  # Method × Stat Kendall (for interpretability)
   ct_ms <- psych::corr.test(as.matrix(cbind(PS, sumstat)),
-                            method = "kendall", adjust = "none")
+                            method = "spearman", adjust = "none")
   r_ms <- ct_ms$r[colnames(PS), colnames(sumstat)]
   p_ms <- ct_ms$p[colnames(PS), colnames(sumstat)]
   
@@ -345,65 +344,58 @@ read_sumstats_and_cor <- function(path_to_csv, ps_cols, stat_start) {
       TRUE      ~ ""
     ))
   
-  # NEW: Method × Method Kendall from PS realisations
-  ct_mm <- psych::corr.test(as.matrix(PS), method = "kendall", adjust = "none")
-  r_mm  <- ct_mm$r
-  p_mm  <- ct_mm$p
+  # Method × Method: Kendall (τ), Spearman (ρ), Pearson (r)
+  ct_tau <- psych::corr.test(as.matrix(PS), method = "kendall",  adjust = "none")
+  ct_spr <- psych::corr.test(as.matrix(PS), method = "spearman", adjust = "none")
+  ct_pea <- psych::corr.test(as.matrix(PS), method = "pearson",  adjust = "none")
   
-  list(cor_df = cor_df, r_ms = r_ms, r_mm = r_mm, p_mm = p_mm, ps_names = colnames(PS))
+  list(
+    cor_df = cor_df,         # method × stat Kendall
+    r_ms   = r_ms,
+    # PS–PS correlations:
+    r_mm_tau   = ct_tau$r,   p_mm_tau   = ct_tau$p,
+    r_mm_spear = ct_spr$r,   p_mm_spear = ct_spr$p,
+    r_mm_pear  = ct_pea$r,   p_mm_pear  = ct_pea$p,
+    ps_names   = colnames(PS)
+  )
 }
 
 plot_method_stat_heatmap_stars <- function(cor_df, method_order = NULL, tag = "") {
   df <- cor_df
-  if (!is.null(method_order)) {
-    df <- df %>% mutate(PS = factor(PS, levels = method_order))
-  }
+  if (!is.null(method_order)) df <- df %>% mutate(PS = factor(PS, levels = method_order))
   ggplot(df, aes(x = Stat, y = PS, fill = r)) +
     geom_tile(color = "white") +
     scale_fill_div_pub(lim = c(-1,1)) +
     geom_text(aes(label = sprintf("%.2f%s", r, star)), size = 3) +
     labs(
       title = paste0("Method × Summary-stat Kendall correlation (with p-stars) • ", tag),
-      x = "Summary Statistic",
-      y = "Plasticity Score / Method",
-      fill = "τ"
+      x = "Summary Statistic", y = "Plasticity Score / Method", fill = "τ"
     ) +
     theme_pub() +
     theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1))
 }
 
-plot_method_corr_heatmap_from_scores <- function(r_mm, p_mm = NULL, order = NULL, tag = "") {
-  M <- r_mm
+# Generic method×method correlation heatmap (used for τ/ρ/r)
+plot_method_corr_heatmap <- function(M, order = NULL, tag = "", title = "", fill_label = "corr") {
+  X <- M
   if (!is.null(order)) {
-    keep <- intersect(order, rownames(M))
-    M <- M[keep, keep, drop = FALSE]
+    keep <- intersect(order, rownames(X))
+    X <- X[keep, keep, drop = FALSE]
   }
-  df <- reshape2::melt(M, varnames = c("method_i","method_j"), value.name = "tau")
+  df <- reshape2::melt(X, varnames = c("method_i","method_j"), value.name = "val")
   if (!is.null(order)) {
+    ord <- order[order %in% unique(df$method_i)]
     df <- df %>%
-      mutate(method_i = factor(method_i, levels = order[order %in% levels(factor(method_i))]),
-             method_j = factor(method_j, levels = order[order %in% levels(factor(method_j))]))
+      mutate(method_i = factor(method_i, levels = ord),
+             method_j = factor(method_j, levels = ord))
   }
-  p <- ggplot(df, aes(method_j, method_i, fill = tau)) +
+  ggplot(df, aes(method_j, method_i, fill = val)) +
     geom_tile(color = "white") +
     coord_fixed() +
     scale_fill_div_pub(lim = c(-1,1)) +
-    labs(title = paste0("Kendall correlation between plasticity score realisations • ", tag),
-         x = NULL, y = NULL, fill = "τ") +
+    labs(title = paste0(title, " • ", tag), x = NULL, y = NULL, fill = fill_label) +
     theme_pub() +
     theme(axis.text.x = element_text(angle = 60, hjust = 1))
-  # optional stars
-  if (!is.null(p_mm)) {
-    stars_df <- reshape2::melt(p_mm, varnames = c("method_i","method_j"), value.name = "p") %>%
-      mutate(star = case_when(p < 0.001 ~ "***", p < 0.01 ~ "**", p < 0.05 ~ "*", TRUE ~ "")) %>%
-      filter(method_i == method_j) %>% # avoid clutter: stars only on diagonal? comment out to print all
-      mutate(label = star)
-    if (nrow(stars_df) > 0) {
-      p <- p + geom_text(data = stars_df, aes(x = method_j, y = method_i, label = label),
-                         inherit.aes = FALSE, size = 3)
-    }
-  }
-  p
 }
 
 # Build a method×method similarity from stat profiles (Pearson corr of r-vectors)
@@ -438,38 +430,68 @@ plot_matrix_link_scatter <- function(Tm, S, tag, x_lab = "Kendall’s τ", y_lab
     theme_pub()
 }
 
-plot_method_stat_pca_biplot <- function(r_ms, Tm, tau_threshold, tag) {
+plot_method_stat_pca_biplot <- function(r_ms, Tm, tau_threshold, tag, alpha = 0.5) {
+  # r_ms: methods × stats matrix (e.g., Kendall correlations of methods vs stats)
   if (nrow(r_ms) == 0) return(ggplot() + theme_void())
-  methods <- rownames(r_ms)
-  X <- scale(r_ms, center = TRUE, scale = TRUE)
-  pc <- stats::prcomp(X)
-  scores <- as_tibble(pc$x[, 1:2]) %>% mutate(method = methods)
-  loadings <- as_tibble(pc$rotation[, 1:2], rownames = "Stat")
   
+  # Center/scale stats across methods (PCA on correlation-like data)
+  X <- scale(r_ms, center = TRUE, scale = TRUE)
+  
+  # SVD: X = U D V^T
+  sv  <- svd(X)
+  U   <- sv$u
+  D   <- sv$d
+  V   <- sv$v
+  
+  # Biplot scaling: F = U D^alpha, G = V D^(1-alpha)
+  D_alpha   <- diag(D^alpha, nrow = length(D))
+  D_1alpha  <- diag(D^(1 - alpha), nrow = length(D))
+  F         <- U %*% D_alpha         # methods (rows of X)
+  G         <- V %*% D_1alpha        # stats   (columns of X)
+  
+  # Grab first two PCs
+  scores <- tibble(PC1 = F[,1], PC2 = F[,2], method = rownames(r_ms))
+  loads  <- tibble(PC1 = G[,1], PC2 = G[,2], Stat   = colnames(r_ms))
+  
+  # Colour methods by τ-graph components (like before)
   A <- ifelse(Tm >= tau_threshold, 1, 0); diag(A) <- 0
-  G <- graph_from_adjacency_matrix(A, mode = "undirected", diag = FALSE)
-  comps <- if (gorder(G) > 0) components(G)$membership else setNames(rep(1, length(methods)), methods)
+  Gtau <- igraph::graph_from_adjacency_matrix(A, mode = "undirected", diag = FALSE)
+  comps <- if (igraph::gorder(Gtau) > 0) igraph::components(Gtau)$membership else
+    setNames(rep(1, nrow(r_ms)), rownames(r_ms))
   scores <- scores %>% mutate(component = factor(unname(comps[method])))
   
-  arr_scale <- max(abs(scores[,1:2])) * 0.9
-  loadings <- loadings %>% mutate(PC1 = PC1 * arr_scale, PC2 = PC2 * arr_scale)
+  # Put arrows on a comparable scale to points
+  s_rng <- max(abs(dplyr::select(scores, PC1, PC2)))
+  l_rng <- max(abs(dplyr::select(loads,  PC1, PC2)))
+  arrow_scale <- if (l_rng > 0) 0.9 * s_rng / l_rng else 1
+  loads <- loads %>% mutate(PC1 = PC1 * arrow_scale, PC2 = PC2 * arrow_scale)
   
   ggplot() +
-    geom_segment(data = loadings, aes(x = 0, y = 0, xend = PC1, yend = PC2),
+    # statistic arrows
+    geom_segment(data = loads,
+                 aes(x = 0, y = 0, xend = PC1, yend = PC2),
                  arrow = arrow(length = unit(0.12, "inches")), alpha = 0.6) +
-    ggrepel::geom_text_repel(data = loadings, aes(x = PC1, y = PC2, label = Stat),
+    ggrepel::geom_text_repel(data = loads, aes(x = PC1, y = PC2, label = Stat),
                              size = 3, max.overlaps = 50) +
-    geom_point(data = scores, aes(x = PC1, y = PC2, fill = component), shape = 21, size = 3, color = "black") +
+    # method points
+    geom_point(data = scores, aes(x = PC1, y = PC2, fill = component),
+               shape = 21, size = 3, color = "black") +
     ggrepel::geom_text_repel(data = scores, aes(x = PC1, y = PC2, label = method, color = component),
                              size = 3, max.overlaps = 50, show.legend = FALSE) +
-    scale_fill_disc_pub() +
-    scale_color_disc_pub() +
-    labs(title = paste0("PCA biplot of method–stat Kendall correlations • ", tag),
-         x = paste0("PC1 (", scales::percent(pc$sdev[1]^2 / sum(pc$sdev^2)), ")"),
-         y = paste0("PC2 (", scales::percent(pc$sdev[2]^2 / sum(pc$sdev^2)), ")"),
-         fill = "τ-component") +
-    theme_pub()
+    scale_fill_manual(values = scales::hue_pal(l = 55)(10), name = "τ-component") +
+    scale_color_manual(values = scales::hue_pal(l = 55)(10), guide = "none") +
+    labs(
+      title = paste0("PCA biplot of method–stat relationships • ", tag,
+                     " (α = ", alpha, ")"),
+      x = "PC1", y = "PC2"
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold"),
+      legend.position = "right"
+    )
 }
+
 # =======================================================================
 
 
@@ -553,45 +575,59 @@ for (pairs_path in pairs_files) {
   Om <- topk_overlap_matrix(ranks_df, rank_cols, k_show)
   print(plot_topk_overlap_heatmap_matrix(Om, tag, k_show))
   
-  # ================= PS–STAT LINK + PS–PS HEATMAP =================
+  # ================= PS–STAT LINK + PS–PS CORR HEATMAPS =================
   if (!is.null(sumstats_path_override) && file.exists(sumstats_path_override)) {
     ss <- read_sumstats_and_cor(sumstats_path_override,
                                 ps_cols = sumstats_ps_cols,
                                 stat_start = sumstats_stat_from)
-    cor_df <- ss$cor_df
-    r_ms   <- ss$r_ms
-    r_mm   <- ss$r_mm
-    p_mm   <- ss$p_mm
+    cor_df    <- ss$cor_df
+    r_ms      <- ss$r_ms
+    r_mm_tau  <- ss$r_mm_tau
+    r_mm_spr  <- ss$r_mm_spear
+    r_mm_pear <- ss$r_mm_pear
     
     # Use τ heatmap order for comparability
     m <- Tm; diag(m) <- 1; m[is.na(m)] <- 0
     ord <- { d <- as.dist(1 - m); hc <- hclust(d, method = "average"); rownames(m)[hc$order] }
     
     # Keep only methods common across sources
-    common_methods <- Reduce(intersect, list(ord, rownames(r_ms), rownames(r_mm)))
-    cor_df <- cor_df %>% filter(PS %in% common_methods)
-    r_ms   <- r_ms[common_methods, , drop = FALSE]
-    r_mm   <- r_mm[common_methods, common_methods, drop = FALSE]
-    p_mm   <- p_mm[common_methods, common_methods, drop = FALSE]
-    ord    <- ord[ord %in% common_methods]
+    common_methods <- Reduce(intersect, list(ord, rownames(r_ms), rownames(r_mm_tau)))
+    cor_df    <- cor_df %>% filter(PS %in% common_methods)
+    r_ms      <- r_ms[common_methods, , drop = FALSE]
+    r_mm_tau  <- r_mm_tau[common_methods, common_methods, drop = FALSE]
+    r_mm_spr  <- r_mm_spr[common_methods, common_methods, drop = FALSE]
+    r_mm_pear <- r_mm_pear[common_methods, common_methods, drop = FALSE]
+    ord       <- ord[ord %in% common_methods]
     
     # (1) Method × stat Kendall with stars
     print(plot_method_stat_heatmap_stars(cor_df, method_order = ord, tag = tag))
-    # (2) NEW: Method × method Kendall (PS realisations)
-    print(plot_method_corr_heatmap_from_scores(r_mm, p_mm, order = ord, tag = tag))
+    # (2) Method × method Kendall (PS realisations) — as before
+    print(plot_method_corr_heatmap(r_mm_tau, order = ord, tag = tag,
+                                   title = "Kendall correlation (τ) between plasticity score realisations",
+                                   fill_label = "τ"))
+    
     # (3) Link τ to stat-profile similarity
     S <- stat_profile_similarity_matrix_from_r(r_ms)
     write_csv(as_tibble(S, rownames = "method"),
               file.path(out_dir, paste0("stat_profile_similarity_matrix_", tag, ".csv")))
     print(plot_matrix_link_scatter(Tm[common_methods, common_methods], S, tag))
-    # (4) PCA biplot of method–stat correlations, coloured by τ-components
+    
+    # (4) PCA biplot of method–stat Kendall correlations
     print(plot_method_stat_pca_biplot(r_ms, Tm[common_methods, common_methods], tau_threshold, tag))
+    
+    # === NEW PAGES AT THE END: Spearman & Pearson PS–PS HEATMAPS ===
+    print(plot_method_corr_heatmap(r_mm_spr, order = ord, tag = tag,
+                                   title = "Spearman correlation (ρ) between plasticity score realisations",
+                                   fill_label = "ρ"))
+    print(plot_method_corr_heatmap(r_mm_pear, order = ord, tag = tag,
+                                   title = "Pearson correlation (r) between plasticity score realisations",
+                                   fill_label = "r"))
   } else {
     grid::grid.newpage()
     grid::grid.text("Summary-statistics file not found.\nSet 'sumstats_path_override' to your CSV.",
                     x = 0.5, y = 0.5, gp = grid::gpar(cex = 1))
   }
-  # ================================================================
+  # ==================================================================
   
   cat("Completed:", tag, "\n\n")
 }
