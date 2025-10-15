@@ -419,6 +419,42 @@ MVPi=post_process(processed_data_list,calculate_MVPi,type_labels)
 #env_cov=post_process(processed_data_list,cross_env_cov,type_labels)
 #
 
+keys <- names(processed_data_list)
+fw_matrices <- setNames(vector("list", length(keys)), keys)
+
+for (k in keys) {
+  gl <- processed_data_list[[k]]
+  G <- names(gl)
+  L <- max(lengths(gl))
+  env_ids <- seq_len(L)
+  M <- matrix(NA_real_, nrow=length(G), ncol=L,
+              dimnames=list(G, paste0("E", env_ids)))
+  for (g in G) {
+    v <- as.numeric(gl[[g]])
+    M[g, seq_along(v)] <- v
+  }
+  fw_matrices[[k]] <- as.data.frame(M)
+}
+
+linear_matrix     <- fw_matrices$linear
+gaussian_matrix   <- fw_matrices$gaussian
+sinusoidal_matrix <- fw_matrices$sinusoidal
+wave_matrix       <- fw_matrices$wave
+
+fw_long_all <- data.frame(Dataset=character(), genotype=character(),
+                          environment=integer(), y=double(), 
+                          stringsAsFactors=FALSE)
+
+for (k in keys) {
+  gl <- processed_data_list[[k]]
+  G <- names(gl)
+  for (g in G) {
+    v <- as.numeric(gl[[g]])
+    n <- length(v)
+    df <- data.frame(Dataset=k, genotype=g, environment=seq_len(n), y=v)
+    fw_long_all <- rbind(fw_long_all, df)
+  }
+}
 
 
 
@@ -428,14 +464,45 @@ MVPi=post_process(processed_data_list,calculate_MVPi,type_labels)
 
 
 
+keys <- names(processed_data_list)
+row_list <- list()
+fw_long_all <- data.frame(Dataset=character(), genotype=character(), environment=integer(), y=double(), stringsAsFactors=FALSE)
+Lmax <- max(unlist(lapply(processed_data_list, function(gl) max(lengths(gl)))))
+
+for (k in keys) {
+  gl <- processed_data_list[[k]]
+  G <- names(gl)
+  for (g in G) {
+    uid <- paste(k, g, sep="_")
+    v <- as.numeric(gl[[g]])
+    n <- length(v)
+    row_list[[uid]] <- c(v, rep(NA_real_, Lmax - n))
+    fw_long_all <- rbind(fw_long_all, data.frame(Dataset=k, genotype=uid, environment=seq_len(n), y=v))
+  }
+}
+
+fw_matrix <- do.call(rbind, row_list)
+rownames(fw_matrix) <- names(row_list)
+colnames(fw_matrix) <- paste0("E", seq_len(ncol(fw_matrix)))
+fw_df <- as.data.frame(fw_matrix)
 
 
 
+FW=calculate_finlay_wilkinson(fw_df,plot=T)
 
 
-
-
-
+library(ggplot2)
+Y <- as.matrix(fw_df[28:35,])
+gnames <- rownames(Y); if (is.null(gnames)) gnames <- paste0("G", seq_len(nrow(Y)))
+env_values <- if (exists("env_values") && !is.null(env_values)) as.numeric(env_values) else seq_len(ncol(Y))
+df <- data.frame(genotype=rep(gnames, each=ncol(Y)),
+                 environment=rep(env_values, times=nrow(Y)),
+                 y=as.vector(t(Y)))
+df <- df[is.finite(df$y) & is.finite(df$environment), ]
+ggplot(df, aes(environment, y, color=genotype, group=genotype)) +
+  geom_line() + geom_point() +
+  labs(x="Environment", y="Trait", title="Trait by Environment") +
+  theme_bw()
 
 
 

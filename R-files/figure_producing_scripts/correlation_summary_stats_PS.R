@@ -19,6 +19,7 @@ library(ggalluvial)
 library(tidyverse)
 library(patchwork)
 library(viridis)
+library(factoextra)
 
 
 ############################# data reading and computation of the linear regression for the slope heatmaps 
@@ -30,7 +31,7 @@ sumstat <- df[, 29:ncol(df)]
 
 ct <- corr.test(
   as.matrix(cbind(PS, sumstat)),
-  method = "kendall",
+  method = "pearson",
   adjust = "none"         # turn off p-value adjustment
 )
 
@@ -457,7 +458,7 @@ if (!dir.exists(out)) {
   dir.create(out, recursive = TRUE)
 }
 ggsave(
-  filename = "~/CRC_1644_Z2/plots/figures/sum_stats_cor.pdf",
+  filename = "~/CRC_1644_Z2/plots/figures/sum_stats_cor_pearson.pdf",
   plot     = final_fig3,
   device   = "pdf",
   width    = 15,
@@ -717,40 +718,40 @@ woho=ggplot(slope_df_sig, aes(x = Stat, y = PS)) +
     plot.margin        = margin(t = 10, r = 5, b = 10, l = 5, unit = "pt")
   )
 
-ggsave("~/CRC 1622 - Z2/plots/figures/fuck.pdf", woho, width = 10, height = 14, units = "in", dpi = 900)
+ggsave("~/CRC_1644_Z2/plots/figures/fuck.pdf", woho, width = 10, height = 14, units = "in", dpi = 900)
 
 
 
-
-final_fig5 <- wrap_plots(
-  A = wrap_elements(full = alluv),
-  B = wrap_elements(full = woho),
-  design = "
-AAABBBB
-AAABBBB
-AAABBBB
-AAABBBB
-"
-) +
-  plot_annotation(
-    tag_levels = "A",
-    theme      = theme(
-      plot.title        = element_text(size = 12, face = "bold"),
-      plot.tag.position = c(1, 1)
-    )
-  )
-
-print(final_fig5)
-
-ggsave(
-  filename = "~/CRC_1644_Z2/plots/figures/fig4.pdf",
-  plot     = final_fig5,
-  device   = "pdf",
-  width    = 15,
-  height   = 15,
-  units    = "in",
-  dpi      = 900
-)
+#
+#final_fig5 <- wrap_plots(
+#  A = wrap_elements(full = alluv),
+#  B = wrap_elements(full = woho),
+#  design = "
+#AAABBBB
+#AAABBBB
+#AAABBBB
+#AAABBBB
+#"
+#) +
+#  plot_annotation(
+#    tag_levels = "A",
+#    theme      = theme(
+#      plot.title        = element_text(size = 12, face = "bold"),
+#      plot.tag.position = c(1, 1)
+#    )
+#  )
+#
+#print(final_fig5)
+#
+#ggsave(
+#  filename = "~/CRC_1644_Z2/plots/figures/fig4.pdf",
+#  plot     = final_fig5,
+#  device   = "pdf",
+#  width    = 15,
+#  height   = 15,
+#  units    = "in",
+#  dpi      = 900
+#)
 
 ####################################### this is for the figure containing the hetmaps for the regression slopes for the full/subset model and not the single predictor model. Only the significant slopes are being reported. 
 # withthis we can potentially make the claim that when using the summary statsitics in combination we can reproduce the scores by using the respecitve coefficients. In the end it is just proving that there certainly is a linear relationship between all the summary statisitcs and the plasticity scores (if one didnt believe it until now ;))
@@ -860,7 +861,6 @@ CCCCCC
   )
 
 print(final_fig6)
-
 ggsave(
   filename = "~/CRC_1644_Z2/plots/figures/fig5.pdf",
   plot     = final_fig6,
