@@ -219,6 +219,7 @@ plot_agreement_network <- function(Tm, tau_threshold, tag) {
 
 plot_method_stat_heatmap_stars <- function(cor_df, method_order = NULL, tag = "") {
   df <- cor_df
+  # Order the Y-axis (PS) based on the supplied clustered order
   if (!is.null(method_order)) df <- df %>% mutate(PS = factor(PS, levels = method_order))
   ggplot(df, aes(x = Stat, y = PS, fill = r)) +
     geom_tile(color = "white") +
@@ -433,6 +434,16 @@ main <- function() {
   
   cat("Creating analysis plots...\n")
   
+  # --- Calculate the clustered order from the PS-PS Kendall correlation matrix (Tm) ---
+  # This order will be reused for all heatmaps for consistency.
+  m_ord <- Tm
+  diag(m_ord) <- 1
+  m_ord[is.na(m_ord)] <- 0
+  d_ord <- as.dist(1 - m_ord)
+  hc_ord <- hclust(d_ord, method = "average")
+  clustering_order <- rownames(m_ord)[hc_ord$order]
+  # -----------------------------------------------------------------------------------
+  
   # 1. Kendall τ Heatmap (with clustering)
   cat("  Creating Kendall τ heatmap...\n")
   p1 <- plot_tau_heatmap(cor_results$kendall, "Plasticity Analysis")
@@ -440,6 +451,7 @@ main <- function() {
   
   # 2. All Correlation Heatmaps (ALL with same clustering)
   cat("  Creating correlation heatmaps...\n")
+  # These functions already use the internal clustering logic, but we include them here for context
   p2 <- plot_consistent_corr_heatmap(cor_results$kendall, "Plasticity Analysis",
                                      "Kendall correlation (τ) - Rank Agreement", "τ")
   print(p2)
@@ -452,9 +464,11 @@ main <- function() {
                                      "Pearson correlation (r) - Absolute Values", "r")
   print(p4)
   
-  # 3. Method × Stat Correlation Heatmap
+  # 3. Method × Stat Correlation Heatmap (FIXED: now uses the clustered order)
   cat("  Creating method-stat correlation heatmap...\n")
-  p5 <- plot_method_stat_heatmap_stars(method_stat_cor$cor_df, "Plasticity Analysis")
+  p5 <- plot_method_stat_heatmap_stars(method_stat_cor$cor_df, 
+                                       method_order = clustering_order, # <--- FIX: Passing the clustered order
+                                       tag = "Plasticity Analysis")
   print(p5)
   
   # 4. Agreement Network
@@ -499,4 +513,4 @@ main <- function() {
 
 # Run the analysis
 
-  main()
+main()

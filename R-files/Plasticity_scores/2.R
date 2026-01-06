@@ -8,6 +8,8 @@
 #evwpi_calculation (idea from Benedikt)
 
 
+#this has 4 functions
+
 ##### datasets for testing
 
 df_test1 = data.frame(Column1 = c(rep(4, 10), rep(2, 10)), Column2 = c(rep(10, 10), rep(1, 10)))

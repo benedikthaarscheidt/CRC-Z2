@@ -17,6 +17,8 @@
 #PIR (calculate_PIR) - tested
 
 
+#14 functions in here 
+
 ################################
 
 if (!requireNamespace("roxygen2", quietly = TRUE)) {

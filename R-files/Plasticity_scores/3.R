@@ -9,6 +9,8 @@
 #Calculate Plasticity Differential (PD) (calculate_PD) - tested,
 #Calculate Fitness Plasticity Index (FPI) (calculate_FPI) - tested,
 #Calculate Transplant Plasticity Score (TPS)(calculate_TPS) - tested,
+#this has 9 functions
+
 
 source("~/CRC_1644_Z2/R-files/Plasticity_scores/2.R")
 

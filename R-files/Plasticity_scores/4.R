@@ -11,7 +11,7 @@
 #Calculate Multivariate Plasticity Index (MVPi)(calculate_MVPi) NEEDS TO BE TESTED WITH THE REQUESTED DATASET FROM PROF. BARBOSA,
 #Calculate Standardized Plasticity Metric (SPM)(calculate_SPM) - tested,
 #Calculate SSpop/SStotal Plasticity Ratio(calculate_Plasticity_Ratio) - tested
-
+#this has 12 functions 
 
 source("~/CRC_1644_Z2/R-files/Plasticity_scores/2.R")
 

@@ -34,88 +34,179 @@
 #   gaussian_data, sinusoidal_data, wave_data, linear_data
 
 source("~/CRC_1644_Z2/R-files/Plasticity_scores/1_2.R")
-#coefficient-of variation total (calculate_CVt) - tested,
-#slope of norm reaction (calculate_reaction_norm_slope) - tested,
-#slope of plastic response (D) (calculate_D_slope)- tested,
-#response coefficient (RC) (calculate_RC)- tested,
-#Standard deviation of means (CVm) (calculate_CVm)- tested,
-#Standard deviation of medians (CVmd)(calculate_CVmd)- tested,
-#Grand plasticity (calculate_GPi)- tested,
-#Phenotypic Plasticity Index (calculate_PPF)- tested,
-#Phenotypic Plasticity Index (calculate_Phenotypic_Plasticity_Index)- tested,
-#PImd (calculate_PImd)- tested,
-#PILSM (calculate_PILSM)- tested,
-#RTR (calculate_RTR)- tested,
-#PIR (calculate_PIR) - tested
+# coefficient-of variation total (calculate_CVt) - tested,
+# slope of norm reaction (calculate_reaction_norm_slope) - tested,
+# slope of plastic response (D) (calculate_D_slope)- tested,
+# response coefficient (RC) (calculate_RC)- tested,
+# Standard deviation of means (CVm) (calculate_CVm)- tested,
+# Standard deviation of medians (CVmd)(calculate_CVmd)- tested,
+# Grand plasticity (calculate_GPi)- tested,
+# Phenotypic Plasticity Index (calculate_PPF)- tested,
+# Phenotypic Plasticity Index (calculate_Phenotypic_Plasticity_Index)- tested,
+# PImd (calculate_PImd)- tested,
+# PILSM (calculate_PILSM)- tested,
+# RTR (calculate_RTR)- tested,
+# PIR (calculate_PIR) - tested
 source("~/CRC_1644_Z2/R-files/Plasticity_scores/2.R")
-#RDPI	(rdpi_calculation) - tested,
-#RDPIs (rdpi_mean_calculation) - tested,
-#ESPI (calculate_ESPI) - tested,
-#ESPIid (espiid_calculation) - tested,
-#evwpi_calculation (idea from Benedikt)
+# RDPI	(rdpi_calculation) - tested,
+# RDPIs (rdpi_mean_calculation) - tested,
+# ESPI (calculate_ESPI) - tested,
+# ESPIid (espiid_calculation) - tested,
+# evwpi_calculation (idea from Benedikt)
 source("~/CRC_1644_Z2/R-files/Plasticity_scores/3.R")
-#Phenotypic Stability Index (calculate_PSI),
-#Relative Plasticity Index (calculate_RPI) - tested,
-#Plasticity Quotient (calculate_PQ) - tested,
-#Phenotypic Range (PR) (calculate_PR) - tested,
-#Norm of reaction width (calculate_NRW) - tested,
-#Environment-Specific Plasticity (ESP) (calculate_ESP) - tested,
-#Calculate Plasticity Differential (PD) (calculate_PD) - tested,
-#Calculate Fitness Plasticity Index (FPI) (calculate_FPI) - tested,
-#Calculate Transplant Plasticity Score (TPS)(calculate_TPS) - tested,
+# Phenotypic Stability Index (calculate_PSI),
+# Relative Plasticity Index (calculate_RPI) - tested,
+# Plasticity Quotient (calculate_PQ) - tested,
+# Phenotypic Range (PR) (calculate_PR) - tested,
+# Norm of reaction width (calculate_NRW) - tested,
+# Environment-Specific Plasticity (ESP) (calculate_ESP) - tested,
+# Calculate Plasticity Differential (PD) (calculate_PD) - tested,
+# Calculate Fitness Plasticity Index (FPI) (calculate_FPI) - tested,
+# Calculate Transplant Plasticity Score (TPS)(calculate_TPS) - tested,
 source("~/CRC_1644_Z2/R-files/Plasticity_scores/4.R")
-#Calculate Developmental Plasticity Index (DPI)(calculate_DPI) - tested,
-#Calculate Coefficient of Environmental Variation (CEV)(calculate_CEV) - tested,
-#Calculate Plasticity Response Index (PRI)(calculate_PRI) - tested,
-#Calculate Phenotypic Flexibility Index (PFI)(calculate_PFI) - tested,
-#Calculate Standardized Plasticity Index (SPI)(calculate_SPI) - tested,
-#Calculate Absolute Plasticity Coefficient (APC)(calculate_APC) - tested,
-#Calculate Stability Index (SI)(calculate_SI) - tested,
-#Calculate Relative Stability Index (RSI)(calculate_RSI),
-#Calculate Environmental Variance Sensitivity (EVS)(calculate_EVS) - tested,
-#Calculate Environmental Variance Sensitivity (EVS)(calculate_EVS) - tested,
-#Calculate Multivariate Plasticity Index (MVPi)(calculate_MVPi) NEEDS TO BE TESTED WITH THE REQUESTED DATASET FROM PROF. BARBOSA,
-#Calculate Standardized Plasticity Metric (SPM)(calculate_SPM) - tested,
-#Calculate SSpop/SStotal Plasticity Ratio(calculate_Plasticity_Ratio) - tested
+# Calculate Developmental Plasticity Index (DPI)(calculate_DPI) - tested,
+# Calculate Coefficient of Environmental Variation (CEV)(calculate_CEV) - tested,
+# Calculate Plasticity Response Index (PRI)(calculate_PRI) - tested,
+# Calculate Phenotypic Flexibility Index (PFI)(calculate_PFI) - tested,
+# Calculate Standardized Plasticity Index (SPI)(calculate_SPI) - tested,
+# Calculate Absolute Plasticity Coefficient (APC)(calculate_APC) - tested,
+# Calculate Stability Index (SI)(calculate_SI) - tested,
+# Calculate Relative Stability Index (RSI)(calculate_RSI),
+# Calculate Environmental Variance Sensitivity (EVS)(calculate_EVS) - tested,
+# Calculate Environmental Variance Sensitivity (EVS)(calculate_EVS) - tested,
+# Calculate Multivariate Plasticity Index (MVPi)(calculate_MVPi) NEEDS TO BE TESTED WITH THE REQUESTED DATASET FROM PROF. BARBOSA,
+# Calculate Standardized Plasticity Metric (SPM)(calculate_SPM) - tested,
+# Calculate SSpop/SStotal Plasticity Ratio(calculate_Plasticity_Ratio) - tested
 
 source("~/CRC_1644_Z2/R-files/Plasticity_scores/5.R")
-source("~/CRC_1644_Z2/R-files/norms_generator2_nonlinear.R")
+
+# -----------------------------------------------------------------------------
+# ENABLE GENETICS AND GENERATE DATA
+# -----------------------------------------------------------------------------
+USE_GENETICS <- TRUE
+KEEP_REPLICATES <- TRUE
+STRUCTURED_POPULATION <- FALSE # Set to FALSE for Random Mating (Baseline)
+GENETIC_VARIANCES <- FALSE # Set to FALSE to model VE/VS as environmental noise (Zoran's request)
+
+# --- Simulation Configuration ---
+NUM_GENOTYPES <- 10000
+NUM_SNPs <- 10000
+# Total number of genotypes (must be divisible by 4)
+POLY_COUNTS <- list(
+  Slope = 5, # Highly polygenic
+  BaseShift = 2, # Moderately polygenic
+  Amplitude = 4,
+  Width = 3,
+  Center = 1,
+  Frequency = 1,
+  Phase = 1,
+  VE = 0,
+  VS = 0
+)
+
+# Scale 1-5: How strongly genetics affects the parameter (Scales the Genetic SD)
+# 5 = Full SD (High Heritability), 1 = 20% SD (Low Heritability)
+POLY_STRENGTH <- list(
+  Slope = 5, # Strong genetic control
+  BaseShift = 10, # Moderate
+  Amplitude = 40,
+  Width = 2,
+  Center = 6,
+  Frequency = 7,
+  Phase = 3,
+  VE = 0, # Weak/None (if genetic)
+  VS = 0
+)
+
+# Effect Size Distribution:
+# "uniform"     = All SNPs have similar effect sizes (Box-like)
+# "exponential" = Few strong SNPs, many weak ones (L-shaped, more realistic)
+POLY_MODE <- "uniform"
+
+message(paste("Step 1: Simulating Genetics (", NUM_GENOTYPES, " Genotypes, Polygenic Model)..."))
+source("~/CRC_1644_Z2/R-files/simulate_genetics.R")
+
+message("Step 2: Generating Reaction Norms from Genetic Parameters...")
 source("~/CRC_1644_Z2/R-files/norms_generator2_linear.R")
+source("~/CRC_1644_Z2/R-files/norms_generator2_nonlinear.R")
 
 
 ## ──────────────────────────────────────────────────────────────────────────────
 ##  1) Define defaults for any globals you need
-## ──────────────────────────────────────────────────────────────────────────────
-default_indices   <- seq(1, 50)   #sampling over the whole interval every index
-default_env       <- seq_along(default_indices)
+default_indices <- seq(1, 50, length.out = 5) # 6 equidistant indices from 1 to 50ole interval every index
+default_env <- seq(1, 10, length.out = length(default_indices))
 default_Covariate <- rep(1, length(default_indices))
 default_type_labels <- c("gaussian", "sinusoidal", "wave", "linear")
 
-## ──────────────────────────────────────────────────────────────────────────────
+print(default_indices)
+print(default_env)
+
+## ──────────────────────────────────────────────────────────────────────────────å
 ##  2) Only assign them if they don't already exist
 ## ──────────────────────────────────────────────────────────────────────────────
-if (!exists("indices",   envir = .GlobalEnv)) indices      <- default_indices
-if (!exists("env",       envir = .GlobalEnv)) env          <- default_env
-if (!exists("Covariate", envir = .GlobalEnv)) Covariate    <- default_Covariate
+if (!exists("indices", envir = .GlobalEnv)) indices <- default_indices
+if (!exists("env", envir = .GlobalEnv)) env <- default_env
+if (!exists("Covariate", envir = .GlobalEnv)) Covariate <- default_Covariate
 if (!exists("type_labels", envir = .GlobalEnv)) type_labels <- default_type_labels
+
+# Default KEEP_REPLICATES to TRUE if not defined (for standalone execution)
+if (!exists("KEEP_REPLICATES", envir = .GlobalEnv)) KEEP_REPLICATES <- TRUE
 
 ## ──────────────────────────────────────────────────────────────────────────────
 ##  3) And likewise for your data‐frames, before you try to rbind them
 ## ──────────────────────────────────────────────────────────────────────────────
-if (!exists("gaussian_data",  envir = .GlobalEnv))   gaussian_rn  = gaussian_data  
-if (!exists("sinusoidal_data",envir = .GlobalEnv))   sinusoidal_rn = sinusoidal_data
-if (!exists("wave_data",      envir = .GlobalEnv))   wave_rn       = wave_data       
-if (!exists("linear_data",envir = .GlobalEnv))      linear_data     = individual_norms
+if (!exists("gaussian_data", envir = .GlobalEnv)) gaussian_rn <- gaussian_data
+if (!exists("sinusoidal_data", envir = .GlobalEnv)) sinusoidal_rn <- sinusoidal_data
+if (!exists("wave_data", envir = .GlobalEnv)) wave_rn <- wave_data
+if (!exists("linear_data", envir = .GlobalEnv)) linear_data <- individual_norms
 
 
+combined <- rbind(linear_data, gaussian_data, sinusoidal_data, wave_data)
 
+combined_data <- list(
+  linear = linear_data,
+  gaussian = gaussian_data,
+  sinusoidal = sinusoidal_data,
+  wave = wave_data
+)
 
-combined=rbind(linear_data,gaussian_data, sinusoidal_data,wave_data )
+combined_df <- rbind(linear_data, gaussian_data, sinusoidal_data, wave_data)
 
-combined_data=list(linear=linear_data,
-                   gaussian=gaussian_data,
-                   sinusoidal=sinusoidal_data,
-                   wave=wave_data)
+# -----------------------------------------------------------------------------
+# PLOTTING CHECK (Visual Verification)there
+# -----------------------------------------------------------------------------
+if (!dir.exists("~/CRC_1644_Z2/plots")) dir.create("~/CRC_1644_Z2/plots", recursive = TRUE)
+
+library(ggplot2)
+library(gridExtra)
+
+plot_genotypes <- function(df, form_name, n_plot = 3) {
+  # Get unique genotypes
+  genos <- unique(df$Genotype)
+  # Pick random subset
+  selected_genos <- sample(genos, min(length(genos), n_plot))
+
+  subset_df <- df[df$Genotype %in% selected_genos, ]
+
+  p <- ggplot(subset_df, aes(x = Environment, y = Trait, group = interaction(Genotype, Replicate), color = as.factor(Genotype))) +
+    geom_line(alpha = 0.7) +
+    facet_wrap(~Genotype, scales = "free_y") +
+    labs(
+      title = paste(form_name, "- Sample Genotypes"),
+      y = "Phenotype", x = "Environment", color = "Genotype"
+    ) +
+    theme_minimal()
+  return(p)
+}
+
+pdf("~/CRC_1644_Z2/plots/reaction_norms_check.pdf", width = 10, height = 8)
+print(plot_genotypes(linear_data, "Linear"))
+print(plot_genotypes(gaussian_data, "Gaussian"))
+print(plot_genotypes(sinusoidal_data, "Sinusoidal"))
+print(plot_genotypes(wave_data, "Wave"))
+dev.off()
+
+message("Reaction norm plots saved to: ~/CRC_1644_Z2/plots/reaction_norms_check.pdf")
 
 
 ############################################################
@@ -136,56 +227,73 @@ combined_data=list(linear=linear_data,
 #'
 #' @examples
 #' # Example dataset
-#' data = data.frame(
+#' data <- data.frame(
 #'   Genotype = rep(c("G1", "G2"), each = 10),
 #'   Environment = rep(1:5, times = 4),
 #'   Replicate = rep(1:2, each = 5, times = 2),
-#'   Trait = c(10, 12, 15, 20, 22, 15, 17, 20, 18, 20,
-#'             23, 25, 28, 30, 32, 25, 27, 30, 28, 30)
+#'   Trait = c(
+#'     10, 12, 15, 20, 22, 15, 17, 20, 18, 20,
+#'     23, 25, 28, 30, 32, 25, 27, 30, 28, 30
+#'   )
 #' )
 #'
 #' # Preprocess the dataset
-#' preprocessed = preprocess_data(
-#'   data, trait_col = "Trait", genotype_col = "Genotype",
+#' preprocessed <- preprocess_data(
+#'   data,
+#'   trait_col = "Trait", genotype_col = "Genotype",
 #'   replicate_col = "Replicate"
 #' )
 #'
 #' print(preprocessed)
 #'
 #' @export
-preprocess_data = function(data, trait_col, genotype_col, replicate_col = NULL, indices = NULL) {
-  if (is.numeric(trait_col)) trait_col = colnames(data)[trait_col]
-  if (is.numeric(genotype_col)) genotype_col = colnames(data)[genotype_col]
-  if (!is.null(replicate_col) && is.numeric(replicate_col)) replicate_col = colnames(data)[replicate_col]
-  
-  genotype_split = split(data, data[[genotype_col]])
-  result = list()
-  
+preprocess_data <- function(data, trait_col, genotype_col, replicate_col = NULL, indices = NULL) {
+  if (is.numeric(trait_col)) trait_col <- colnames(data)[trait_col]
+  if (is.numeric(genotype_col)) genotype_col <- colnames(data)[genotype_col]
+  if (!is.null(replicate_col) && is.numeric(replicate_col)) replicate_col <- colnames(data)[replicate_col]
+
+  genotype_split <- split(data, data[[genotype_col]])
+  result <- list()
+
   for (genotype in names(genotype_split)) {
-    genotype_data = genotype_split[[genotype]]
-    
+    genotype_data <- genotype_split[[genotype]]
+
     if (is.null(replicate_col)) {
-      result[[genotype]] = genotype_data[[trait_col]][seq(1, length(genotype_data[[trait_col]]), 1)]
+      result[[genotype]] <- genotype_data[[trait_col]][seq(1, length(genotype_data[[trait_col]]), 1)]
     } else {
-      unique_replicates = unique(genotype_data[[replicate_col]])
-      
-      temp = do.call(
+      unique_replicates <- unique(genotype_data[[replicate_col]])
+
+      temp <- do.call(
         cbind,
         lapply(unique_replicates, function(rep) {
           genotype_data[genotype_data[[replicate_col]] == rep, trait_col]
         })
       )
-      
-      averaged_vector = rowMeans(temp, na.rm = TRUE)
-      
+
+      averaged_vector <- rowMeans(temp, na.rm = TRUE)
+
       # If indices are provided externally, use them.
       # Otherwise, compute default indices over the entire vector.
       if (is.null(indices)) {
-        indices = unique(c(seq(1, length(averaged_vector), by = interval),
-                           length(averaged_vector)))
+        indices <- unique(c(
+          seq(1, length(averaged_vector), by = interval),
+          length(averaged_vector)
+        ))
       }
-    
-      result[[genotype]] = averaged_vector[indices]
+
+      if (exists("KEEP_REPLICATES") && KEEP_REPLICATES) {
+        # Return each replicate as a separate entry in the list
+        for (rep_idx in seq_along(unique_replicates)) {
+          rep_val <- unique_replicates[rep_idx]
+          # Extract the specific replicate vector
+          rep_vector <- genotype_data[genotype_data[[replicate_col]] == rep_val, trait_col]
+          # Apply indices subsampling
+          result[[paste0(genotype, "_Rep_", rep_val)]] <- rep_vector[indices]
+        }
+      } else {
+        # Default behavior: Average replicates
+        result[[genotype]] <- averaged_vector[indices]
+      }
     }
   }
 
@@ -193,91 +301,123 @@ preprocess_data = function(data, trait_col, genotype_col, replicate_col = NULL, 
 }
 
 
+call_function <- function(data_list, score, additional_1 = NULL, additional_2 = NULL) {
+  results <- list() # Store results for each item
 
-call_function = function(data_list, score, additional_1 = NULL, additional_2 = NULL) {
-  results = list()  # Store results for each item
-  
   for (i in names(data_list)) {
     # Construct arguments dynamically
-    args = list(data_list[[i]])
-    if (!is.null(additional_1)) args = c(args, list(additional_1))
-    if (!is.null(additional_2)) args = c(args, list(additional_2))
-    
+    args <- list(data_list[[i]])
+    if (!is.null(additional_1)) args <- c(args, list(additional_1))
+    if (!is.null(additional_2)) args <- c(args, list(additional_2))
+
     # Call the score function
-    result = do.call(score, args)
-    
+    result <- do.call(score, args)
+
     # Store the result in the list
-    results[[i]] = result
+    results[[i]] <- result
   }
-  
+
   # Combine results into a data frame or keep as list
   if (all(sapply(results, is.list))) {
     # Extract all unique names from the output lists
-    output_names = unique(unlist(lapply(results, names)))
-    
+    output_names <- unique(unlist(lapply(results, names)))
+
     # Create a data frame with one column per output name
-    results_df = do.call(rbind, lapply(results, function(res) {
+    results_df <- do.call(rbind, lapply(results, function(res) {
       # Fill missing outputs with NA
       sapply(output_names, function(name) if (name %in% names(res)) res[[name]] else NA)
     }))
-    
-    rownames(results_df) = names(results)
+
+    rownames(results_df) <- names(results)
     return(as.data.frame(results_df))
   } else {
-    # Return results as-is if not all outputs are lists
-    return(results)
+    # Ensure consistent return of numeric vector for scalar results
+    return(unlist(results))
   }
 }
 
-post_process = function(data_list, score_function, type_labels, ...) {
-  result_list = list()
-  
+post_process <- function(data_list, score_function, type_labels, ...) {
+  result_list <- list()
+
   for (i in seq_along(data_list)) {
     # Calculate scores using the provided score function and additional arguments
-    score_data = call_function(data_list[[i]], score_function, ...)
-    
-    # Add the Type label for the current dataset
-    score_data = cbind(Score = score_data, Type = type_labels[i])
-    
+    score_data <- call_function(data_list[[i]], score_function, ...)
+
+    # Convert to dataframe if needed and add the Type label
+    if (is.null(dim(score_data))) {
+      # score_data is a vector or named list
+      score_df <- data.frame(
+        Score = as.numeric(score_data),
+        Type = type_labels[i],
+        stringsAsFactors = FALSE,
+        row.names = names(score_data)
+      )
+    } else if (is.matrix(score_data)) {
+      # score_data is a matrix
+      score_df <- as.data.frame(score_data, stringsAsFactors = FALSE)
+      score_df$Type <- type_labels[i]
+      # Rename first column to "Score" if it exists
+      if (ncol(score_df) > 1) {
+        colnames(score_df)[1] <- "Score"
+      } else {
+        colnames(score_df) <- c("Score", "Type")
+      }
+    } else {
+      # score_data is already a dataframe
+      score_df <- as.data.frame(score_data, stringsAsFactors = FALSE)
+      if (!"Type" %in% colnames(score_df)) {
+        score_df$Type <- type_labels[i]
+      }
+      # Ensure first column is named "Score"
+      if (colnames(score_df)[1] != "Score") {
+        colnames(score_df)[1] <- "Score"
+      }
+    }
+
+
+    # Add Genotype_ID column from rownames to preserve it after rbind
+    score_df$Genotype_ID <- rownames(score_df)
+
     # Store in the result list
-    result_list[[i]] = score_data
+    result_list[[i]] <- score_df
   }
-  
-  # Combine all results into a single data frame
-  final_result = do.call(rbind, result_list)
-  
+
+  # Combine all results - use rbind with make.row.names=FALSE to handle duplicates
+  final_result <- do.call(rbind, c(result_list, make.row.names = FALSE))
+
   return(final_result)
 }
 
 #############################################################################
 
-combine_traits_with_groups = function(processed_data_list) {
-  combined_results = list()
-  
+combine_traits_with_groups <- function(processed_data_list) {
+  combined_results <- list()
+
   # Loop through each dataset type
   for (dataset_name in names(processed_data_list)) {
-    dataset = processed_data_list[[dataset_name]]
-    
+    dataset <- processed_data_list[[dataset_name]]
+
     # Combine all sublists within the dataset into a single vector
-    traits = unlist(dataset, use.names = FALSE)
-    
-    env = seq(1, length(traits))
-  
-    
+    traits <- unlist(dataset, use.names = FALSE)
+
+    env <- seq(1, length(traits))
+
+
     # Create a data frame for this dataset
-    combined_results[[dataset_name]] = data.frame(
+    combined_results[[dataset_name]] <- data.frame(
       Trait = traits,
-      Env =env
+      Env = env
     )
   }
-  
+
   # Combine all datasets into one large data frame
-  final_result = do.call(rbind, combined_results)
-  
+  final_result <- do.call(rbind, combined_results)
+
   # Add a dataset identifier to distinguish between datasets
-  final_result$Dataset = rep(names(combined_results), 
-                             times = sapply(combined_results, nrow))
-  
+  final_result$Dataset <- rep(names(combined_results),
+    times = sapply(combined_results, nrow)
+  )
+
   return(final_result)
 }
 
@@ -292,6 +432,23 @@ processed_data_list <- list(
   linear = preprocess_data(linear_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices)
 )
 
+# Print processing information
+total_entries <- sum(sapply(processed_data_list, length))
+entries_per_form <- sapply(processed_data_list, length)
+message("\n=== Data Processing Summary ===")
+message("KEEP_REPLICATES: ", KEEP_REPLICATES)
+message("Total genotype entries to process: ", total_entries)
+message("  Linear: ", entries_per_form["linear"], " entries")
+message("  Gaussian: ", entries_per_form["gaussian"], " entries")
+message("  Sinusoidal: ", entries_per_form["sinusoidal"], " entries")
+message("  Wave: ", entries_per_form["wave"], " entries")
+if (KEEP_REPLICATES) {
+  message("(80 genotypes × 3 replicates per form = 240 entries/form)")
+} else {
+  message("(80 genotypes averaged across replicates = 80 entries/form)")
+}
+message("Calculating plasticity scores...\n")
+
 linear <- preprocess_data(linear_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices)
 gaussian <- preprocess_data(gaussian_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices)
 sinusoidal <- preprocess_data(sinusoidal_data, trait_col = 4, genotype_col = 1, replicate_col = 2, indices = indices)
@@ -304,120 +461,147 @@ wave_long <- combine_traits_with_groups(wave)
 sinus_long <- combine_traits_with_groups(sinusoidal)
 linear_long <- combine_traits_with_groups(linear)
 
-#test <- data.frame(genotype = rep(1, 40),
+# test <- data.frame(genotype = rep(1, 40),
 #                   replicate = c(rep(0, 10), rep(1, 10), rep(2, 10), rep(3, 10)),
 #                   Trait = c(rep(1, 20), rep(3, 20)))
-#test_processed <- preprocess_data(test, trait_col = 3, genotype_col = 1, replicate_col = 2, indices = indices)
+# test_processed <- preprocess_data(test, trait_col = 3, genotype_col = 1, replicate_col = 2, indices = indices)
 #
-#CV_t_test <- call_function(test_processed, calculate_CVt)
-#RN_test <- call_function(test_processed, calculate_reaction_norm_slope)
+# CV_t_test <- call_function(test_processed, calculate_CVt)
+# RN_test <- call_function(test_processed, calculate_reaction_norm_slope)
 #################################################################################################################################### 1.R
 ####################################################################################################################################
 
-CV_t=post_process(processed_data_list,calculate_CVt,type_labels)
+CV_t <- post_process(processed_data_list, calculate_CVt, type_labels)
 
-RN=post_process(processed_data_list,calculate_reaction_norm_slope,type_labels)
+RN <- post_process(processed_data_list, calculate_reaction_norm_slope, type_labels)
 
-RNN=post_process(processed_data_list,calculate_reaction_norm_non_linear,type_labels,3)
+RNN <- post_process(processed_data_list, calculate_reaction_norm_non_linear, type_labels, 3)
 
-D_slope=post_process(processed_data_list,calculate_D_slope,type_labels)
+D_slope <- post_process(processed_data_list, calculate_D_slope, type_labels)
 
-RC=post_process(processed_data_list,calculate_RC,type_labels)
+RC <- post_process(processed_data_list, calculate_RC, type_labels)
 
-#comparative score -- not one score for a single genotype but for a population of different genotypes. Therefore not suitable for direct comparison 
-CVm_gaussian=calculate_CVm(trait_values = gaussian)
-CVm_wave=calculate_CVm(trait_values = wave)
-CVm_sinus=calculate_CVm(trait_values = sinusoidal)
-CVm_linear=calculate_CVm(trait_values = linear)
+# comparative score -- not one score for a single genotype but for a population of different genotypes. Therefore not suitable for direct comparison
+CVm_gaussian <- calculate_CVm(trait_values = gaussian)
+CVm_wave <- calculate_CVm(trait_values = wave)
+CVm_sinus <- calculate_CVm(trait_values = sinusoidal)
+CVm_linear <- calculate_CVm(trait_values = linear)
 
-#comparative score -- not one score for a single genotype but for a population of different genotypes. Therefore not suitable for direct comparison 
-CVmd_gaussian=calculate_CVmd(trait_values = gaussian)
-CVmd_wave=calculate_CVmd(trait_values = wave)
-CVmd_sinus=calculate_CVmd(trait_values = sinusoidal)
-CVmd_linear=calculate_CVmd(trait_values = linear)
+# comparative score -- not one score for a single genotype but for a population of different genotypes. Therefore not suitable for direct comparison
+CVmd_gaussian <- calculate_CVmd(trait_values = gaussian)
+CVmd_wave <- calculate_CVmd(trait_values = wave)
+CVmd_sinus <- calculate_CVmd(trait_values = sinusoidal)
+CVmd_linear <- calculate_CVmd(trait_values = linear)
 
-Covariate=rep(1,length(indices)) #static covariate to minimize influence on the realisation of the score 
+Covariate <- rep(1, length(indices)) # static covariate to minimize influence on the realisation of the score
 # sequential environment
 
 
-gPi=post_process(processed_data_list,calculate_grand_plasticity,type_labels,env,Covariate)
+gPi <- post_process(processed_data_list, calculate_grand_plasticity, type_labels, env, Covariate)
 
-PPF=post_process(processed_data_list,calculate_PPF,type_labels,env,Covariate)
+PPF <- post_process(processed_data_list, calculate_PPF, type_labels, env, Covariate)
 
-PPi=post_process(processed_data_list,calculate_Phenotypic_Plasticity_Index,type_labels)
+PPi <- post_process(processed_data_list, calculate_Phenotypic_Plasticity_Index, type_labels)
 
-PImd=post_process(processed_data_list,calculate_PImd,type_labels,env)
+PImd <- post_process(processed_data_list, calculate_PImd, type_labels, env)
 
-PILSM=post_process(processed_data_list,calculate_PILSM,type_labels,env,Covariate)
+PILSM <- post_process(processed_data_list, calculate_PILSM, type_labels, env, Covariate)
 
-RTR=post_process(processed_data_list,calculate_RTR,type_labels,env)
+RTR <- post_process(processed_data_list, calculate_RTR, type_labels, env)
 
-PIR=post_process(processed_data_list,calculate_PIR,type_labels,env)
-
+PIR <- post_process(processed_data_list, calculate_PIR, type_labels, env)
 
 
 ############### 2.R
 ###############
 
-RDPI=post_process(processed_data_list,calculate_rdpi,type_labels)
+RDPI <- post_process(processed_data_list, calculate_rdpi, type_labels)
 
-ESPI=post_process(processed_data_list,calculate_ESPI,type_labels)
+ESPI <- post_process(processed_data_list, calculate_ESPI, type_labels)
 
-ESPIID=post_process(processed_data_list,calculate_espiid,type_labels)
-
+ESPIID <- post_process(processed_data_list, calculate_espiid, type_labels)
 
 
 ################# 3.R
 #################
 
 
-PSI=post_process(processed_data_list,calculate_PSI,type_labels)
+PSI <- post_process(processed_data_list, calculate_PSI, type_labels)
 
-RPI=post_process(processed_data_list,calculate_RPI,type_labels)
+RPI <- post_process(processed_data_list, calculate_RPI, type_labels)
 
-PQ=post_process(processed_data_list,calculate_PQ,type_labels)
+PQ <- post_process(processed_data_list, calculate_PQ, type_labels)
 
-PR=post_process(processed_data_list,calculate_PR,type_labels) #not really comparable as it required individual level data
+PR <- post_process(processed_data_list, calculate_PR, type_labels) # not really comparable as it required individual level data
 
-NRW=post_process(processed_data_list,calculate_NRW,type_labels)
+NRW <- post_process(processed_data_list, calculate_NRW, type_labels)
 
-ESP=post_process(processed_data_list,calculate_ESP,type_labels)
+ESP <- post_process(processed_data_list, calculate_ESP, type_labels)
 
-PD=post_process(processed_data_list,calculate_general_PD,type_labels) # not comparable as it required stress env and control env
+PD <- post_process(processed_data_list, calculate_general_PD, type_labels) # not comparable as it required stress env and control env
 
-FPI=post_process(processed_data_list,calculate_FPI,type_labels) # not comparable as it required stress env and control env
+FPI <- post_process(processed_data_list, calculate_FPI, type_labels) # not comparable as it required stress env and control env
 
 ################## 4.R
 ##################
 
 
-add_arg=rep(1,length(linear[1][[1]]))
+add_arg <- rep(1, length(linear[1][[1]]))
 
-#DPI=post_process(processed_data_list,calculate_DPI,type_labels,add_arg) # not comparable as this requires time resolved data
+# DPI=post_process(processed_data_list,calculate_DPI,type_labels,add_arg) # not comparable as this requires time resolved data
 
-CEV=post_process(processed_data_list,calculate_CEV,type_labels) 
+CEV <- post_process(processed_data_list, calculate_CEV, type_labels)
 
-#PRI=post_process(processed_data_list,calculate_PRI,type_labels) not comparable as extreme env needs to be specified 
+# PRI=post_process(processed_data_list,calculate_PRI,type_labels) not comparable as extreme env needs to be specified
 
-PFI=post_process(processed_data_list,calculate_PFI,type_labels) 
+PFI <- post_process(processed_data_list, calculate_PFI, type_labels)
 
-APC=post_process(processed_data_list,calculate_APC,type_labels) 
+APC <- post_process(processed_data_list, calculate_APC, type_labels)
 
-SI=post_process(processed_data_list,calculate_SI,type_labels) 
+SI <- post_process(processed_data_list, calculate_SI, type_labels)
 
-RSI=post_process(processed_data_list,calculate_RSI,type_labels) 
+RSI <- post_process(processed_data_list, calculate_RSI, type_labels)
 
-EVS=post_process(processed_data_list,calculate_EVS,type_labels) 
+EVS <- post_process(processed_data_list, calculate_EVS, type_labels)
 
-MVPi=post_process(processed_data_list,calculate_MVPi,type_labels) 
+MVPi <- post_process(processed_data_list, calculate_MVPi, type_labels)
 
 ################### 5.R
 ###################
 
-#Plasticity=post_process(processed_data_list,calculate_plasticity,type_labels)
+# Plasticity=post_process(processed_data_list,calculate_plasticity,type_labels)
 #
-#env_cov=post_process(processed_data_list,cross_env_cov,type_labels)
+# env_cov=post_process(processed_data_list,cross_env_cov,type_labels)
 #
+scores_list <- list(
+  CV_t = CV_t,
+  RN = RN,
+  RNN = RNN,
+  D_slope = D_slope,
+  RC = RC,
+  gPi = gPi,
+  PPF = PPF,
+  PPi = PPi,
+  PImd = PImd,
+  PILSM = PILSM,
+  RTR = RTR,
+  PIR = PIR,
+  RDPI = RDPI,
+  ESPI = ESPI,
+  ESPIID = ESPIID,
+  PSI = PSI,
+  RPI = RPI,
+  PQ = PQ,
+  PR = PR,
+  NRW = NRW,
+  ESP = ESP,
+  CEV = CEV,
+  PFI = PFI,
+  APC = APC,
+  SI = SI,
+  RSI = RSI,
+  EVS = EVS
+)
 
 keys <- names(processed_data_list)
 fw_matrices <- setNames(vector("list", length(keys)), keys)
@@ -427,8 +611,10 @@ for (k in keys) {
   G <- names(gl)
   L <- max(lengths(gl))
   env_ids <- seq_len(L)
-  M <- matrix(NA_real_, nrow=length(G), ncol=L,
-              dimnames=list(G, paste0("E", env_ids)))
+  M <- matrix(NA_real_,
+    nrow = length(G), ncol = L,
+    dimnames = list(G, paste0("E", env_ids))
+  )
   for (g in G) {
     v <- as.numeric(gl[[g]])
     M[g, seq_along(v)] <- v
@@ -436,14 +622,16 @@ for (k in keys) {
   fw_matrices[[k]] <- as.data.frame(M)
 }
 
-linear_matrix     <- fw_matrices$linear
-gaussian_matrix   <- fw_matrices$gaussian
+linear_matrix <- fw_matrices$linear
+gaussian_matrix <- fw_matrices$gaussian
 sinusoidal_matrix <- fw_matrices$sinusoidal
-wave_matrix       <- fw_matrices$wave
+wave_matrix <- fw_matrices$wave
 
-fw_long_all <- data.frame(Dataset=character(), genotype=character(),
-                          environment=integer(), y=double(), 
-                          stringsAsFactors=FALSE)
+fw_long_all <- data.frame(
+  Dataset = character(), genotype = character(),
+  environment = integer(), y = double(),
+  stringsAsFactors = FALSE
+)
 
 for (k in keys) {
   gl <- processed_data_list[[k]]
@@ -451,59 +639,80 @@ for (k in keys) {
   for (g in G) {
     v <- as.numeric(gl[[g]])
     n <- length(v)
-    df <- data.frame(Dataset=k, genotype=g, environment=seq_len(n), y=v)
+    df <- data.frame(Dataset = k, genotype = g, environment = seq_len(n), y = v)
     fw_long_all <- rbind(fw_long_all, df)
   }
 }
 
 
-
-
-
-
-
-
-
 keys <- names(processed_data_list)
 row_list <- list()
-fw_long_all <- data.frame(Dataset=character(), genotype=character(), environment=integer(), y=double(), stringsAsFactors=FALSE)
+fw_long_all <- data.frame(Dataset = character(), genotype = character(), environment = integer(), y = double(), stringsAsFactors = FALSE)
 Lmax <- max(unlist(lapply(processed_data_list, function(gl) max(lengths(gl)))))
 
 for (k in keys) {
   gl <- processed_data_list[[k]]
   G <- names(gl)
   for (g in G) {
-    uid <- paste(k, g, sep="_")
+    uid <- paste(k, g, sep = "_")
     v <- as.numeric(gl[[g]])
     n <- length(v)
     row_list[[uid]] <- c(v, rep(NA_real_, Lmax - n))
-    fw_long_all <- rbind(fw_long_all, data.frame(Dataset=k, genotype=uid, environment=seq_len(n), y=v))
+    fw_long_all <- rbind(fw_long_all, data.frame(Dataset = k, genotype = uid, environment = seq_len(n), y = v))
   }
 }
 
-fw_matrix <- do.call(rbind, row_list)
-rownames(fw_matrix) <- names(row_list)
-colnames(fw_matrix) <- paste0("E", seq_len(ncol(fw_matrix)))
-fw_df <- as.data.frame(fw_matrix)
 
+# -----------------------------------------------------------------------------
+# SAVE ALL DATA TO DISK (Timestamped)
+# -----------------------------------------------------------------------------
+output_dir <- "~/CRC_1644_Z2/synthetic_data/scores_output"
+if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 
+timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
+run_dir <- file.path(output_dir, paste0("run_", timestamp))
+dir.create(run_dir)
 
-FW=calculate_finlay_wilkinson(fw_df,plot=T)
+message("Saving all simulation data to: ", run_dir)
 
+# 1. Scores
+saveRDS(scores_list, file.path(run_dir, "scores_list.rds"))
 
-library(ggplot2)
-Y <- as.matrix(fw_df[28:35,])
-gnames <- rownames(Y); if (is.null(gnames)) gnames <- paste0("G", seq_len(nrow(Y)))
-env_values <- if (exists("env_values") && !is.null(env_values)) as.numeric(env_values) else seq_len(ncol(Y))
-df <- data.frame(genotype=rep(gnames, each=ncol(Y)),
-                 environment=rep(env_values, times=nrow(Y)),
-                 y=as.vector(t(Y)))
-df <- df[is.finite(df$y) & is.finite(df$environment), ]
-ggplot(df, aes(environment, y, color=genotype, group=genotype)) +
-  geom_line() + geom_point() +
-  labs(x="Environment", y="Trait", title="Trait by Environment") +
-  theme_bw()
+# 2. Reaction Norms (Phenotypes)
+saveRDS(combined_df, file.path(run_dir, "reaction_norms.rds"))
+write.csv(combined_df, file.path(run_dir, "reaction_norms.csv"), row.names = FALSE)
 
+# 3. Genetics (Copy from temp location or save directly if variables exist)
+if (exists("snp_matrix")) {
+  saveRDS(snp_matrix, file.path(run_dir, "snp_matrix.rds"))
+  write.csv(snp_matrix, file.path(run_dir, "snp_matrix.csv"))
+}
+if (exists("params_df")) {
+  write.csv(params_df, file.path(run_dir, "genotypic_parameters.csv"), row.names = FALSE)
+}
+if (exists("truth_df")) {
+  write.csv(truth_df, file.path(run_dir, "causal_snps_truth.csv"), row.names = FALSE)
+}
 
+# 4. Kinship Matrix (Calculate if not exists)
+if (!exists("K")) {
+  if (exists("snp_matrix")) {
+    message("Calculating Kinship Matrix...")
+    # Simple centered IBS or use sommer if available
+    if (requireNamespace("sommer", quietly = TRUE)) {
+      # sommer expects -1, 0, 1 usually, or 0, 1, 2. Our data is 0, 1, 2.
+      # A.mat expects -1, 0, 1. Let's subtract 1.
+      M_adj <- snp_matrix - 1
+      K <- sommer::A.mat(M_adj)
+    } else {
+      # Fallback: simple correlation or identity
+      K <- cor(t(snp_matrix))
+    }
+  }
+}
 
+if (exists("K")) {
+  saveRDS(K, file.path(run_dir, "kinship_matrix.rds"))
+}
 
+message("Done. All data saved in: ", run_dir)
